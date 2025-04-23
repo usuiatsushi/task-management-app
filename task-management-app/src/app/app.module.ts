@@ -8,6 +8,8 @@ import { getAuth, provideAuth } from '@angular/fire/auth';
 import { environment } from '../environments/environment';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TasksModule } from './features/tasks/tasks.module';
+import { AuthModule } from './features/auth/auth.module';
 
 @NgModule({
   imports: [
@@ -16,6 +18,8 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
     FormsModule,
     ReactiveFormsModule,
     BrowserAnimationsModule,
+    TasksModule,
+    AuthModule,
     AppComponent
   ],
   providers: [

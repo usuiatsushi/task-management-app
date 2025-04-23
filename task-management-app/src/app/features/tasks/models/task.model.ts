@@ -1,3 +1,5 @@
+import { Timestamp } from '@angular/fire/firestore';
+
 export interface Task {
   id?: string;
   title: string;
@@ -5,8 +7,8 @@ export interface Task {
   category: string;
   status: '未対応' | '対応中' | '完了';
   priority: '高' | '中' | '低';
-  dueDate: Date;
+  dueDate: Date | Timestamp;
   assignedTo: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
 } 

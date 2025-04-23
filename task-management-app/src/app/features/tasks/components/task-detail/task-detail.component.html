@@ -4,7 +4,9 @@
       <h1>{{ task.title }}</h1>
       <div class="task-actions">
         <button class="edit-button" routerLink="edit">編集</button>
-        <button class="delete-button" (click)="deleteTask()">削除</button>
+        <button class="delete-button" (click)="deleteTask()" [disabled]="deleting">
+          {{ deleting ? '削除中...' : '削除' }}
+        </button>
       </div>
     </div>
 
