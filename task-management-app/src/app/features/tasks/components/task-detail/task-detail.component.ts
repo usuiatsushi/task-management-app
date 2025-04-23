@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Firestore, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
 import { Task } from '../../models/task.model';
 
 @Component({
@@ -14,6 +14,7 @@ export class TaskDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private firestore: Firestore
   ) { }
 
@@ -34,6 +35,14 @@ export class TaskDetailComponent implements OnInit {
         id: taskSnap.id,
         ...taskSnap.data()
       } as Task;
+    }
+  }
+
+  async deleteTask() {
+    if (this.task?.id) {
+      const taskRef = doc(this.firestore, 'tasks', this.task.id);
+      await deleteDoc(taskRef);
+      this.router.navigate(['/tasks']);
     }
   }
 } 
