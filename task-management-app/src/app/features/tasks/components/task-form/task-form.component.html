@@ -1,107 +1,101 @@
 <div class="task-form-container">
-  <h1>{{ isEditMode ? 'タスク編集' : '新規タスク作成' }}</h1>
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>{{ isEditMode ? 'タスク編集' : '新規タスク作成' }}</mat-card-title>
+    </mat-card-header>
 
-  <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
-    <div class="form-group">
-      <label for="title">タイトル</label>
-      <input
-        type="text"
-        id="title"
-        formControlName="title"
-        [class.is-invalid]="taskForm.get('title')?.invalid && taskForm.get('title')?.touched"
-      >
-      <div class="invalid-feedback" *ngIf="taskForm.get('title')?.invalid && taskForm.get('title')?.touched">
-        タイトルを入力してください
-      </div>
-    </div>
+    <mat-card-content>
+      <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>タイトル</mat-label>
+          <input matInput formControlName="title" placeholder="タスクのタイトルを入力">
+          <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
+            タイトルは必須です
+          </mat-error>
+        </mat-form-field>
 
-    <div class="form-group">
-      <label for="description">詳細</label>
-      <textarea
-        id="description"
-        formControlName="description"
-        [class.is-invalid]="taskForm.get('description')?.invalid && taskForm.get('description')?.touched"
-      ></textarea>
-      <div class="invalid-feedback" *ngIf="taskForm.get('description')?.invalid && taskForm.get('description')?.touched">
-        詳細を入力してください
-      </div>
-    </div>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>説明</mat-label>
+          <textarea matInput formControlName="description" rows="4" placeholder="タスクの説明を入力"></textarea>
+          <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
+            説明は必須です
+          </mat-error>
+        </mat-form-field>
 
-    <div class="form-group">
-      <label for="category">カテゴリ</label>
-      <select
-        id="category"
-        formControlName="category"
-        [class.is-invalid]="taskForm.get('category')?.invalid && taskForm.get('category')?.touched"
-      >
-        <option value="">選択してください</option>
-        <option value="技術的課題">技術的課題</option>
-        <option value="業務フロー">業務フロー</option>
-        <option value="バグ修正">バグ修正</option>
-        <option value="その他">その他</option>
-      </select>
-      <div class="invalid-feedback" *ngIf="taskForm.get('category')?.invalid && taskForm.get('category')?.touched">
-        カテゴリを選択してください
-      </div>
-    </div>
+        <div class="category-section">
+          <mat-form-field appearance="outline" class="form-field">
+            <mat-label>カテゴリ</mat-label>
+            <mat-select formControlName="category">
+              <mat-option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="taskForm.get('category')?.hasError('required')">
+              カテゴリは必須です
+            </mat-error>
+          </mat-form-field>
 
-    <div class="form-group">
-      <label for="status">ステータス</label>
-      <select
-        id="status"
-        formControlName="status"
-        [class.is-invalid]="taskForm.get('status')?.invalid && taskForm.get('status')?.touched"
-      >
-        <option value="未対応">未対応</option>
-        <option value="対応中">対応中</option>
-        <option value="完了">完了</option>
-      </select>
-    </div>
+          <div class="new-category-form">
+            <mat-form-field appearance="outline" class="new-category-input">
+              <mat-label>新しいカテゴリ</mat-label>
+              <input matInput [(ngModel)]="newCategoryName" placeholder="カテゴリ名を入力">
+            </mat-form-field>
+            <button mat-button color="primary" (click)="addNewCategory()" [disabled]="!newCategoryName">
+              <mat-icon>add</mat-icon>
+              追加
+            </button>
+          </div>
+        </div>
 
-    <div class="form-group">
-      <label for="priority">優先度</label>
-      <select
-        id="priority"
-        formControlName="priority"
-        [class.is-invalid]="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched"
-      >
-        <option value="高">高</option>
-        <option value="中">中</option>
-        <option value="低">低</option>
-      </select>
-    </div>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>ステータス</mat-label>
+          <mat-select formControlName="status">
+            <mat-option value="未着手">未着手</mat-option>
+            <mat-option value="進行中">進行中</mat-option>
+            <mat-option value="完了">完了</mat-option>
+          </mat-select>
+          <mat-error *ngIf="taskForm.get('status')?.hasError('required')">
+            ステータスは必須です
+          </mat-error>
+        </mat-form-field>
 
-    <div class="form-group">
-      <label for="dueDate">期限</label>
-      <input
-        type="date"
-        id="dueDate"
-        formControlName="dueDate"
-        [class.is-invalid]="taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.touched"
-      >
-      <div class="invalid-feedback" *ngIf="taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.touched">
-        期限を選択してください
-      </div>
-    </div>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>優先度</mat-label>
+          <mat-select formControlName="priority">
+            <mat-option value="低">低</mat-option>
+            <mat-option value="中">中</mat-option>
+            <mat-option value="高">高</mat-option>
+          </mat-select>
+          <mat-error *ngIf="taskForm.get('priority')?.hasError('required')">
+            優先度は必須です
+          </mat-error>
+        </mat-form-field>
 
-    <div class="form-group">
-      <label for="assignedTo">担当者</label>
-      <input
-        type="text"
-        id="assignedTo"
-        formControlName="assignedTo"
-        [class.is-invalid]="taskForm.get('assignedTo')?.invalid && taskForm.get('assignedTo')?.touched"
-      >
-      <div class="invalid-feedback" *ngIf="taskForm.get('assignedTo')?.invalid && taskForm.get('assignedTo')?.touched">
-        担当者を入力してください
-      </div>
-    </div>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>期限</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="dueDate" placeholder="タスクの期限を選択">
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-error *ngIf="taskForm.get('dueDate')?.hasError('required')">
+            期限は必須です
+          </mat-error>
+        </mat-form-field>
 
-    <div class="form-actions">
-      <button type="button" class="cancel-button" routerLink="/tasks">キャンセル</button>
-      <button type="submit" class="submit-button" [disabled]="taskForm.invalid">
-        {{ isEditMode ? '更新' : '作成' }}
-      </button>
-    </div>
-  </form>
+        <mat-form-field appearance="outline" class="form-field">
+          <mat-label>担当者</mat-label>
+          <input matInput formControlName="assignedTo" placeholder="タスクの担当者を入力">
+          <mat-error *ngIf="taskForm.get('assignedTo')?.hasError('required')">
+            担当者は必須です
+          </mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-button type="button" (click)="onCancel()">キャンセル</button>
+          <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading">
+            {{ isEditMode ? '更新' : '作成' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
 </div> 

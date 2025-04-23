@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TaskListComponent } from './components/task-list/task-list.component';
 import { TaskDetailComponent } from './components/task-detail/task-detail.component';
+import { TaskFormComponent } from './components/task-form/task-form.component';
 import { TaskEditComponent } from './components/task-edit/task-edit.component';
 
 const routes: Routes = [
@@ -11,7 +12,7 @@ const routes: Routes = [
   },
   {
     path: 'new',
-    component: TaskEditComponent
+    component: TaskFormComponent
   },
   {
     path: ':id',
@@ -19,7 +20,7 @@ const routes: Routes = [
   },
   {
     path: ':id/edit',
-    component: TaskEditComponent
+    component: TaskFormComponent
   }
 ];
 

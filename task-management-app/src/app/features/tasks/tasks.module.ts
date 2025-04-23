@@ -6,19 +6,19 @@ import { TaskDetailComponent } from './components/task-detail/task-detail.compon
 import { TaskFormComponent } from './components/task-form/task-form.component';
 import { TaskEditComponent } from './components/task-edit/task-edit.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
-  declarations: [
-    TaskListComponent,
-    TaskDetailComponent,
-    TaskFormComponent,
-    TaskEditComponent
-  ],
   imports: [
     CommonModule,
     TasksRoutingModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    RouterModule,
+    TaskListComponent,
+    TaskDetailComponent,
+    TaskFormComponent,
+    TaskEditComponent
   ]
 })
 export class TasksModule { } 

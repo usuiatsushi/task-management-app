@@ -1,13 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
+import { TaskService } from '../../services/task.service';
 import { Task } from '../../models/task.model';
-import { Timestamp } from '@angular/fire/firestore';
+import { Timestamp } from 'firebase/firestore';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-task-detail',
   templateUrl: './task-detail.component.html',
-  styleUrls: ['./task-detail.component.scss']
+  styleUrls: ['./task-detail.component.scss'],
+  standalone: true,
+  imports: [CommonModule]
 })
 export class TaskDetailComponent implements OnInit {
   task: (Task & { dueDate: Date; createdAt: Date; updatedAt: Date }) | null = null;
@@ -34,13 +38,20 @@ export class TaskDetailComponent implements OnInit {
     
     if (taskDoc.exists()) {
       const data = taskDoc.data();
-      this.task = {
+      const task = {
         id: taskDoc.id,
         ...data,
         dueDate: this.convertTimestampToDate(data['dueDate']),
         createdAt: this.convertTimestampToDate(data['createdAt']),
         updatedAt: this.convertTimestampToDate(data['updatedAt'])
       } as Task & { dueDate: Date; createdAt: Date; updatedAt: Date };
+      
+      // 日付が正しく変換されていることを確認
+      if (!(task.dueDate instanceof Date)) {
+        console.warn('Invalid dueDate for task:', task.id, task.dueDate);
+      }
+      
+      this.task = task;
     }
   }
 
@@ -48,7 +59,20 @@ export class TaskDetailComponent implements OnInit {
     if (timestamp instanceof Timestamp) {
       return timestamp.toDate();
     }
-    return timestamp;
+    if (timestamp && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate();
+    }
+    if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
+      return new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+    }
+    if (timestamp instanceof Date) {
+      return timestamp;
+    }
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp);
+    }
+    console.warn('Invalid timestamp format:', timestamp);
+    return new Date();
   }
 
   async deleteTask() {
