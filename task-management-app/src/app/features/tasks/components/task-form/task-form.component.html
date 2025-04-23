@@ -1,0 +1,107 @@
+<div class="task-form-container">
+  <h1>{{ isEditMode ? 'タスク編集' : '新規タスク作成' }}</h1>
+
+  <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
+    <div class="form-group">
+      <label for="title">タイトル</label>
+      <input
+        type="text"
+        id="title"
+        formControlName="title"
+        [class.is-invalid]="taskForm.get('title')?.invalid && taskForm.get('title')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="taskForm.get('title')?.invalid && taskForm.get('title')?.touched">
+        タイトルを入力してください
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="description">詳細</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        [class.is-invalid]="taskForm.get('description')?.invalid && taskForm.get('description')?.touched"
+      ></textarea>
+      <div class="invalid-feedback" *ngIf="taskForm.get('description')?.invalid && taskForm.get('description')?.touched">
+        詳細を入力してください
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="category">カテゴリ</label>
+      <select
+        id="category"
+        formControlName="category"
+        [class.is-invalid]="taskForm.get('category')?.invalid && taskForm.get('category')?.touched"
+      >
+        <option value="">選択してください</option>
+        <option value="技術的課題">技術的課題</option>
+        <option value="業務フロー">業務フロー</option>
+        <option value="バグ修正">バグ修正</option>
+        <option value="その他">その他</option>
+      </select>
+      <div class="invalid-feedback" *ngIf="taskForm.get('category')?.invalid && taskForm.get('category')?.touched">
+        カテゴリを選択してください
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="status">ステータス</label>
+      <select
+        id="status"
+        formControlName="status"
+        [class.is-invalid]="taskForm.get('status')?.invalid && taskForm.get('status')?.touched"
+      >
+        <option value="未対応">未対応</option>
+        <option value="対応中">対応中</option>
+        <option value="完了">完了</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="priority">優先度</label>
+      <select
+        id="priority"
+        formControlName="priority"
+        [class.is-invalid]="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched"
+      >
+        <option value="高">高</option>
+        <option value="中">中</option>
+        <option value="低">低</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="dueDate">期限</label>
+      <input
+        type="date"
+        id="dueDate"
+        formControlName="dueDate"
+        [class.is-invalid]="taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.touched">
+        期限を選択してください
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="assignedTo">担当者</label>
+      <input
+        type="text"
+        id="assignedTo"
+        formControlName="assignedTo"
+        [class.is-invalid]="taskForm.get('assignedTo')?.invalid && taskForm.get('assignedTo')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="taskForm.get('assignedTo')?.invalid && taskForm.get('assignedTo')?.touched">
+        担当者を入力してください
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="cancel-button" routerLink="/tasks">キャンセル</button>
+      <button type="submit" class="submit-button" [disabled]="taskForm.invalid">
+        {{ isEditMode ? '更新' : '作成' }}
+      </button>
+    </div>
+  </form>
+</div> 
