@@ -140,26 +140,46 @@
       width: 100%;
     }
 
-    .mat-mdc-input-element {
-      font-size: 14px;
-      padding: 4px 0;
-    }
-
-    .mat-mdc-select-value-text {
-      font-size: 14px;
-    }
-
-    .mat-mdc-select-arrow-wrapper {
-      width: 24px;
-      height: 24px;
-    }
-
-    .mat-mdc-select-arrow {
-      width: 12px;
-      height: 12px;
-    }
-
     ::ng-deep {
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none !important;
+      }
+
+      .mat-mdc-form-field-infix {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        min-height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+      }
+
+      .mat-mdc-text-field-wrapper {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 24px !important;
+      }
+
+      .mat-mdc-form-field-flex {
+        min-height: 24px !important;
+        height: 24px !important;
+        align-items: center !important;
+      }
+
+      .mat-mdc-select {
+        font-size: 14px !important;
+      }
+
+      .mat-mdc-select-value {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        line-height: 24px !important;
+      }
+
+      .mat-mdc-select-arrow-wrapper {
+        transform: translateY(0) !important;
+        height: 24px !important;
+      }
+
       .mat-datepicker-toggle {
         width: 20px !important;
         height: 20px !important;
@@ -171,50 +191,17 @@
         height: 16px !important;
       }
 
-      .mat-mdc-form-field-subscript-wrapper {
-        display: none !important;
-      }
-
-      .mat-mdc-form-field-infix {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        min-height: 24px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-      }
-
-      .mat-mdc-text-field-wrapper {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-      }
-
       .mat-mdc-input-element {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+        padding: 0 8px !important;
         line-height: 24px !important;
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
-        text-align: center !important;
-        width: 100% !important;
-        position: relative !important;
-        top: 0 !important;
+        height: 24px !important;
+        margin: 0 !important;
+        font-size: 14px !important;
       }
 
-      .mat-mdc-form-field-flex {
-        min-height: 24px !important;
-        align-items: center !important;
-        justify-content: center !important;
-      }
-
-      .mat-mdc-form-field-infix {
-        width: 100% !important;
-      }
-
-      .mat-mdc-form-field {
-        .mdc-text-field {
-          padding: 0 !important;
-        }
+      .mdc-text-field {
+        padding: 0 !important;
+        height: 24px !important;
       }
     }
   }
