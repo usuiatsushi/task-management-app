@@ -205,33 +205,30 @@
       }
 
       .mat-mdc-form-field-infix {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        min-height: 24px !important;
+        padding: 0 !important;
+        min-height: 48px !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
       }
 
       .mat-mdc-text-field-wrapper {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
+        padding: 0 !important;
+        height: 48px !important;
       }
 
       .mat-mdc-input-element {
-        padding-top: 0 !important;
-        padding-bottom: 0 !important;
-        line-height: 24px !important;
-        margin-top: 0 !important;
-        margin-bottom: 0 !important;
+        padding: 0 !important;
+        line-height: 48px !important;
+        margin: 0 !important;
         text-align: center !important;
         width: 100% !important;
-        position: relative !important;
-        top: 0 !important;
+        font-size: 14px !important;
       }
 
       .mat-mdc-form-field-flex {
-        min-height: 24px !important;
+        min-height: 48px !important;
+        height: 48px !important;
         align-items: center !important;
         justify-content: center !important;
       }
@@ -243,6 +240,7 @@
       .mat-mdc-form-field {
         .mdc-text-field {
           padding: 0 !important;
+          height: 48px !important;
         }
       }
     }
@@ -419,4 +417,15 @@ mat-form-field {
       display: none;
     }
   }
+}
+
+// 非編集時の期限表示のスタイル
+.editable-field {
+  font-size: 14px !important;
+  text-align: center !important;
+  line-height: 48px !important;
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 } 
