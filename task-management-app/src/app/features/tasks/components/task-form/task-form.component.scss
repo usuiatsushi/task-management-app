@@ -29,11 +29,20 @@
         height: 56px;
         padding: 0;
         background-color: white;
+
+        &.mdc-text-field--textarea {
+          height: auto;
+        }
       }
 
       .mat-mdc-form-field-flex {
         height: 56px;
         align-items: center;
+
+        &.mdc-text-field--textarea {
+          height: auto;
+          align-items: stretch;
+        }
       }
 
       .mdc-line-ripple::before, 
@@ -49,6 +58,40 @@
         align-items: center;
       }
 
+      .mdc-text-field--textarea {
+        .mat-mdc-form-field-flex {
+          padding: 0;
+          min-height: 152px;
+          display: flex;
+          align-items: center;
+        }
+
+        .mat-mdc-form-field-infix {
+          padding: 0;
+          height: 100%;
+          display: flex;
+          align-items: center;
+        }
+
+        textarea.mat-mdc-input-element {
+          margin: 0;
+          padding: 16px !important;
+          min-height: 120px;
+          line-height: 1.5;
+          box-sizing: border-box;
+          align-self: center;
+        }
+
+        .mdc-text-field__input {
+          padding-left: 16px !important;
+          padding-right: 16px !important;
+        }
+      }
+
+      .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+
       input.mat-mdc-input-element {
         position: static;
         margin: 0;
@@ -57,9 +100,8 @@
         padding: 0 16px !important;
       }
 
-      textarea.mat-mdc-input-element {
-        margin: 0;
-        padding: 16px !important;
+      .mat-mdc-select {
+        padding: 0 16px !important;
       }
     }
   }
@@ -81,7 +123,31 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: -10px;
+    margin: 0;
+    height: 56px;
+
+    .mat-mdc-form-field {
+      flex: 1;
+      height: 56px;
+      
+      ::ng-deep {
+        .mdc-text-field {
+          padding: 0;
+          height: 56px;
+        }
+
+        .mat-mdc-form-field-flex {
+          height: 56px;
+        }
+
+        input.mat-mdc-input-element {
+          padding: 0 16px !important;
+          margin: 0;
+          height: 56px;
+          line-height: 56px;
+        }
+      }
+    }
   }
 
   .new-category-input {
