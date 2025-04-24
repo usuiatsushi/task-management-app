@@ -101,6 +101,33 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     },
   };
 
+  // TimestampをDateに変換するヘルパーメソッド
+  getDateFromTimestamp(timestamp: Timestamp | Date | any): Date {
+    try {
+      if (!timestamp) {
+        return new Date();
+      }
+
+      if (timestamp instanceof Timestamp) {
+        const date = timestamp.toDate();
+        return isNaN(date.getTime()) ? new Date() : date;
+      } else if (timestamp instanceof Date) {
+        return isNaN(timestamp.getTime()) ? new Date() : timestamp;
+      } else if (timestamp && typeof timestamp.toDate === 'function') {
+        const date = timestamp.toDate();
+        return isNaN(date.getTime()) ? new Date() : date;
+      } else if (typeof timestamp === 'number' || typeof timestamp === 'string') {
+        const date = new Date(timestamp);
+        return isNaN(date.getTime()) ? new Date() : date;
+      } else {
+        return new Date();
+      }
+    } catch (error) {
+      console.error('日付の変換に失敗しました:', error);
+      return new Date();
+    }
+  }
+
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('categorySelect') categorySelect!: MatSelect;

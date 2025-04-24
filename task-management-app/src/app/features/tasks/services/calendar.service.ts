@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Task } from '../models/task.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Timestamp } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -13,15 +14,16 @@ export class CalendarService {
 
   async addTaskToCalendar(task: Task): Promise<void> {
     try {
+      const dueDate = task.dueDate instanceof Timestamp ? task.dueDate.toDate() : task.dueDate;
       const event = {
         summary: task.title,
         description: task.description,
         start: {
-          dateTime: task.dueDate.toDate().toISOString(),
+          dateTime: dueDate.toISOString(),
           timeZone: 'Asia/Tokyo'
         },
         end: {
-          dateTime: new Date(task.dueDate.toDate().getTime() + 60 * 60 * 1000).toISOString(), // 1時間後
+          dateTime: new Date(dueDate.getTime() + 60 * 60 * 1000).toISOString(), // 1時間後
           timeZone: 'Asia/Tokyo'
         },
         reminders: {
@@ -45,15 +47,16 @@ export class CalendarService {
 
   async updateCalendarEvent(task: Task): Promise<void> {
     try {
+      const dueDate = task.dueDate instanceof Timestamp ? task.dueDate.toDate() : task.dueDate;
       const event = {
         summary: task.title,
         description: task.description,
         start: {
-          dateTime: task.dueDate.toDate().toISOString(),
+          dateTime: dueDate.toISOString(),
           timeZone: 'Asia/Tokyo'
         },
         end: {
-          dateTime: new Date(task.dueDate.toDate().getTime() + 60 * 60 * 1000).toISOString(),
+          dateTime: new Date(dueDate.getTime() + 60 * 60 * 1000).toISOString(),
           timeZone: 'Asia/Tokyo'
         }
       };

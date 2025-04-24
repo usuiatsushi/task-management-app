@@ -159,19 +159,19 @@
         <td mat-cell *matCellDef="let task">
           <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
             <span class="editable-field" (click)="startEditing(task, 'dueDate')">
-              {{ task.dueDate.toDate() | date:'yyyy/MM/dd' }}
+              {{ getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/dd' }}
             </span>
           </div>
           <ng-template #editDueDate>
             <mat-form-field class="edit-field">
               <input matInput
                 [matDatepicker]="picker"
-                [value]="task.dueDate.toDate()"
+                [value]="getDateFromTimestamp(task.dueDate)"
                 (dateChange)="onDateChange(task, $event)"
                 (blur)="stopEditing()"
                 [matDatepickerFilter]="filterDates">
               <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker [startView]="'month'" [startAt]="task.dueDate.toDate()" [dateFormats]="dateFormat"></mat-datepicker>
+              <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
             </mat-form-field>
           </ng-template>
         </td>
