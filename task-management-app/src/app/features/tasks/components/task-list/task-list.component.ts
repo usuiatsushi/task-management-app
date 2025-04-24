@@ -27,8 +27,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter } from '@angular/material/core';
 import { Timestamp } from 'firebase/firestore';
+import { CustomDateAdapter } from './custom-date-adapter';
+import { Task } from '../../models/task.model';
 
 const MY_FORMATS = {
   parse: {
@@ -36,9 +38,9 @@ const MY_FORMATS = {
   },
   display: {
     dateInput: 'yyyy/MM/dd',
-    monthYearLabel: 'yyyy年MM月',
+    monthYearLabel: 'yyyy年M月',
     dateA11yLabel: 'yyyy/MM/dd',
-    monthYearA11yLabel: 'yyyy年MM月',
+    monthYearA11yLabel: 'yyyy年M月',
   },
 };
 
@@ -66,7 +68,12 @@ const MY_FORMATS = {
     MatDatepickerModule,
     MatNativeDateModule
   ],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  providers: [
+    { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
+    { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
+    { provide: DateAdapter, useClass: CustomDateAdapter }
+  ]
 })
 export class TaskListComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['select', 'title', 'category', 'status', 'priority', 'dueDate', 'actions'];
@@ -95,9 +102,9 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     },
     display: {
       dateInput: 'yyyy/MM/dd',
-      monthYearLabel: 'yyyy年MM月',
+      monthYearLabel: 'yyyy年M月',
       dateA11yLabel: 'yyyy/MM/dd',
-      monthYearA11yLabel: 'yyyy年MM月',
+      monthYearA11yLabel: 'yyyy年M月',
     },
   };
 
@@ -347,11 +354,43 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     this.editingField = null;
   }
 
-  async updateTaskField(task: any, field: string, value: any) {
-    try {
-      const updateData = {
-        [field]: value
+  onDateChange(task: any, event: any) {
+    const newDate = event.value;
+    if (newDate) {
+      // 日付をFirebase Timestampに変換
+      const timestamp = Timestamp.fromDate(newDate);
+      const updateData: Partial<Task> = {
+        dueDate: timestamp
       };
+      
+      this.taskService.updateTask(task.id, updateData)
+        .then(() => {
+          this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
+          this.loadTasks();
+        })
+        .catch(error => {
+          console.error('タスクの更新に失敗しました:', error);
+          this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
+        });
+    }
+    this.stopEditing();
+  }
+
+  async updateTaskField(task: any, field: keyof Task, value: any) {
+    try {
+      const updateData: Partial<Task> = {};
+      
+      if (field === 'dueDate') {
+        // dueDateフィールドの場合は、DateオブジェクトをFirebase Timestampに変換
+        if (value instanceof Date) {
+          updateData.dueDate = Timestamp.fromDate(value);
+        } else if (value instanceof Timestamp) {
+          updateData.dueDate = value;
+        }
+      } else {
+        updateData[field] = value;
+      }
+
       await this.taskService.updateTask(task.id, updateData);
       this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
       this.loadTasks();
@@ -363,20 +402,35 @@ export class TaskListComponent implements OnInit, AfterViewInit {
 
   onFieldChange(task: any, field: string, event: any) {
     const value = event.target.value;
-    this.updateTaskField(task, field, value);
+    this.updateTaskField(task, field as keyof Task, value);
     this.stopEditing();
   }
 
   onSelectChange(task: any, field: string, event: any) {
     const value = event.value;
-    this.updateTaskField(task, field, value);
+    this.updateTaskField(task, field as keyof Task, value);
     this.stopEditing();
   }
 
-  onDateChange(task: any, event: any) {
-    const newDate = event.value;
-    const timestamp = Timestamp.fromDate(newDate);
-    this.updateTaskField(task, 'dueDate', timestamp);
-    this.stopEditing();
+  convertTimestampToDate(timestamp: any): Date | null {
+    if (!timestamp) return null;
+    
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
+    }
+    if (timestamp && typeof timestamp.toDate === 'function') {
+      return timestamp.toDate();
+    }
+    if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
+      return new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
+    }
+    if (timestamp instanceof Date) {
+      return timestamp;
+    }
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp);
+    }
+    console.warn('Invalid timestamp format:', timestamp);
+    return null;
   }
 } 

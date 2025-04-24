@@ -76,5 +76,24 @@
   border-width: 0 0 1.5px 1.5px !important;
 }
 
+/* デートピッカーのカスタマイズ */
+.mat-calendar-body-cell-content {
+  &::after {
+    content: '' !important;
+  }
+}
+
+.mat-calendar-period-button {
+  &::after {
+    content: '' !important;
+  }
+}
+
+.mat-calendar-table-header th {
+  &::after {
+    content: '' !important;
+  }
+}
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

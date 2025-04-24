@@ -8,9 +8,18 @@ export interface Task {
   priority: '低' | '中' | '高';
   category: string;
   assignedTo: string;
-  dueDate: Timestamp;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  dueDate: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  createdAt: {
+    seconds: number;
+    nanoseconds: number;
+  };
+  updatedAt: {
+    seconds: number;
+    nanoseconds: number;
+  };
   userId: string;
   calendarEventId?: string;
 } 

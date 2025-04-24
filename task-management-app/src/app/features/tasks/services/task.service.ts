@@ -30,6 +30,8 @@ export class TaskService {
 
   async updateTask(id: string, task: Partial<Task>): Promise<void> {
     const taskDoc = doc(this.firestore, 'tasks', id);
+    
+    // TimestampオブジェクトをFirestoreの形式に変換
     const updateData = {
       ...task,
       updatedAt: {
@@ -37,6 +39,15 @@ export class TaskService {
         nanoseconds: 0
       }
     };
+
+    // dueDateがTimestampオブジェクトの場合は変換
+    if (task.dueDate instanceof Timestamp) {
+      updateData.dueDate = {
+        seconds: task.dueDate.seconds,
+        nanoseconds: task.dueDate.nanoseconds
+      };
+    }
+
     await updateDoc(taskDoc, updateData);
   }
 

@@ -79,7 +79,18 @@
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>タイトル</th>
         <td mat-cell *matCellDef="let task">
-          <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'title'; else editTitle">
+            <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
+          </div>
+          <ng-template #editTitle>
+            <div class="edit-field">
+              <input type="text"
+                     [value]="task.title"
+                     (blur)="onFieldChange(task, 'title', $event)"
+                     (keyup.enter)="onFieldChange(task, 'title', $event)"
+                     class="title-input">
+            </div>
+          </ng-template>
         </td>
       </ng-container>
 
@@ -157,28 +168,30 @@
       <ng-container matColumnDef="dueDate">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>期限</th>
         <td mat-cell *matCellDef="let task">
-          <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-            <span class="editable-field" (click)="startEditing(task, 'dueDate')">
-              {{ task.dueDate.toDate() | date:'yyyy/MM/dd' }}
-            </span>
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'"
+               (click)="startEditing(task, 'dueDate')"
+               class="editable-field">
+            <ng-container *ngIf="task.dueDate">
+              {{ task.dueDate.seconds ? (convertTimestampToDate(task.dueDate) | date:'yyyy/MM/dd') : '未設定' }}
+            </ng-container>
+            <ng-container *ngIf="!task.dueDate">未設定</ng-container>
           </div>
-          <ng-template #editDueDate>
-            <mat-form-field class="edit-field">
+          <div *ngIf="editingTask?.id === task.id && editingField === 'dueDate'"
+               class="edit-field">
+            <mat-form-field>
               <input matInput
-                [matDatepicker]="picker"
-                [value]="task.dueDate.toDate()"
-                (dateChange)="onDateChange(task, $event)"
-                (blur)="stopEditing()"
-                [matDatepickerFilter]="filterDates">
+                     [matDatepicker]="picker"
+                     [value]="task.dueDate ? convertTimestampToDate(task.dueDate) : null"
+                     (dateChange)="onDateChange(task, $event)">
               <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-              <mat-datepicker #picker [startView]="'month'" [startAt]="task.dueDate.toDate()" [dateFormats]="dateFormat"></mat-datepicker>
+              <mat-datepicker #picker></mat-datepicker>
             </mat-form-field>
-          </ng-template>
+          </div>
         </td>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>操作</th>
+        <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let task">
           <div class="action-buttons">
             <button mat-button color="primary" (click)="viewTask(task)">詳細</button>

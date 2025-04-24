@@ -17,11 +17,11 @@ export class CalendarService {
         summary: task.title,
         description: task.description,
         start: {
-          dateTime: task.dueDate.toDate().toISOString(),
+          dateTime: new Date(task.dueDate.seconds * 1000).toISOString(),
           timeZone: 'Asia/Tokyo'
         },
         end: {
-          dateTime: new Date(task.dueDate.toDate().getTime() + 60 * 60 * 1000).toISOString(), // 1時間後
+          dateTime: new Date(task.dueDate.seconds * 1000 + 60 * 60 * 1000).toISOString(), // 1時間後
           timeZone: 'Asia/Tokyo'
         },
         reminders: {
@@ -49,11 +49,11 @@ export class CalendarService {
         summary: task.title,
         description: task.description,
         start: {
-          dateTime: task.dueDate.toDate().toISOString(),
+          dateTime: new Date(task.dueDate.seconds * 1000).toISOString(),
           timeZone: 'Asia/Tokyo'
         },
         end: {
-          dateTime: new Date(task.dueDate.toDate().getTime() + 60 * 60 * 1000).toISOString(),
+          dateTime: new Date(task.dueDate.seconds * 1000 + 60 * 60 * 1000).toISOString(),
           timeZone: 'Asia/Tokyo'
         }
       };
