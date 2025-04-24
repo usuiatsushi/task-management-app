@@ -97,22 +97,56 @@
     border-spacing: 0;
   }
 
-  tr {
+  th, td {
     height: 48px !important;
+    padding: 0 8px !important;
+    vertical-align: middle !important;
+    line-height: 48px !important;
+  }
+
+  th {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
   }
 
   td {
-    height: 48px !important;
-    padding: 4px 8px !important;
-    vertical-align: middle !important;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
   }
 
   .mat-column-select {
     width: 50px;
+    padding: 0 !important;
+
+    ::ng-deep {
+      .mdc-checkbox {
+        padding: 0;
+        margin: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+      }
+    }
+  }
+
+  th.mat-column-select {
+    ::ng-deep {
+      .mdc-checkbox {
+        margin-top: 0;
+      }
+    }
+  }
+
+  td.mat-column-select,
+  th.mat-column-select {
+    padding: 0 !important;
+    vertical-align: middle !important;
   }
 
   .mat-column-title {
     width: 300px;
+    padding-left: 0 !important;
   }
 
   .mat-column-category {
@@ -138,10 +172,11 @@
       height: 48px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       font-size: 14px;
       color: rgba(0, 0, 0, 0.87);
       cursor: pointer;
+      padding-left: 8px;
     }
 
     .edit-field {
@@ -194,15 +229,21 @@
           .mat-datepicker-toggle {
             position: absolute;
             right: 0;
-            top: 0;
+            top: 50%;
+            transform: translateY(-50%);
             width: 40px;
-            height: 48px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0;
             padding: 0;
             z-index: 2;
+
+            .mat-datepicker-toggle-default-icon {
+              width: 20px;
+              height: 20px;
+            }
           }
 
           .mdc-line-ripple,
@@ -221,6 +262,18 @@
   .mat-column-actions {
     width: 120px;
     text-align: right;
+  }
+
+  .task-title-link {
+    display: inline-flex;
+    align-items: center;
+    height: 48px;
+  }
+
+  td.mat-column-category,
+  td.mat-column-status,
+  td.mat-column-priority {
+    white-space: nowrap;
   }
 }
 
