@@ -19,6 +19,8 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 // NgRx
 import { StoreModule } from '@ngrx/store';
@@ -38,27 +40,14 @@ import { TaskFormComponent } from './features/tasks/components/task-form/task-fo
 import { TaskDetailComponent } from './features/tasks/components/task-detail/task-detail.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    TaskListComponent,
-    TaskFormComponent,
-    TaskDetailComponent
-  ],
+  declarations: [],
   imports: [
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule.forRoot([
-      { path: '', redirectTo: '/tasks', pathMatch: 'full' },
-      { path: 'tasks', component: TaskListComponent },
-      { path: 'tasks/new', component: TaskFormComponent },
-      { path: 'tasks/:id', component: TaskDetailComponent },
-      { path: 'tasks/:id/edit', component: TaskFormComponent }
-    ]),
-
-    // Angular Material
+    RouterModule,
     MatButtonModule,
     MatCardModule,
     MatInputModule,
@@ -72,7 +61,11 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule,
-
+    MatProgressBarModule,
+    MatCheckboxModule,
+    TaskListComponent,
+    TaskFormComponent,
+    TaskDetailComponent,
     // NgRx
     StoreModule.forRoot({ tasks: taskReducer }),
     EffectsModule.forRoot([TaskEffects]),
@@ -86,6 +79,6 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
     AngularFirestoreModule
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  exports: []
 })
 export class AppModule { } 

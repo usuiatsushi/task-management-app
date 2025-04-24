@@ -14,8 +14,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { TaskService } from '../../services/task.service';
 import { CategoryService } from '../../services/category.service';
+import { CalendarService } from '../../services/calendar.service';
 
 @Component({
   selector: 'app-task-form',
@@ -35,7 +37,8 @@ import { CategoryService } from '../../services/category.service';
     MatButtonModule,
     MatSnackBarModule,
     MatDividerModule,
-    MatIconModule
+    MatIconModule,
+    MatTooltipModule
   ]
 })
 export class TaskFormComponent implements OnInit {
@@ -44,7 +47,6 @@ export class TaskFormComponent implements OnInit {
   taskId: string | null = null;
   loading = false;
   categories: string[] = [];
-  newCategoryName: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -54,7 +56,8 @@ export class TaskFormComponent implements OnInit {
     private snackBar: MatSnackBar,
     private taskService: TaskService,
     private categoryService: CategoryService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private calendarService: CalendarService
   ) {
     this.taskForm = this.fb.group({
       title: ['', Validators.required],
@@ -63,7 +66,8 @@ export class TaskFormComponent implements OnInit {
       status: ['未着手', Validators.required],
       priority: ['中', Validators.required],
       dueDate: [new Date(), Validators.required],
-      assignedTo: ['', Validators.required]
+      assignedTo: ['', Validators.required],
+      newCategoryName: ['']
     });
   }
 
@@ -130,21 +134,24 @@ export class TaskFormComponent implements OnInit {
     if (this.taskForm.valid) {
       try {
         this.loading = true;
-        const now = new Date();
         const taskData = {
           ...this.taskForm.value,
           dueDate: this.taskForm.value.dueDate,
-          createdAt: this.isEditMode ? this.taskForm.value.createdAt : now,
-          updatedAt: now
+          updatedAt: new Date()
         };
 
         if (this.isEditMode && this.taskId) {
           const taskRef = doc(this.firestore, 'tasks', this.taskId);
           await updateDoc(taskRef, taskData);
+          await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
           this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
         } else {
           const tasksRef = collection(this.firestore, 'tasks');
-          await addDoc(tasksRef, taskData);
+          const docRef = await addDoc(tasksRef, {
+            ...taskData,
+            createdAt: new Date()
+          });
+          await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
           this.snackBar.open('タスクを作成しました', '閉じる', { duration: 3000 });
         }
 
@@ -158,15 +165,22 @@ export class TaskFormComponent implements OnInit {
     }
   }
 
-  async addNewCategory() {
-    if (this.newCategoryName && !this.categories.includes(this.newCategoryName)) {
-      try {
-        await this.categoryService.addCategory(this.newCategoryName);
-        this.taskForm.patchValue({ category: this.newCategoryName });
-        this.newCategoryName = '';
-        this.snackBar.open('カテゴリを追加しました', '閉じる', { duration: 3000 });
-      } catch (error) {
-        this.snackBar.open('カテゴリの追加に失敗しました', '閉じる', { duration: 3000 });
+  addNewCategory(): void {
+    const newCategory = this.taskForm.get('newCategoryName')?.value;
+    if (newCategory && !this.categories.includes(newCategory)) {
+      this.categories.push(newCategory);
+      this.taskForm.patchValue({ category: newCategory });
+      this.taskForm.get('newCategoryName')?.reset();
+    }
+  }
+
+  onCalendarSync() {
+    if (this.taskForm.valid) {
+      const taskData = this.taskForm.value;
+      if (this.isEditMode && this.taskId) {
+        this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
+      } else {
+        this.calendarService.addTaskToCalendar(taskData);
       }
     }
   }

@@ -63,8 +63,8 @@
         font-size: 0.9em;
 
         &.status {
-          &.未対応 { background: #ffebee; color: #c62828; }
-          &.対応中 { background: #fff3e0; color: #ef6c00; }
+          &.未着手 { background: #f5f5f5; color: #757575; }
+          &.進行中 { background: #e3f2fd; color: #1976d2; }
           &.完了 { background: #e8f5e9; color: #2e7d32; }
         }
 
@@ -77,6 +77,36 @@
         &.due-date {
           color: #666;
         }
+      }
+    }
+
+    .progress-section {
+      margin-bottom: 20px;
+      padding: 16px;
+      background: #f5f5f5;
+      border-radius: 4px;
+
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+
+        h3 {
+          margin: 0;
+          font-size: 1em;
+          color: #333;
+        }
+
+        .progress-percentage {
+          font-weight: 500;
+          color: #666;
+        }
+      }
+
+      .progress-bar {
+        height: 8px;
+        border-radius: 4px;
       }
     }
 

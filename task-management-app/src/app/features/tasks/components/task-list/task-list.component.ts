@@ -20,6 +20,27 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { NotificationService } from '../../services/notification.service';
+import { BulkEditDialogComponent } from '../bulk-edit-dialog/bulk-edit-dialog.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSelect } from '@angular/material/select';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { Timestamp } from 'firebase/firestore';
+
+const MY_FORMATS = {
+  parse: {
+    dateInput: 'yyyy/MM/dd',
+  },
+  display: {
+    dateInput: 'yyyy/MM/dd',
+    monthYearLabel: 'yyyy年MM月',
+    dateA11yLabel: 'yyyy/MM/dd',
+    monthYearA11yLabel: 'yyyy年MM月',
+  },
+};
 
 @Component({
   selector: 'app-task-list',
@@ -39,18 +60,50 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
     MatTableModule,
     MatSortModule,
     MatPaginatorModule,
-    MatDialogModule
-  ]
+    MatDialogModule,
+    MatCheckboxModule,
+    MatMenuModule,
+    MatDatepickerModule,
+    MatNativeDateModule
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskListComponent implements OnInit, AfterViewInit {
-  displayedColumns: string[] = ['title', 'category', 'status', 'priority', 'dueDate', 'actions'];
+  displayedColumns: string[] = ['select', 'title', 'category', 'status', 'priority', 'dueDate', 'actions'];
   dataSource = new MatTableDataSource<any>();
   loading = false;
   filterForm: FormGroup;
   searchControl: FormControl;
+  selectedTasks: any[] = [];
+  editingTask: any = null;
+  editingField: string | null = null;
+  categories: string[] = [];
+
+  // 選択肢の定義
+  statusOptions = ['未着手', '進行中', '完了'];
+  priorityOptions = ['低', '中', '高'];
+
+  // 日付フィルター
+  filterDates = (d: Date | null): boolean => {
+    return true;
+  };
+
+  // 日付フォーマット
+  dateFormat = {
+    parse: {
+      dateInput: 'yyyy/MM/dd',
+    },
+    display: {
+      dateInput: 'yyyy/MM/dd',
+      monthYearLabel: 'yyyy年MM月',
+      dateA11yLabel: 'yyyy/MM/dd',
+      monthYearA11yLabel: 'yyyy年MM月',
+    },
+  };
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild('categorySelect') categorySelect!: MatSelect;
 
   constructor(
     private taskService: TaskService,
@@ -58,7 +111,8 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private notificationService: NotificationService
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -72,6 +126,9 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.loadTasks();
     this.setupFilterForm();
+    this.categoryService.categories$.subscribe(categories => {
+      this.categories = categories;
+    });
   }
 
   ngAfterViewInit(): void {
@@ -91,6 +148,7 @@ export class TaskListComponent implements OnInit, AfterViewInit {
       const tasks = await this.taskService.getTasks();
       this.dataSource.data = tasks;
       this.dataSource.filterPredicate = this.createFilter();
+      this.notificationService.checkTaskDeadlines(tasks);
     } catch (error) {
       console.error('タスクの読み込みに失敗しました:', error);
       this.snackBar.open('タスクの読み込みに失敗しました', '閉じる', { duration: 3000 });
@@ -114,8 +172,7 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   }
 
   getUniqueCategories(): string[] {
-    const categories = this.dataSource.data.map(task => task.category);
-    return [...new Set(categories)];
+    return this.categories;
   }
 
   getStatusClass(status: string): string {
@@ -184,5 +241,142 @@ export class TaskListComponent implements OnInit, AfterViewInit {
         }
       }
     });
+  }
+
+  isSelected(task: any): boolean {
+    return this.selectedTasks.some(t => t.id === task.id);
+  }
+
+  isAllSelected(): boolean {
+    return this.dataSource.data.length === this.selectedTasks.length;
+  }
+
+  isSomeSelected(): boolean {
+    return this.selectedTasks.length > 0 && this.selectedTasks.length < this.dataSource.data.length;
+  }
+
+  toggleTaskSelection(task: any): void {
+    const index = this.selectedTasks.findIndex(t => t.id === task.id);
+    if (index === -1) {
+      this.selectedTasks.push(task);
+    } else {
+      this.selectedTasks.splice(index, 1);
+    }
+  }
+
+  toggleAllSelection(event: any): void {
+    if (event.checked) {
+      this.selectedTasks = [...this.dataSource.data];
+    } else {
+      this.selectedTasks = [];
+    }
+  }
+
+  async openBulkEditDialog(): Promise<void> {
+    const dialogRef = this.dialog.open(BulkEditDialogComponent, {
+      data: { tasks: this.selectedTasks }
+    });
+
+    const result = await dialogRef.afterClosed().toPromise();
+    if (result) {
+      try {
+        this.loading = true;
+        const updates = {
+          ...result,
+          updatedAt: Timestamp.now()
+        };
+
+        await Promise.all(
+          this.selectedTasks.map(task =>
+            this.taskService.updateTask(task.id, updates)
+          )
+        );
+
+        this.snackBar.open(`${this.selectedTasks.length}件のタスクを更新しました`, '閉じる', { duration: 3000 });
+        this.selectedTasks = [];
+        await this.loadTasks();
+      } catch (error) {
+        console.error('タスクの一括更新に失敗しました:', error);
+        this.snackBar.open('タスクの一括更新に失敗しました', '閉じる', { duration: 3000 });
+      } finally {
+        this.loading = false;
+      }
+    }
+  }
+
+  async openBulkDeleteDialog(): Promise<void> {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'タスクの一括削除',
+        message: `選択された${this.selectedTasks.length}件のタスクを削除してもよろしいですか？`,
+        confirmText: '削除',
+        cancelText: 'キャンセル'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result) {
+        try {
+          this.loading = true;
+          await Promise.all(
+            this.selectedTasks.map(task =>
+              this.taskService.deleteTask(task.id)
+            )
+          );
+
+          this.snackBar.open(`${this.selectedTasks.length}件のタスクを削除しました`, '閉じる', { duration: 3000 });
+          this.selectedTasks = [];
+          await this.loadTasks();
+        } catch (error) {
+          console.error('タスクの一括削除に失敗しました:', error);
+          this.snackBar.open('タスクの一括削除に失敗しました', '閉じる', { duration: 3000 });
+        } finally {
+          this.loading = false;
+        }
+      }
+    });
+  }
+
+  startEditing(task: any, field: string) {
+    this.editingTask = task;
+    this.editingField = field;
+  }
+
+  stopEditing() {
+    this.editingTask = null;
+    this.editingField = null;
+  }
+
+  async updateTaskField(task: any, field: string, value: any) {
+    try {
+      const updateData = {
+        [field]: value
+      };
+      await this.taskService.updateTask(task.id, updateData);
+      this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
+      this.loadTasks();
+    } catch (error) {
+      console.error('タスクの更新に失敗しました:', error);
+      this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  onFieldChange(task: any, field: string, event: any) {
+    const value = event.target.value;
+    this.updateTaskField(task, field, value);
+    this.stopEditing();
+  }
+
+  onSelectChange(task: any, field: string, event: any) {
+    const value = event.value;
+    this.updateTaskField(task, field, value);
+    this.stopEditing();
+  }
+
+  onDateChange(task: any, event: any) {
+    const newDate = event.value;
+    const timestamp = Timestamp.fromDate(newDate);
+    this.updateTaskField(task, 'dueDate', timestamp);
+    this.stopEditing();
   }
 } 

@@ -1,17 +1,29 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Firestore, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
 import { TaskService } from '../../services/task.service';
 import { Task } from '../../models/task.model';
 import { Timestamp } from 'firebase/firestore';
 import { CommonModule } from '@angular/common';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-task-detail',
   templateUrl: './task-detail.component.html',
   styleUrls: ['./task-detail.component.scss'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [
+    CommonModule,
+    MatProgressBarModule,
+    RouterModule,
+    MatDialogModule,
+    MatSnackBarModule
+  ]
 })
 export class TaskDetailComponent implements OnInit {
   task: (Task & { dueDate: Date; createdAt: Date; updatedAt: Date }) | null = null;
@@ -21,7 +33,9 @@ export class TaskDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) { }
 
   async ngOnInit() {
@@ -78,15 +92,54 @@ export class TaskDetailComponent implements OnInit {
   async deleteTask() {
     if (!this.task?.id) return;
     
-    this.deleting = true;
-    try {
-      const taskRef = doc(this.firestore, 'tasks', this.task.id);
-      await deleteDoc(taskRef);
-      this.router.navigate(['/tasks']);
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    } finally {
-      this.deleting = false;
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'タスクの削除',
+        message: `「${this.task.title}」を削除してもよろしいですか？`,
+        confirmText: '削除',
+        cancelText: 'キャンセル'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(async result => {
+      if (result) {
+        this.deleting = true;
+        try {
+          const taskRef = doc(this.firestore, 'tasks', this.task!.id);
+          await deleteDoc(taskRef);
+          this.snackBar.open('タスクを削除しました', '閉じる', { duration: 3000 });
+          this.router.navigate(['/tasks']);
+        } catch (error) {
+          console.error('Error deleting task:', error);
+          this.snackBar.open('タスクの削除に失敗しました', '閉じる', { duration: 3000 });
+        } finally {
+          this.deleting = false;
+        }
+      }
+    });
+  }
+
+  getProgressPercentage(): number {
+    switch (this.task?.status) {
+      case '未着手':
+        return 0;
+      case '進行中':
+        return 50;
+      case '完了':
+        return 100;
+      default:
+        return 0;
+    }
+  }
+
+  getProgressColor(): string {
+    const percentage = this.getProgressPercentage();
+    if (percentage === 0) {
+      return 'warn';
+    } else if (percentage === 50) {
+      return 'accent';
+    } else {
+      return 'primary';
     }
   }
 } 

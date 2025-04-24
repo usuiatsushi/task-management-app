@@ -3,7 +3,7 @@
     <div class="task-header">
       <h1>{{ task.title }}</h1>
       <div class="task-actions">
-        <button class="edit-button" routerLink="edit">編集</button>
+        <button class="edit-button" [routerLink]="['/tasks', task.id, 'edit']">編集</button>
         <button class="delete-button" (click)="deleteTask()" [disabled]="deleting">
           {{ deleting ? '削除中...' : '削除' }}
         </button>
@@ -14,6 +14,19 @@
       <span class="status" [ngClass]="task.status">{{ task.status }}</span>
       <span class="priority" [ngClass]="task.priority">{{ task.priority }}</span>
       <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <h3>進捗状況</h3>
+        <span class="progress-percentage">{{ getProgressPercentage() }}%</span>
+      </div>
+      <mat-progress-bar
+        [mode]="'determinate'"
+        [value]="getProgressPercentage()"
+        [color]="getProgressColor()"
+        class="progress-bar">
+      </mat-progress-bar>
     </div>
 
     <div class="task-content">

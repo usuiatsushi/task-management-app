@@ -1,0 +1,38 @@
+<h2 mat-dialog-title>一括編集</h2>
+<div mat-dialog-content>
+  <form [formGroup]="editForm">
+    <mat-form-field>
+      <mat-label>ステータス</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="">変更なし</mat-option>
+        <mat-option value="未着手">未着手</mat-option>
+        <mat-option value="進行中">進行中</mat-option>
+        <mat-option value="完了">完了</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>優先度</mat-label>
+      <mat-select formControlName="priority">
+        <mat-option value="">変更なし</mat-option>
+        <mat-option value="低">低</mat-option>
+        <mat-option value="中">中</mat-option>
+        <mat-option value="高">高</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>カテゴリ</mat-label>
+      <mat-select formControlName="category">
+        <mat-option value="">変更なし</mat-option>
+        <mat-option *ngFor="let category of categories" [value]="category">
+          {{ category }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">キャンセル</button>
+  <button mat-button color="primary" (click)="onSave()">保存</button>
+</div> 

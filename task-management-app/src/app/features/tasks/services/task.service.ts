@@ -30,10 +30,14 @@ export class TaskService {
 
   async updateTask(id: string, task: Partial<Task>): Promise<void> {
     const taskDoc = doc(this.firestore, 'tasks', id);
-    await updateDoc(taskDoc, {
+    const updateData = {
       ...task,
-      updatedAt: Timestamp.now()
-    });
+      updatedAt: {
+        seconds: Math.floor(Date.now() / 1000),
+        nanoseconds: 0
+      }
+    };
+    await updateDoc(taskDoc, updateData);
   }
 
   async deleteTask(id: string): Promise<void> {
