@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, LOCALE_ID, Injectable } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -27,18 +27,33 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelect } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, NativeDateAdapter } from '@angular/material/core';
 import { Timestamp } from 'firebase/firestore';
+
+@Injectable()
+class CustomDateAdapter extends NativeDateAdapter {
+  override getDateNames(): string[] {
+    return Array.from(Array(31), (_, i) => `${i + 1}`);
+  }
+
+  override getMonthNames(style: 'long' | 'short' | 'narrow'): string[] {
+    return Array.from(Array(12), (_, i) => `${i + 1}`);
+  }
+
+  override getYearName(date: Date): string {
+    return `${date.getFullYear()}`;
+  }
+}
 
 const MY_FORMATS = {
   parse: {
     dateInput: 'yyyy/MM/dd',
   },
   display: {
-    dateInput: 'yyyy/MM/dd',
-    monthYearLabel: 'yyyy年MM月',
+    dateInput: 'yyyy/MM/d',
+    monthYearLabel: 'yyyy/MM',
     dateA11yLabel: 'yyyy/MM/dd',
-    monthYearA11yLabel: 'yyyy年MM月',
+    monthYearA11yLabel: 'yyyy/MM',
   },
 };
 
@@ -65,6 +80,11 @@ const MY_FORMATS = {
     MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule
+  ],
+  providers: [
+    { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
+    { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
+    { provide: DateAdapter, useClass: CustomDateAdapter }
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
