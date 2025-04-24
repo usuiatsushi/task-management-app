@@ -122,30 +122,22 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   };
 
   // TimestampをDateに変換するヘルパーメソッド
-  getDateFromTimestamp(timestamp: Timestamp | Date | any): Date {
-    try {
-      if (!timestamp) {
-        return new Date();
-      }
+  getDateFromTimestamp(timestamp: any): Date {
+    if (!timestamp) return new Date();
 
-      if (timestamp instanceof Timestamp) {
-        const date = timestamp.toDate();
-        return isNaN(date.getTime()) ? new Date() : date;
-      } else if (timestamp instanceof Date) {
-        return isNaN(timestamp.getTime()) ? new Date() : timestamp;
-      } else if (timestamp && typeof timestamp.toDate === 'function') {
-        const date = timestamp.toDate();
-        return isNaN(date.getTime()) ? new Date() : date;
-      } else if (typeof timestamp === 'number' || typeof timestamp === 'string') {
-        const date = new Date(timestamp);
-        return isNaN(date.getTime()) ? new Date() : date;
-      } else {
-        return new Date();
-      }
-    } catch (error) {
-      console.error('日付の変換に失敗しました:', error);
-      return new Date();
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
     }
+
+    if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+      return new Timestamp(timestamp.seconds, timestamp.nanoseconds || 0).toDate();
+    }
+
+    if (timestamp instanceof Date) {
+      return timestamp;
+    }
+
+    return new Date(timestamp);
   }
 
   @ViewChild(MatSort) sort!: MatSort;
@@ -190,9 +182,11 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   }
 
   async loadTasks(): Promise<void> {
+    console.log('Loading tasks...');
     this.loading = true;
     try {
       const tasks = await this.taskService.getTasks();
+      console.log('Tasks loaded:', tasks);
       this.dataSource.data = tasks;
       this.dataSource.filterPredicate = this.createFilter();
       this.notificationService.checkTaskDeadlines(tasks);
@@ -201,6 +195,7 @@ export class TaskListComponent implements OnInit, AfterViewInit {
       this.snackBar.open('タスクの読み込みに失敗しました', '閉じる', { duration: 3000 });
     } finally {
       this.loading = false;
+      console.log('Task loading completed');
     }
   }
 
@@ -396,12 +391,18 @@ export class TaskListComponent implements OnInit, AfterViewInit {
 
   async updateTaskField(task: any, field: string, value: any) {
     try {
+      console.log(`Updating field "${field}" for task:`, task);
+      console.log('New value:', value);
+
       const updateData = {
         [field]: value
       };
+
       await this.taskService.updateTask(task.id, updateData);
       this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
-      this.loadTasks();
+      
+      // 更新後にタスクリストを再読み込み
+      await this.loadTasks();
     } catch (error) {
       console.error('タスクの更新に失敗しました:', error);
       this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
@@ -420,10 +421,28 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     this.stopEditing();
   }
 
-  onDateChange(task: any, event: any) {
+  async onDateChange(task: any, event: any) {
     const newDate = event.value;
-    const timestamp = Timestamp.fromDate(newDate);
-    this.updateTaskField(task, 'dueDate', timestamp);
-    this.stopEditing();
+    if (!newDate) return;
+
+    try {
+      console.log('Selected date:', newDate);
+      
+      // 日付をTimestamp形式のオブジェクトとして渡す
+      const timestamp = {
+        seconds: Math.floor(newDate.getTime() / 1000),
+        nanoseconds: 0
+      };
+      
+      console.log('Timestamp to be sent:', timestamp);
+      await this.updateTaskField(task, 'dueDate', timestamp);
+      
+      // 更新後にタスクリストを再読み込み
+      await this.loadTasks();
+      this.stopEditing();
+    } catch (error) {
+      console.error('日付の更新に失敗しました:', error);
+      this.snackBar.open('日付の更新に失敗しました', '閉じる', { duration: 3000 });
+    }
   }
 } 
