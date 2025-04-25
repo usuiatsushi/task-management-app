@@ -16,6 +16,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 describe('TaskFormComponent', () => {
   let component: TaskFormComponent;
@@ -35,6 +36,7 @@ describe('TaskFormComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [
+        TaskFormComponent,
         BrowserAnimationsModule,
         ReactiveFormsModule,
         MatCardModule,
@@ -43,9 +45,9 @@ describe('TaskFormComponent', () => {
         MatSelectModule,
         MatDatepickerModule,
         MatNativeDateModule,
-        MatButtonModule
+        MatButtonModule,
+        MatSnackBarModule
       ],
-      declarations: [TaskFormComponent],
       providers: [
         { provide: MatSnackBar, useValue: snackBarSpy },
         { provide: Router, useValue: routerSpy },
@@ -168,8 +170,13 @@ describe('TaskFormComponent', () => {
 
   describe('Form Submission', () => {
     it('should show error message when form is invalid', fakeAsync(() => {
+      component.taskForm.controls['title'].setValue('');
+      component.taskForm.controls['description'].setValue('');
+      component.taskForm.controls['category'].setValue('');
+      component.taskForm.controls['assignedTo'].setValue('');
+      
       component.onSubmit();
-      tick();
+      tick(100);
       
       expect(snackBar.open).toHaveBeenCalledWith(
         '入力内容に誤りがあります。エラーメッセージをご確認ください。',
@@ -186,20 +193,19 @@ describe('TaskFormComponent', () => {
 
   describe('Category Management', () => {
     it('should add new category', () => {
-      const newCategoryControl = component.taskForm.get('newCategoryName');
-      newCategoryControl?.setValue('新しいカテゴリ');
+      const newCategory = '新しいカテゴリ';
+      component.taskForm.controls['newCategoryName'].setValue(newCategory);
       component.addNewCategory();
       fixture.detectChanges();
 
-      expect(component.categories).toContain('新しいカテゴリ');
-      expect(component.taskForm.get('category')?.value).toBe('新しいカテゴリ');
-      expect(newCategoryControl?.value).toBe('');
+      expect(component.categories).toContain(newCategory);
+      expect(component.taskForm.get('category')?.value).toBe(newCategory);
+      expect(component.taskForm.get('newCategoryName')?.value).toBe('');
     });
 
     it('should not add duplicate category', () => {
       const initialLength = component.categories.length;
-      const newCategoryControl = component.taskForm.get('newCategoryName');
-      newCategoryControl?.setValue('カテゴリ1');
+      component.taskForm.controls['newCategoryName'].setValue('カテゴリ1');
       component.addNewCategory();
       fixture.detectChanges();
 
