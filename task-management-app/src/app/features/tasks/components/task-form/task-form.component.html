@@ -21,8 +21,7 @@
                     placeholder="タスクの説明を入力"
                     cdkTextareaAutosize
                     [cdkAutosizeMinRows]="3"
-                    [cdkAutosizeMaxRows]="10"
-                    [rows]="3"></textarea>
+                    [cdkAutosizeMaxRows]="10"></textarea>
           <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
             説明は必須です
           </mat-error>

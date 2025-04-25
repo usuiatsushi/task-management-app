@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc } from '@angular/fire/firestore';
@@ -58,7 +58,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private taskService: TaskService,
     private categoryService: CategoryService,
     private cdr: ChangeDetectorRef,
-    private calendarService: CalendarService
+    private calendarService: CalendarService,
+    private ngZone: NgZone
   ) {
     this.taskForm = this.fb.group({
       title: ['', Validators.required],
@@ -92,8 +93,12 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     // ビューの初期化後に変更検知を強制的に実行
-    setTimeout(() => {
-      this.cdr.detectChanges();
+    this.ngZone.runOutsideAngular(() => {
+      requestAnimationFrame(() => {
+        this.ngZone.run(() => {
+          this.cdr.detectChanges();
+        });
+      });
     });
   }
 

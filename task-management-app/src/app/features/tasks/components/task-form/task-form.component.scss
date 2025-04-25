@@ -35,26 +35,6 @@
     justify-content: flex-end;
     gap: 8px;
     margin-top: 16px;
-
-    .mat-icon-button {
-      width: 40px;
-      height: 40px;
-      line-height: 40px;
-
-      .mat-icon {
-        font-size: 24px;
-        width: 24px;
-        height: 24px;
-        line-height: 24px;
-      }
-    }
-
-    button {
-      svg {
-        vertical-align: middle;
-        color: inherit;
-      }
-    }
   }
 
   .category-section {
@@ -73,87 +53,6 @@
   .new-category-input {
     flex: 1;
   }
-
-  // Material Form Field Styles
-  .mat-mdc-form-field {
-    width: 100%;
-    
-    .mdc-text-field {
-      padding: 0;
-      background-color: white;
-    }
-
-    .mat-mdc-form-field-flex {
-      padding: 0 12px;
-      min-height: 48px;
-    }
-
-    .mat-mdc-form-field-infix {
-      padding: 8px 0;
-      min-height: 48px;
-    }
-
-    // Input styles
-    input.mat-mdc-input-element,
-    textarea.mat-mdc-input-element {
-      margin: 0;
-      padding: 8px 0;
-      line-height: 1.5;
-    }
-
-    // Textarea specific styles
-    textarea.mat-mdc-input-element {
-      min-height: 24px;
-      padding-top: 8px;
-      resize: vertical;
-    }
-
-    // Floating label styles
-    .mdc-floating-label {
-      top: 50%;
-      transform: translateY(-50%);
-      transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    &.mdc-text-field--focused .mdc-floating-label,
-    &.mdc-text-field--filled .mdc-floating-label {
-      top: 0;
-      transform: translateY(-50%) scale(0.75);
-    }
-
-    .mat-mdc-form-field-flex {
-      align-items: center;
-    }
-
-    .mat-mdc-text-field-wrapper {
-      padding-top: 0;
-    }
-
-    // Outline styles
-    .mdc-notched-outline {
-      &__leading,
-      &__notch,
-      &__trailing {
-        border-width: 1px;
-        border-color: rgba(0, 0, 0, 0.24);
-      }
-
-      &__notch {
-        border-right: none;
-      }
-    }
-
-    // Select styles
-    .mat-mdc-select {
-      padding: 8px 0;
-    }
-
-    // Error styles
-    .mat-mdc-form-field-error-wrapper {
-      padding: 4px 0;
-      font-size: 12px;
-    }
-  }
 }
 
 :host {
@@ -169,7 +68,7 @@
             height: 56px;
             padding: 0 12px;
             align-items: center;
-  }
+          }
 
           .mat-mdc-form-field-infix {
             padding: 0;
@@ -210,21 +109,14 @@
       .mdc-floating-label {
         top: 50%;
         transform: translateY(-50%);
-        transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+        background: white;
+        padding: 0 4px;
+        margin-left: -4px;
       }
 
-      &.mdc-text-field--focused .mdc-floating-label,
-      &.mdc-text-field--filled .mdc-floating-label {
+      .mdc-floating-label--float-above {
         top: 0;
         transform: translateY(-50%) scale(0.75);
-      }
-
-      .mat-mdc-form-field-flex {
-        align-items: center;
-      }
-
-      .mat-mdc-text-field-wrapper {
-        padding-top: 0;
       }
 
       .mdc-notched-outline {
@@ -239,21 +131,6 @@
           border-right: none;
         }
       }
-    }
-
-    .mat-icon {
-      font-family: 'Material Icons';
-      font-weight: normal;
-      font-style: normal;
-      font-size: 24px;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
-      display: inline-block;
-      white-space: nowrap;
-      word-wrap: normal;
-      direction: ltr;
-      -webkit-font-smoothing: antialiased;
     }
   }
 }
