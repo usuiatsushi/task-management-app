@@ -1,70 +1,87 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { TaskFormComponent } from './task-form.component';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Firestore } from '@angular/fire/firestore';
-import { TaskService } from '../../services/task.service';
-import { CategoryService } from '../../services/category.service';
-import { CalendarService } from '../../services/calendar.service';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
-import { MatCardModule } from '@angular/material/card';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterTestingModule } from '@angular/router/testing';
+import { Firestore } from '@angular/fire/firestore';
+import { CalendarService } from '../../../../core/services/calendar.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
 
 describe('TaskFormComponent', () => {
   let component: TaskFormComponent;
   let fixture: ComponentFixture<TaskFormComponent>;
-  let snackBar: jasmine.SpyObj<MatSnackBar>;
-  let router: jasmine.SpyObj<Router>;
-  let categoryService: jasmine.SpyObj<CategoryService>;
+  let mockFirestore: any;
+  let mockCalendarService: any;
+  let mockSnackBar: any;
+  let mockRouter: any;
 
   beforeEach(async () => {
-    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
-    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
-    const categoryServiceSpy = jasmine.createSpyObj('CategoryService', [], {
-      categories$: of(['カテゴリ1', 'カテゴリ2'])
-    });
-    const taskServiceSpy = jasmine.createSpyObj('TaskService', ['createTask', 'updateTask']);
-    const calendarServiceSpy = jasmine.createSpyObj('CalendarService', ['addTaskToCalendar', 'updateCalendarEvent']);
+    mockFirestore = {
+      collection: jasmine.createSpy('collection').and.returnValue({
+        doc: jasmine.createSpy('doc').and.returnValue({
+          get: jasmine.createSpy('get').and.returnValue(Promise.resolve({
+            exists: true,
+            data: () => ({
+              title: 'テストタスク',
+              description: 'テスト説明',
+              category: 'テストカテゴリ',
+              status: '未着手',
+              priority: '中',
+              dueDate: new Date(),
+              assignedTo: 'テスト担当者'
+            })
+          }))
+        })
+      })
+    };
+
+    mockCalendarService = {
+      addTaskToCalendar: jasmine.createSpy('addTaskToCalendar').and.returnValue(Promise.resolve()),
+      updateCalendarEvent: jasmine.createSpy('updateCalendarEvent').and.returnValue(Promise.resolve())
+    };
+
+    mockSnackBar = {
+      open: jasmine.createSpy('open')
+    };
+
+    mockRouter = {
+      navigate: jasmine.createSpy('navigate')
+    };
 
     await TestBed.configureTestingModule({
+      declarations: [TaskFormComponent],
       imports: [
-        TaskFormComponent,
-        BrowserAnimationsModule,
         ReactiveFormsModule,
-        MatCardModule,
+        FormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatSelectModule,
         MatDatepickerModule,
         MatNativeDateModule,
         MatButtonModule,
-        MatSnackBarModule
+        MatIconModule,
+        MatSnackBarModule,
+        NoopAnimationsModule,
+        RouterTestingModule
       ],
       providers: [
-        { provide: MatSnackBar, useValue: snackBarSpy },
-        { provide: Router, useValue: routerSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
-        { provide: Firestore, useValue: {} },
-        { provide: TaskService, useValue: taskServiceSpy },
-        { provide: CategoryService, useValue: categoryServiceSpy },
-        { provide: CalendarService, useValue: calendarServiceSpy }
+        { provide: Firestore, useValue: mockFirestore },
+        { provide: CalendarService, useValue: mockCalendarService },
+        { provide: MatSnackBar, useValue: mockSnackBar },
+        { provide: Router, useValue: mockRouter }
       ]
     }).compileComponents();
 
-    snackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
-    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
-    categoryService = TestBed.inject(CategoryService) as jasmine.SpyObj<CategoryService>;
-  });
-
-  beforeEach(() => {
     fixture = TestBed.createComponent(TaskFormComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -74,142 +91,160 @@ describe('TaskFormComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  describe('Form Validation', () => {
-    describe('Title Field', () => {
-      it('should show required error when empty', () => {
-        const titleControl = component.taskForm.get('title');
-        titleControl?.setValue('');
-        titleControl?.markAsTouched();
-        fixture.detectChanges();
-        
-        expect(titleControl?.errors?.['required']).toBeTruthy();
-        expect(component.getErrorMessage('title')).toBe('タイトルは必須です');
-      });
-
-      it('should show min length error when title is too short', () => {
-        const titleControl = component.taskForm.get('title');
-        titleControl?.setValue('ab');
-        titleControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(titleControl?.errors?.['minlength']).toBeTruthy();
-        expect(component.getErrorMessage('title')).toBe('タイトルは3文字以上で入力してください');
-      });
-
-      it('should show max length error when title is too long', () => {
-        const titleControl = component.taskForm.get('title');
-        titleControl?.setValue('a'.repeat(51));
-        titleControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(titleControl?.errors?.['maxlength']).toBeTruthy();
-        expect(component.getErrorMessage('title')).toBe('タイトルは50文字以下で入力してください');
-      });
-
-      it('should show invalid characters error', () => {
-        const titleControl = component.taskForm.get('title');
-        titleControl?.setValue('test<>test');
-        titleControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(titleControl?.errors?.['invalidChars']).toBeTruthy();
-        expect(component.getErrorMessage('title')).toBe('特殊文字（<>）は使用できません');
-      });
-    });
-
-    describe('Description Field', () => {
-      it('should show required error when empty', () => {
-        const descControl = component.taskForm.get('description');
-        descControl?.setValue('');
-        descControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(descControl?.errors?.['required']).toBeTruthy();
-        expect(component.getErrorMessage('description')).toBe('説明は必須です');
-      });
-
-      it('should show max length error when description is too long', () => {
-        const descControl = component.taskForm.get('description');
-        descControl?.setValue('a'.repeat(1001));
-        descControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(descControl?.errors?.['maxlength']).toBeTruthy();
-        expect(component.getErrorMessage('description')).toBe('説明は1000文字以下で入力してください');
-      });
-    });
-
-    describe('Due Date Field', () => {
-      it('should show past date error', () => {
-        const pastDate = new Date();
-        pastDate.setDate(pastDate.getDate() - 1);
-        
-        const dueDateControl = component.taskForm.get('dueDate');
-        dueDateControl?.setValue(pastDate);
-        dueDateControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(dueDateControl?.errors?.['pastDate']).toBeTruthy();
-        expect(component.getErrorMessage('dueDate')).toBe('過去の日付は選択できません');
-      });
-
-      it('should show future date error', () => {
-        const futureDate = new Date();
-        futureDate.setFullYear(futureDate.getFullYear() + 2);
-        
-        const dueDateControl = component.taskForm.get('dueDate');
-        dueDateControl?.setValue(futureDate);
-        dueDateControl?.markAsTouched();
-        fixture.detectChanges();
-
-        expect(dueDateControl?.errors?.['futureDate']).toBeTruthy();
-        expect(component.getErrorMessage('dueDate')).toBe('1年以上先の日付は選択できません');
-      });
-    });
+  it('should initialize form with empty values', () => {
+    expect(component.taskForm.get('title')?.value).toBe('');
+    expect(component.taskForm.get('description')?.value).toBe('');
+    expect(component.taskForm.get('category')?.value).toBe('');
+    expect(component.taskForm.get('status')?.value).toBe('未着手');
+    expect(component.taskForm.get('priority')?.value).toBe('中');
+    expect(component.taskForm.get('dueDate')?.value).toBeNull();
+    expect(component.taskForm.get('assignedTo')?.value).toBe('');
   });
 
-  describe('Form Submission', () => {
-    it('should show error message when form is invalid', fakeAsync(() => {
-      component.taskForm.controls['title'].setValue('');
-      component.taskForm.controls['description'].setValue('');
-      component.taskForm.controls['category'].setValue('');
-      component.taskForm.controls['assignedTo'].setValue('');
-      
-      component.onSubmit();
-      tick(100);
-      
-      expect(snackBar.open).toHaveBeenCalledWith(
-        '入力内容に誤りがあります。エラーメッセージをご確認ください。',
-        '閉じる',
-        jasmine.any(Object)
-      );
-    }));
-
-    it('should navigate to tasks list on cancel', () => {
-      component.onCancel();
-      expect(router.navigate).toHaveBeenCalledWith(['/tasks']);
-    });
+  it('should validate title field', () => {
+    const titleControl = component.taskForm.get('title');
+    
+    // 空の場合はエラー
+    titleControl?.setValue('');
+    expect(titleControl?.valid).toBeFalsy();
+    expect(titleControl?.errors?.['required']).toBeTruthy();
+    
+    // 2文字以下の場合はエラー
+    titleControl?.setValue('ab');
+    expect(titleControl?.valid).toBeFalsy();
+    expect(titleControl?.errors?.['minlength']).toBeTruthy();
+    
+    // 51文字以上の場合はエラー
+    titleControl?.setValue('a'.repeat(51));
+    expect(titleControl?.valid).toBeFalsy();
+    expect(titleControl?.errors?.['maxlength']).toBeTruthy();
+    
+    // 特殊文字が含まれる場合はエラー
+    titleControl?.setValue('test<>');
+    expect(titleControl?.valid).toBeFalsy();
+    expect(titleControl?.errors?.['invalidChars']).toBeTruthy();
+    
+    // 正常な値の場合は有効
+    titleControl?.setValue('テストタスク');
+    expect(titleControl?.valid).toBeTruthy();
   });
 
-  describe('Category Management', () => {
-    it('should add new category', () => {
-      const newCategory = '新しいカテゴリ';
-      component.taskForm.controls['newCategoryName'].setValue(newCategory);
-      component.addNewCategory();
-      fixture.detectChanges();
-
-      expect(component.categories).toContain(newCategory);
-      expect(component.taskForm.get('category')?.value).toBe(newCategory);
-      expect(component.taskForm.get('newCategoryName')?.value).toBe('');
-    });
-
-    it('should not add duplicate category', () => {
-      const initialLength = component.categories.length;
-      component.taskForm.controls['newCategoryName'].setValue('カテゴリ1');
-      component.addNewCategory();
-      fixture.detectChanges();
-
-      expect(component.categories.length).toBe(initialLength);
-    });
+  it('should validate description field', () => {
+    const descriptionControl = component.taskForm.get('description');
+    
+    // 空の場合はエラー
+    descriptionControl?.setValue('');
+    expect(descriptionControl?.valid).toBeFalsy();
+    expect(descriptionControl?.errors?.['required']).toBeTruthy();
+    
+    // 1001文字以上の場合はエラー
+    descriptionControl?.setValue('a'.repeat(1001));
+    expect(descriptionControl?.valid).toBeFalsy();
+    expect(descriptionControl?.errors?.['maxlength']).toBeTruthy();
+    
+    // 特殊文字が含まれる場合はエラー
+    descriptionControl?.setValue('test<>');
+    expect(descriptionControl?.valid).toBeFalsy();
+    expect(descriptionControl?.errors?.['invalidChars']).toBeTruthy();
+    
+    // 正常な値の場合は有効
+    descriptionControl?.setValue('テスト説明');
+    expect(descriptionControl?.valid).toBeTruthy();
   });
+
+  it('should validate dueDate field', () => {
+    const dueDateControl = component.taskForm.get('dueDate');
+    
+    // 過去の日付の場合はエラー
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    dueDateControl?.setValue(yesterday);
+    expect(dueDateControl?.valid).toBeFalsy();
+    expect(dueDateControl?.errors?.['pastDate']).toBeTruthy();
+    
+    // 1年以上先の日付の場合はエラー
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    nextYear.setDate(nextYear.getDate() + 1);
+    dueDateControl?.setValue(nextYear);
+    expect(dueDateControl?.valid).toBeFalsy();
+    expect(dueDateControl?.errors?.['futureDate']).toBeTruthy();
+    
+    // 正常な値の場合は有効
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    dueDateControl?.setValue(tomorrow);
+    expect(dueDateControl?.valid).toBeTruthy();
+  });
+
+  it('should handle form submission successfully', fakeAsync(() => {
+    const validTaskData = {
+      title: 'テストタスク',
+      description: 'テスト説明',
+      category: 'テストカテゴリ',
+      status: '未着手',
+      priority: '中',
+      dueDate: new Date(),
+      assignedTo: 'テスト担当者'
+    };
+
+    component.taskForm.setValue(validTaskData);
+    component.onSubmit();
+    tick();
+
+    expect(mockSnackBar.open).toHaveBeenCalledWith(
+      'タスクを作成しました',
+      '閉じる',
+      { duration: 3000, panelClass: ['success-snackbar'] }
+    );
+    expect(mockRouter.navigate).toHaveBeenCalledWith(['/tasks']);
+  }));
+
+  it('should handle form submission with errors', fakeAsync(() => {
+    const invalidTaskData = {
+      title: '',
+      description: '',
+      category: '',
+      status: '未着手',
+      priority: '中',
+      dueDate: null,
+      assignedTo: ''
+    };
+
+    component.taskForm.setValue(invalidTaskData);
+    component.onSubmit();
+    tick();
+
+    expect(mockSnackBar.open).toHaveBeenCalledWith(
+      '入力内容に誤りがあります。エラーメッセージをご確認ください。',
+      '閉じる',
+      { duration: 5000, panelClass: ['warning-snackbar'] }
+    );
+  }));
+
+  it('should handle network error during submission', fakeAsync(() => {
+    const validTaskData = {
+      title: 'テストタスク',
+      description: 'テスト説明',
+      category: 'テストカテゴリ',
+      status: '未着手',
+      priority: '中',
+      dueDate: new Date(),
+      assignedTo: 'テスト担当者'
+    };
+
+    mockFirestore.collection.and.returnValue({
+      addDoc: () => throwError(new Error('network error'))
+    });
+
+    component.taskForm.setValue(validTaskData);
+    component.onSubmit();
+    tick();
+
+    expect(mockSnackBar.open).toHaveBeenCalledWith(
+      'ネットワークエラーが発生しました。インターネット接続をご確認ください。',
+      '閉じる',
+      { duration: 5000, panelClass: ['error-snackbar'] }
+    );
+  }));
 }); 
