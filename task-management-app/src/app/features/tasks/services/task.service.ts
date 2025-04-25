@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, NgZone } from '@angular/core';
 import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Task } from '../models/task.model';
@@ -17,7 +17,8 @@ export class TaskService implements OnDestroy {
 
   constructor(
     private firestore: Firestore,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private ngZone: NgZone
   ) {
     this.onlineHandler = this.handleOnlineStatus.bind(this);
     this.offlineHandler = this.handleOnlineStatus.bind(this);
@@ -40,29 +41,33 @@ export class TaskService implements OnDestroy {
 
       this.unsubscribe = onSnapshot(q, 
         (querySnapshot: QuerySnapshot<DocumentData>) => {
-          const tasks = querySnapshot.docs.map(doc => {
-            const data = doc.data();
-            const task: Task = {
-              id: doc.id,
-              userId: data['userId'] || '',
-              title: data['title'] || '',
-              description: data['description'] || '',
-              status: data['status'] || '未着手',
-              priority: data['priority'] || '中',
-              category: data['category'] || 'その他',
-              assignedTo: data['assignedTo'] || '',
-              createdAt: data['createdAt'],
-              updatedAt: data['updatedAt'],
-              dueDate: data['dueDate']
-            };
-            return task;
+          this.ngZone.run(() => {
+            const tasks = querySnapshot.docs.map(doc => {
+              const data = doc.data();
+              const task: Task = {
+                id: doc.id,
+                userId: data['userId'] || '',
+                title: data['title'] || '',
+                description: data['description'] || '',
+                status: data['status'] || '未着手',
+                priority: data['priority'] || '中',
+                category: data['category'] || 'その他',
+                assignedTo: data['assignedTo'] || '',
+                createdAt: data['createdAt'],
+                updatedAt: data['updatedAt'],
+                dueDate: data['dueDate']
+              };
+              return task;
+            });
+            console.log('Firestore tasks updated:', tasks.length);
+            this.tasksSubject.next(tasks);
           });
-          console.log('Firestore tasks updated:', tasks.length);
-          this.tasksSubject.next(tasks);
         },
         (error) => {
-          console.error('タスクの取得中にエラーが発生しました:', error);
-          this.handleError(error);
+          this.ngZone.run(() => {
+            console.error('タスクの取得中にエラーが発生しました:', error);
+            this.handleError(error);
+          });
         }
       );
     } catch (error) {
@@ -239,19 +244,26 @@ export class TaskService implements OnDestroy {
   }
 
   async createTask(task: Omit<Task, 'id'>): Promise<string> {
-    const tasksCollection = collection(this.firestore, 'tasks');
-    const now = new Date();
-    const currentTimestamp = {
-      seconds: Math.floor(now.getTime() / 1000),
-      nanoseconds: 0
-    };
+    try {
+      const tasksCollection = collection(this.firestore, 'tasks');
+      const now = new Date();
+      const currentTimestamp = {
+        seconds: Math.floor(now.getTime() / 1000),
+        nanoseconds: 0
+      };
 
-    const docRef = await addDoc(tasksCollection, {
-      ...task,
-      createdAt: currentTimestamp,
-      updatedAt: currentTimestamp
-    });
-    return docRef.id;
+      const docRef = await addDoc(tasksCollection, {
+        ...task,
+        createdAt: currentTimestamp,
+        updatedAt: currentTimestamp
+      });
+
+      console.log('Task created with ID:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating task:', error);
+      throw error;
+    }
   }
 
   async updateTask(id: string, task: Partial<Task>): Promise<void> {

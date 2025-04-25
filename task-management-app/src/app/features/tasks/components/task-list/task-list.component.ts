@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit, LOCALE_ID, Injectable } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, LOCALE_ID, Injectable, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -29,6 +29,8 @@ import { MatSelect } from '@angular/material/select';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, NativeDateAdapter } from '@angular/material/core';
 import { Timestamp } from 'firebase/firestore';
+import { Task } from '../../models/task.model';
+import { Subscription } from 'rxjs';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -88,7 +90,7 @@ const MY_FORMATS = {
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class TaskListComponent implements OnInit, AfterViewInit {
+export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = ['select', 'title', 'category', 'status', 'priority', 'dueDate', 'actions'];
   dataSource = new MatTableDataSource<any>();
   loading = false;
@@ -98,6 +100,8 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   editingTask: any = null;
   editingField: string | null = null;
   categories: string[] = [];
+  tasks: Task[] = [];
+  private subscription: Subscription | null = null;
 
   // 選択肢の定義
   statusOptions = ['未着手', '進行中', '完了'];
@@ -151,7 +155,8 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     private snackBar: MatSnackBar,
     private router: Router,
     private fb: FormBuilder,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private cdr: ChangeDetectorRef
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -163,11 +168,38 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.loadTasks();
     this.setupFilterForm();
     this.categoryService.categories$.subscribe(categories => {
       this.categories = categories;
     });
+
+    // リアルタイムアップデートの購読
+    this.subscription = this.taskService.tasks$.subscribe(
+      (tasks) => {
+        console.log('Received tasks update:', tasks.length);
+        this.tasks = tasks;
+        this.dataSource.data = tasks;
+        
+        // ソートとページネーションの設定を確認
+        if (this.sort && !this.dataSource.sort) {
+          this.dataSource.sort = this.sort;
+        }
+        if (this.paginator && !this.dataSource.paginator) {
+          this.dataSource.paginator = this.paginator;
+        }
+
+        // フィルター述語を設定
+        this.dataSource.filterPredicate = this.createFilter();
+        
+        // 現在のフィルターを適用（フィルターが設定されている場合のみ）
+        const currentFilters = this.filterForm.value;
+        if (Object.values(currentFilters).some(value => value)) {
+          this.applyFilters();
+        }
+
+        this.cdr.detectChanges();
+      }
+    );
   }
 
   ngAfterViewInit(): void {
@@ -201,13 +233,17 @@ export class TaskListComponent implements OnInit, AfterViewInit {
 
   private createFilter(): (data: any, filter: string) => boolean {
     return (data: any) => {
+      if (!data) return false;
+      
       const filters = this.filterForm.value;
+      const searchTerm = filters.search ? filters.search.toLowerCase() : '';
+      
       const categoryMatch = !filters.category || data.category === filters.category;
       const statusMatch = !filters.status || data.status === filters.status;
       const priorityMatch = !filters.priority || data.priority === filters.priority;
-      const searchMatch = !filters.search || 
-        data.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-        (data.description && data.description.toLowerCase().includes(filters.search.toLowerCase()));
+      const searchMatch = !searchTerm || 
+        (data.title && data.title.toLowerCase().includes(searchTerm)) ||
+        (data.description && data.description.toLowerCase().includes(searchTerm));
 
       return categoryMatch && statusMatch && priorityMatch && searchMatch;
     };
@@ -244,7 +280,19 @@ export class TaskListComponent implements OnInit, AfterViewInit {
   }
 
   applyFilters(): void {
-    this.dataSource.filter = 'trigger';
+    const filterValues = this.filterForm.value;
+    console.log('Applying filters:', filterValues);
+    console.log('Current data length:', this.dataSource.data.length);
+    
+    // フィルターをトリガー
+    this.dataSource.filter = JSON.stringify(filterValues);
+    
+    // ページネーターをリセット
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+    
+    console.log('Filtered data length:', this.dataSource.filteredData.length);
   }
 
   resetFilters(): void {
@@ -443,6 +491,12 @@ export class TaskListComponent implements OnInit, AfterViewInit {
     } catch (error) {
       console.error('日付の更新に失敗しました:', error);
       this.snackBar.open('日付の更新に失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 } 
