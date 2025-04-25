@@ -16,7 +16,13 @@
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>説明</mat-label>
-          <textarea matInput formControlName="description" rows="4" placeholder="タスクの説明を入力"></textarea>
+          <textarea matInput
+                    formControlName="description"
+                    placeholder="タスクの説明を入力"
+                    cdkTextareaAutosize
+                    [cdkAutosizeMinRows]="3"
+                    [cdkAutosizeMaxRows]="10"
+                    [rows]="3"></textarea>
           <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
             説明は必須です
           </mat-error>
@@ -41,8 +47,7 @@
               <input matInput formControlName="newCategoryName" placeholder="カテゴリ名を入力">
             </mat-form-field>
             <button mat-button color="primary" (click)="addNewCategory()" [disabled]="!taskForm.get('newCategoryName')?.value">
-              <mat-icon>add</mat-icon>
-              追加
+              + 追加
             </button>
           </div>
         </div>

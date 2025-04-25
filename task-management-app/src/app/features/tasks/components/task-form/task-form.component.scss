@@ -1,160 +1,212 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
 .task-form-container {
-  padding: 20px;
+  padding: 16px;
   max-width: 800px;
   margin: 0 auto;
 
   mat-card {
-    padding: 24px;
+    padding: 16px;
+
+    mat-card-header {
+      margin-bottom: 24px;
+      padding: 8px 8px 0;
+
+      mat-card-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+      }
+    }
+
+    mat-card-content {
+      padding: 0 8px;
+    }
   }
 
   .task-form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-  }
-
-  .full-width {
-    width: 100%;
-  }
-
-  .form-field {
-    ::ng-deep {
-      .mdc-text-field--outlined {
-        .mdc-notched-outline__notch {
-          border-right: none;
-        }
-      }
-
-      .mat-mdc-text-field-wrapper {
-        height: 56px;
-        padding: 0;
-        background-color: white;
-
-        &.mdc-text-field--textarea {
-          height: auto;
-        }
-      }
-
-      .mat-mdc-form-field-flex {
-        height: 56px;
-        align-items: center;
-
-        &.mdc-text-field--textarea {
-          height: auto;
-          align-items: stretch;
-        }
-      }
-
-      .mdc-line-ripple::before, 
-      .mdc-line-ripple::after {
-        border-top-style: none;
-      }
-
-      .mat-mdc-form-field-infix {
-        padding: 0;
-        border: none;
-        height: 56px;
-        display: flex;
-        align-items: center;
-      }
-
-      .mdc-text-field--textarea {
-        .mat-mdc-form-field-flex {
-          padding: 0;
-          min-height: 152px;
-          display: flex;
-          align-items: center;
-        }
-
-        .mat-mdc-form-field-infix {
-          padding: 0;
-          height: 100%;
-          display: flex;
-          align-items: center;
-        }
-
-        textarea.mat-mdc-input-element {
-          margin: 0;
-          padding: 16px !important;
-          min-height: 120px;
-          line-height: 1.5;
-          box-sizing: border-box;
-          align-self: center;
-        }
-
-        .mdc-text-field__input {
-          padding-left: 16px !important;
-          padding-right: 16px !important;
-        }
-      }
-
-      .mat-mdc-form-field-subscript-wrapper {
-        display: none;
-      }
-
-      input.mat-mdc-input-element {
-        position: static;
-        margin: 0;
-        height: 100%;
-        line-height: 56px;
-        padding: 0 16px !important;
-      }
-
-      .mat-mdc-select {
-        padding: 0 16px !important;
-      }
-    }
+    gap: 16px;
   }
 
   .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
+    gap: 8px;
+    margin-top: 16px;
   }
 
   .category-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .new-category-form {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin: 0;
-    height: 56px;
-
-    .mat-mdc-form-field {
-      flex: 1;
-      height: 56px;
-      
-      ::ng-deep {
-        .mdc-text-field {
-          padding: 0;
-          height: 56px;
-        }
-
-        .mat-mdc-form-field-flex {
-          height: 56px;
-        }
-
-        input.mat-mdc-input-element {
-          padding: 0 16px !important;
-          margin: 0;
-          height: 56px;
-          line-height: 56px;
-        }
-      }
-    }
   }
 
   .new-category-input {
     flex: 1;
   }
 
-  ::ng-deep .mat-select-panel {
-    max-height: 400px !important;
+  // Material Form Field Styles
+  .mat-mdc-form-field {
+    width: 100%;
+    
+    .mdc-text-field {
+      padding: 0;
+      background-color: white;
+    }
+
+    .mat-mdc-form-field-flex {
+      padding: 0 12px;
+      min-height: 48px;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding: 8px 0;
+      min-height: 48px;
+    }
+
+    // Input styles
+    input.mat-mdc-input-element,
+    textarea.mat-mdc-input-element {
+      margin: 0;
+      padding: 8px 0;
+      line-height: 1.5;
+    }
+
+    // Textarea specific styles
+    textarea.mat-mdc-input-element {
+      min-height: 24px;
+      padding-top: 8px;
+      resize: vertical;
+    }
+
+    // Floating label styles
+    .mdc-floating-label {
+      top: 50%;
+      transform: translateY(-50%);
+      background: white;
+      padding: 0 4px;
+      margin: 0 -4px;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    .mdc-floating-label--float-above {
+      top: 0;
+      transform: translateY(-50%) scale(0.75);
+    }
+
+    // Outline styles
+    .mdc-notched-outline {
+      &__leading,
+      &__notch,
+      &__trailing {
+        border-width: 1px;
+        border-color: rgba(0, 0, 0, 0.24);
+      }
+
+      &__notch {
+        border-right: none;
+      }
+    }
+
+    // Select styles
+    .mat-mdc-select {
+      padding: 8px 0;
+    }
+
+    // Error styles
+    .mat-mdc-form-field-error-wrapper {
+      padding: 4px 0;
+      font-size: 12px;
+    }
+  }
+}
+
+:host {
+  ::ng-deep {
+    .mat-mdc-form-field {
+      &.mat-mdc-form-field-type-mat-input,
+      &.mat-mdc-form-field-type-mat-select,
+      &.mat-mdc-form-field-type-mat-native-select {
+        .mat-mdc-text-field-wrapper {
+          height: 56px;
+          
+          .mat-mdc-form-field-flex {
+            height: 56px;
+            padding: 0 12px;
+            align-items: center;
+          }
+
+          .mat-mdc-form-field-infix {
+            padding: 0;
+            height: 56px;
+            display: flex;
+            align-items: center;
+          }
+
+          input.mat-mdc-input-element {
+            margin: 0;
+            height: 100%;
+            line-height: normal;
+          }
+        }
+      }
+
+      &.mat-mdc-form-field-type-mat-textarea {
+        .mat-mdc-text-field-wrapper {
+          .mat-mdc-form-field-flex {
+            padding: 0 12px;
+            min-height: 56px;
+          }
+
+          .mat-mdc-form-field-infix {
+            padding: 8px 0;
+            min-height: auto;
+
+            textarea.mat-mdc-input-element {
+              margin: 0;
+              padding: 0;
+              line-height: 1.5;
+              box-sizing: border-box;
+            }
+          }
+        }
+      }
+
+      .mdc-floating-label {
+        top: 50%;
+        transform: translateY(-50%);
+        background: white;
+        padding: 0 4px;
+        margin-left: -4px;
+      }
+
+      .mdc-floating-label--float-above {
+        top: 0;
+        transform: translateY(-50%) scale(0.75);
+      }
+
+      .mdc-notched-outline {
+        &__leading,
+        &__notch,
+        &__trailing {
+          border-width: 1px;
+          border-color: rgba(0, 0, 0, 0.24);
+        }
+
+        &__notch {
+          border-right: none;
+        }
+      }
+    }
   }
 } 

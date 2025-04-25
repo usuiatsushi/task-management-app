@@ -1,0 +1,41 @@
+<div class="component-container">
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <!-- フォームフィールド -->
+    <mat-form-field appearance="outline">
+      <mat-label>タイトル</mat-label>
+      <input matInput
+             formControlName="title"
+             placeholder="タイトルを入力"
+             aria-label="タイトル">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>説明</mat-label>
+      <textarea matInput
+                formControlName="description"
+                placeholder="説明を入力"
+                rows="4"
+                aria-label="説明"></textarea>
+    </mat-form-field>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons">
+      <button type="button"
+              mat-stroked-button
+              color="warn"
+              (click)="onCancel()"
+              (keydown.enter)="onCancel()"
+              (keydown.space)="onCancel()"
+              aria-label="キャンセル">
+        キャンセル
+      </button>
+      <button type="submit"
+              mat-raised-button
+              color="primary"
+              [disabled]="!form.valid"
+              aria-label="保存">
+        保存
+      </button>
+    </div>
+  </form>
+</div> 
