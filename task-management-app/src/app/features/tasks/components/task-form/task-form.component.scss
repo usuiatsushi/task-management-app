@@ -132,6 +132,34 @@
         }
       }
     }
+
+    // デートピッカーのカスタマイズ
+    .mat-calendar {
+      .mat-calendar-table-header th {
+        // ヘッダーの曜日表示のスタイル
+        &:first-letter {
+          color: rgba(0, 0, 0, 0.87);
+        }
+        // 「日」などの文字を非表示
+        &::after {
+          content: none !important;
+        }
+      }
+
+      // 年と月の選択画面の「年」「月」を非表示
+      .mat-calendar-period-button {
+        .mat-calendar-period-button-content::after {
+          content: none !important;
+        }
+      }
+
+      // カレンダーの日付から「日」を削除
+      .mat-calendar-body-cell-content {
+        &::after {
+          content: none !important;
+        }
+      }
+    }
   }
 }
 
