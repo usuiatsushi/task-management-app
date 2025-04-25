@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc } from '@angular/fire/firestore';
@@ -42,7 +42,7 @@ import { CalendarService } from '../../services/calendar.service';
     MatTooltipModule
   ]
 })
-export class TaskFormComponent implements OnInit {
+export class TaskFormComponent implements OnInit, AfterViewInit {
   taskForm: FormGroup;
   isEditMode = false;
   taskId: string | null = null;
@@ -88,6 +88,13 @@ export class TaskFormComponent implements OnInit {
     if (this.isEditMode && this.taskId) {
       await this.loadTask(this.taskId);
     }
+  }
+
+  ngAfterViewInit() {
+    // ビューの初期化後に変更検知を強制的に実行
+    setTimeout(() => {
+      this.cdr.detectChanges();
+    });
   }
 
   private async loadTask(taskId: string) {
