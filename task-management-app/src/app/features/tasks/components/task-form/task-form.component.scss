@@ -160,6 +160,34 @@
         }
       }
     }
+
+    // Snackbarのスタイル
+    .success-snackbar {
+      background-color: #4caf50;
+      color: white;
+      
+      .mat-simple-snackbar-action {
+        color: white;
+      }
+    }
+
+    .error-snackbar {
+      background-color: #f44336;
+      color: white;
+      
+      .mat-simple-snackbar-action {
+        color: white;
+      }
+    }
+
+    .warning-snackbar {
+      background-color: #ff9800;
+      color: white;
+      
+      .mat-simple-snackbar-action {
+        color: white;
+      }
+    }
   }
 }
 

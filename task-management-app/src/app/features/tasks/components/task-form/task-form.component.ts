@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit, NgZone } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc } from '@angular/fire/firestore';
 import { Task } from '../../models/task.model';
@@ -62,13 +62,13 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private ngZone: NgZone
   ) {
     this.taskForm = this.fb.group({
-      title: ['', Validators.required],
-      description: ['', Validators.required],
+      title: ['', [Validators.required, this.titleValidator.bind(this)]],
+      description: ['', [Validators.required, this.descriptionValidator.bind(this)]],
       category: ['', Validators.required],
       status: ['未着手', Validators.required],
       priority: ['中', Validators.required],
-      dueDate: [new Date(), Validators.required],
-      assignedTo: ['', Validators.required],
+      dueDate: [new Date(), [Validators.required, this.dueDateValidator.bind(this)]],
+      assignedTo: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
       newCategoryName: ['']
     });
   }
@@ -157,7 +157,10 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           const taskRef = doc(this.firestore, 'tasks', this.taskId);
           await updateDoc(taskRef, taskData);
           await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
-          this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
+          this.snackBar.open('タスクを更新しました', '閉じる', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
         } else {
           const tasksRef = collection(this.firestore, 'tasks');
           const docRef = await addDoc(tasksRef, {
@@ -165,16 +168,47 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
             createdAt: new Date()
           });
           await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
-          this.snackBar.open('タスクを作成しました', '閉じる', { duration: 3000 });
+          this.snackBar.open('タスクを作成しました', '閉じる', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
         }
 
         this.router.navigate(['/tasks']);
       } catch (error) {
         console.error('タスクの保存に失敗しました:', error);
-        this.snackBar.open('タスクの保存に失敗しました', '閉じる', { duration: 3000 });
+        let errorMessage = 'タスクの保存に失敗しました';
+        
+        if (error instanceof Error) {
+          if (error.message.includes('permission-denied')) {
+            errorMessage = '権限がありません。ログインしているかご確認ください。';
+          } else if (error.message.includes('network')) {
+            errorMessage = 'ネットワークエラーが発生しました。インターネット接続をご確認ください。';
+          } else if (error.message.includes('quota')) {
+            errorMessage = 'サービスの制限に達しました。しばらく時間をおいて再度お試しください。';
+          }
+        }
+        
+        this.snackBar.open(errorMessage, '閉じる', { 
+          duration: 5000,
+          panelClass: ['error-snackbar']
+        });
       } finally {
         this.loading = false;
       }
+    } else {
+      // フォームが無効な場合、すべてのコントロールにタッチしてエラーを表示
+      Object.keys(this.taskForm.controls).forEach(key => {
+        const control = this.taskForm.get(key);
+        if (control) {
+          control.markAsTouched();
+        }
+      });
+
+      this.snackBar.open('入力内容に誤りがあります。エラーメッセージをご確認ください。', '閉じる', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
     }
   }
 
@@ -196,5 +230,92 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         this.calendarService.addTaskToCalendar(taskData);
       }
     }
+  }
+
+  // カスタムバリデーター
+  private titleValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const errors: ValidationErrors = {};
+
+    if (value.length < 3) {
+      errors['minlength'] = { requiredLength: 3, actualLength: value.length };
+    }
+    if (value.length > 50) {
+      errors['maxlength'] = { requiredLength: 50, actualLength: value.length };
+    }
+    if (/[<>]/.test(value)) {
+      errors['invalidChars'] = true;
+    }
+
+    return Object.keys(errors).length ? errors : null;
+  }
+
+  private descriptionValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const errors: ValidationErrors = {};
+
+    if (value.length > 1000) {
+      errors['maxlength'] = { requiredLength: 1000, actualLength: value.length };
+    }
+    if (/[<>]/.test(value)) {
+      errors['invalidChars'] = true;
+    }
+
+    return Object.keys(errors).length ? errors : null;
+  }
+
+  private dueDateValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+
+    const selectedDate = new Date(value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      return { pastDate: true };
+    }
+
+    const maxDate = new Date();
+    maxDate.setFullYear(maxDate.getFullYear() + 1);
+    if (selectedDate > maxDate) {
+      return { futureDate: true };
+    }
+
+    return null;
+  }
+
+  // エラーメッセージを取得するヘルパーメソッド
+  getErrorMessage(controlName: string): string {
+    const control = this.taskForm.get(controlName);
+    if (!control || !control.errors) return '';
+
+    const errors = control.errors;
+    
+    if (errors['required']) return `${this.getFieldLabel(controlName)}は必須です`;
+    if (errors['minlength']) return `${this.getFieldLabel(controlName)}は${errors['minlength'].requiredLength}文字以上で入力してください`;
+    if (errors['maxlength']) return `${this.getFieldLabel(controlName)}は${errors['maxlength'].requiredLength}文字以下で入力してください`;
+    if (errors['invalidChars']) return '特殊文字（<>）は使用できません';
+    if (errors['pastDate']) return '過去の日付は選択できません';
+    if (errors['futureDate']) return '1年以上先の日付は選択できません';
+
+    return '入力内容を確認してください';
+  }
+
+  private getFieldLabel(controlName: string): string {
+    const labels: { [key: string]: string } = {
+      title: 'タイトル',
+      description: '説明',
+      category: 'カテゴリ',
+      status: 'ステータス',
+      priority: '優先度',
+      dueDate: '期限',
+      assignedTo: '担当者'
+    };
+    return labels[controlName] || controlName;
   }
 } 

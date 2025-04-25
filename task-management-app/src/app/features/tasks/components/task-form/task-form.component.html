@@ -9,9 +9,7 @@
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>タイトル</mat-label>
           <input matInput formControlName="title" placeholder="タスクのタイトルを入力">
-          <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
-            タイトルは必須です
-          </mat-error>
+          <mat-error>{{ getErrorMessage('title') }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -22,9 +20,7 @@
                     cdkTextareaAutosize
                     [cdkAutosizeMinRows]="3"
                     [cdkAutosizeMaxRows]="10"></textarea>
-          <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
-            説明は必須です
-          </mat-error>
+          <mat-error>{{ getErrorMessage('description') }}</mat-error>
         </mat-form-field>
 
         <div class="category-section">
@@ -35,9 +31,7 @@
                 {{ category }}
               </mat-option>
             </mat-select>
-            <mat-error *ngIf="taskForm.get('category')?.hasError('required')">
-              カテゴリは必須です
-            </mat-error>
+            <mat-error>{{ getErrorMessage('category') }}</mat-error>
           </mat-form-field>
 
           <div class="new-category-form">
@@ -58,9 +52,7 @@
             <mat-option value="進行中">進行中</mat-option>
             <mat-option value="完了">完了</mat-option>
           </mat-select>
-          <mat-error *ngIf="taskForm.get('status')?.hasError('required')">
-            ステータスは必須です
-          </mat-error>
+          <mat-error>{{ getErrorMessage('status') }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -70,9 +62,7 @@
             <mat-option value="中">中</mat-option>
             <mat-option value="高">高</mat-option>
           </mat-select>
-          <mat-error *ngIf="taskForm.get('priority')?.hasError('required')">
-            優先度は必須です
-          </mat-error>
+          <mat-error>{{ getErrorMessage('priority') }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
@@ -80,17 +70,13 @@
           <input matInput [matDatepicker]="picker" formControlName="dueDate" placeholder="タスクの期限を選択">
           <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
-          <mat-error *ngIf="taskForm.get('dueDate')?.hasError('required')">
-            期限は必須です
-          </mat-error>
+          <mat-error>{{ getErrorMessage('dueDate') }}</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>担当者</mat-label>
           <input matInput formControlName="assignedTo" placeholder="タスクの担当者を入力">
-          <mat-error *ngIf="taskForm.get('assignedTo')?.hasError('required')">
-            担当者は必須です
-          </mat-error>
+          <mat-error>{{ getErrorMessage('assignedTo') }}</mat-error>
         </mat-form-field>
 
         <div class="form-actions">
