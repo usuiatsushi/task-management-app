@@ -23,7 +23,7 @@ import { CalendarService } from '../../services/calendar.service';
   selector: 'app-task-form',
   templateUrl: './task-form.component.html',
   styleUrls: ['./task-form.component.scss'],
-  encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.ShadowDom,
   standalone: true,
   imports: [
     CommonModule,
