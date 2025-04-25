@@ -1,7 +1,7 @@
 import { ApplicationConfig, importProvidersFrom } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideFirestore, getFirestore, enableIndexedDbPersistence } from '@angular/fire/firestore';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { environment } from '../environments/environment';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -28,7 +28,19 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideFirestore(() => getFirestore()),
+    provideFirestore(() => {
+      const firestore = getFirestore();
+      // オフライン永続化を有効化
+      enableIndexedDbPersistence(firestore)
+        .catch((err) => {
+          if (err.code === 'failed-precondition') {
+            console.warn('複数のタブで永続化が有効になっています');
+          } else if (err.code === 'unimplemented') {
+            console.warn('ブラウザが永続化をサポートしていません');
+          }
+        });
+      return firestore;
+    }),
     provideAnimations(),
     importProvidersFrom(
       MatProgressBarModule,

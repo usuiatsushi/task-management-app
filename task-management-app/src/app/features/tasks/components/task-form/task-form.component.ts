@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit, NgZone } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, enableIndexedDbPersistence } from '@angular/fire/firestore';
 import { Task } from '../../models/task.model';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -74,20 +74,38 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
+    // オフライン状態をチェック
+    if (!navigator.onLine) {
+      this.snackBar.open('オフライン状態です。インターネット接続を確認してください。', '閉じる', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
     this.taskId = this.route.snapshot.paramMap.get('id');
     this.isEditMode = !!this.taskId;
 
-    // カテゴリの読み込み
-    this.categoryService.categories$.subscribe(categories => {
-      this.categories = categories;
-      if (categories.length > 0 && !this.isEditMode) {
-        this.taskForm.patchValue({ category: categories[0] });
-      }
-      this.cdr.detectChanges();
-    });
+    // オンライン状態の監視を開始
+    window.addEventListener('online', this.handleOnlineStatus.bind(this));
+    window.addEventListener('offline', this.handleOnlineStatus.bind(this));
 
-    if (this.isEditMode && this.taskId) {
-      await this.loadTask(this.taskId);
+    try {
+      // カテゴリの読み込み
+      this.categoryService.categories$.subscribe(categories => {
+        this.categories = categories;
+        if (categories.length > 0 && !this.isEditMode) {
+          this.taskForm.patchValue({ category: categories[0] });
+        }
+        this.cdr.detectChanges();
+      });
+
+      if (this.isEditMode && this.taskId) {
+        await this.loadTask(this.taskId);
+      }
+    } catch (error) {
+      console.error('初期化中にエラーが発生しました:', error);
+      this.handleError(error);
     }
   }
 
@@ -143,7 +161,51 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     this.router.navigate(['/tasks']);
   }
 
+  ngOnDestroy() {
+    // イベントリスナーの削除
+    window.removeEventListener('online', this.handleOnlineStatus.bind(this));
+    window.removeEventListener('offline', this.handleOnlineStatus.bind(this));
+  }
+
+  private handleOnlineStatus() {
+    if (!navigator.onLine) {
+      this.snackBar.open('オフライン状態です。インターネット接続を確認してください。', '閉じる', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+    } else {
+      this.snackBar.open('オンラインに復帰しました。', '閉じる', {
+        duration: 3000,
+        panelClass: ['success-snackbar']
+      });
+    }
+  }
+
+  private handleError(error: any) {
+    let errorMessage = 'エラーが発生しました';
+    
+    if (error instanceof Error) {
+      if (!navigator.onLine || error.message === 'network-error') {
+        errorMessage = 'ネットワークエラーが発生しました。インターネット接続をご確認ください。';
+      } else if (error.message.includes('permission-denied')) {
+        errorMessage = '権限がありません。ログインしているかご確認ください。';
+      } else if (error.message.includes('quota')) {
+        errorMessage = 'サービスの制限に達しました。しばらく時間をおいて再度お試しください。';
+      }
+    }
+    
+    this.snackBar.open(errorMessage, '閉じる', { 
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
+  }
+
   async onSubmit() {
+    if (!navigator.onLine) {
+      this.handleError(new Error('network-error'));
+      return;
+    }
+
     if (this.taskForm.valid) {
       try {
         this.loading = true;
@@ -177,27 +239,11 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         this.router.navigate(['/tasks']);
       } catch (error) {
         console.error('タスクの保存に失敗しました:', error);
-        let errorMessage = 'タスクの保存に失敗しました';
-        
-        if (error instanceof Error) {
-          if (error.message.includes('permission-denied')) {
-            errorMessage = '権限がありません。ログインしているかご確認ください。';
-          } else if (error.message.includes('network')) {
-            errorMessage = 'ネットワークエラーが発生しました。インターネット接続をご確認ください。';
-          } else if (error.message.includes('quota')) {
-            errorMessage = 'サービスの制限に達しました。しばらく時間をおいて再度お試しください。';
-          }
-        }
-        
-        this.snackBar.open(errorMessage, '閉じる', { 
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
+        this.handleError(error);
       } finally {
         this.loading = false;
       }
     } else {
-      // フォームが無効な場合、すべてのコントロールにタッチしてエラーを表示
       Object.keys(this.taskForm.controls).forEach(key => {
         const control = this.taskForm.get(key);
         if (control) {

@@ -1,13 +1,119 @@
-import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from '@angular/fire/firestore';
+import { Injectable, OnDestroy } from '@angular/core';
+import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Task } from '../models/task.model';
 import { Timestamp } from 'firebase/firestore';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable({
   providedIn: 'root'
 })
-export class TaskService {
-  constructor(private firestore: Firestore) {}
+export class TaskService implements OnDestroy {
+  private tasksSubject = new BehaviorSubject<Task[]>([]);
+  tasks$ = this.tasksSubject.asObservable();
+  private unsubscribe: (() => void) | null = null;
+  private onlineHandler: () => void;
+  private offlineHandler: () => void;
+
+  constructor(
+    private firestore: Firestore,
+    private snackBar: MatSnackBar
+  ) {
+    this.onlineHandler = this.handleOnlineStatus.bind(this);
+    this.offlineHandler = this.handleOnlineStatus.bind(this);
+    
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
+    
+    this.initializeTasksListener();
+  }
+
+  private initializeTasksListener() {
+    try {
+      if (this.unsubscribe) {
+        this.unsubscribe();
+        this.unsubscribe = null;
+      }
+
+      const tasksRef = collection(this.firestore, 'tasks');
+      const q = query(tasksRef, orderBy('createdAt', 'desc'));
+
+      this.unsubscribe = onSnapshot(q, 
+        (querySnapshot: QuerySnapshot<DocumentData>) => {
+          const tasks = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            const task: Task = {
+              id: doc.id,
+              userId: data['userId'] || '',
+              title: data['title'] || '',
+              description: data['description'] || '',
+              status: data['status'] || '未着手',
+              priority: data['priority'] || '中',
+              category: data['category'] || 'その他',
+              assignedTo: data['assignedTo'] || '',
+              createdAt: data['createdAt'],
+              updatedAt: data['updatedAt'],
+              dueDate: data['dueDate']
+            };
+            return task;
+          });
+          console.log('Firestore tasks updated:', tasks.length);
+          this.tasksSubject.next(tasks);
+        },
+        (error) => {
+          console.error('タスクの取得中にエラーが発生しました:', error);
+          this.handleError(error);
+        }
+      );
+    } catch (error) {
+      console.error('タスクリスナーの初期化中にエラーが発生しました:', error);
+      this.handleError(error);
+    }
+  }
+
+  private handleOnlineStatus() {
+    if (!navigator.onLine) {
+      this.snackBar.open('オフライン状態です。一部の機能が制限されます。', '閉じる', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+    } else {
+      this.snackBar.open('オンラインに復帰しました。', '閉じる', {
+        duration: 3000,
+        panelClass: ['success-snackbar']
+      });
+      // オンラインに復帰したらリスナーを再初期化
+      this.initializeTasksListener();
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
+    window.removeEventListener('online', this.onlineHandler);
+    window.removeEventListener('offline', this.offlineHandler);
+  }
+
+  private handleError(error: any) {
+    let errorMessage = 'エラーが発生しました';
+    
+    if (error instanceof Error) {
+      if (!navigator.onLine || error.message === 'network-error') {
+        errorMessage = 'ネットワークエラーが発生しました。インターネット接続をご確認ください。';
+      } else if (error.message.includes('permission-denied')) {
+        errorMessage = '権限がありません。ログインしているかご確認ください。';
+      } else if (error.message.includes('quota')) {
+        errorMessage = 'サービスの制限に達しました。しばらく時間をおいて再度お試しください。';
+      }
+    }
+    
+    this.snackBar.open(errorMessage, '閉じる', { 
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
+  }
 
   async getTasks(): Promise<Task[]> {
     try {
@@ -82,6 +188,7 @@ export class TaskService {
           // 基本的なタスクデータを作成
           const processedData = {
             id: docSnapshot.id,
+            userId: data['userId'] || '',
             title: data['title'] || '',
             description: data['description'] || '',
             status: data['status'] || '未着手',
@@ -106,6 +213,7 @@ export class TaskService {
           // エラーが発生しても他のタスクの処理は続行
           return {
             id: docSnapshot.id,
+            userId: errorData['userId'] || '',
             title: errorData['title'] || '',
             description: errorData['description'] || '',
             status: errorData['status'] || '未着手',
