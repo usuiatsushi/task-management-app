@@ -52,6 +52,6 @@ export const appConfig: ApplicationConfig = {
     ),
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
     { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
-    provideAuth(() => getAuth())
+    provideAuth(() => getAuth()),
   ]
 };

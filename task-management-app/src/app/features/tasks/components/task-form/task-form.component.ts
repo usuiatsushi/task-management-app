@@ -91,18 +91,18 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     window.addEventListener('offline', this.handleOnlineStatus.bind(this));
 
     try {
-      // カテゴリの読み込み
-      this.categoryService.categories$.subscribe(categories => {
-        this.categories = categories;
-        if (categories.length > 0 && !this.isEditMode) {
-          this.taskForm.patchValue({ category: categories[0] });
-        }
-        this.cdr.detectChanges();
-      });
-
-      if (this.isEditMode && this.taskId) {
-        await this.loadTask(this.taskId);
+    // カテゴリの読み込み
+    this.categoryService.categories$.subscribe(categories => {
+      this.categories = categories;
+      if (categories.length > 0 && !this.isEditMode) {
+        this.taskForm.patchValue({ category: categories[0] });
       }
+      this.cdr.detectChanges();
+    });
+
+    if (this.isEditMode && this.taskId) {
+      await this.loadTask(this.taskId);
+    }
     } catch (error) {
       console.error('初期化中にエラーが発生しました:', error);
       this.handleError(error);
