@@ -6,20 +6,31 @@ import { MatButtonModule } from '@angular/material/button';
 @Component({
   selector: 'app-toast-container',
   template: `
-    <div class="toast-container">
-      <div
-        *ngFor="let toast of toastService.toasts$ | async"
-        class="toast"
-        [ngStyle]="getStyle(toast.type)"
-      >
-        <span class="message">{{ toast.message }}</span>
-        <button mat-button (click)="toastService.remove(toast.id)" class="close-button">
-          確認
-        </button>
-      </div>
-    </div>
+    <ng-container *ngIf="(toastService.toasts$ | async) as toasts">
+      <ng-container *ngIf="toasts.length > 0">
+        <div class="toast-overlay" (click)="toastService.clearAll()"></div>
+        <div class="toast-container">
+          <div
+            *ngFor="let toast of toasts"
+            class="toast"
+            [ngStyle]="getStyle(toast.type)"
+          >
+            <span class="message">{{ toast.message }}</span>
+            <button mat-button (click)="toastService.remove(toast.id)" class="close-button">
+              確認
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
   `,
   styles: [`
+    ::ng-deep .toast-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 9998;
+    }
     ::ng-deep .toast-container {
       position: fixed;
       bottom: 24px;
