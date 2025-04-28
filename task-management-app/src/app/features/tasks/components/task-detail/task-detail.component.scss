@@ -81,10 +81,13 @@
     }
 
     .progress-section {
+      width: 100%;
+      margin: 0 auto;
       margin-bottom: 20px;
       padding: 16px;
       background: #f5f5f5;
       border-radius: 4px;
+      box-sizing: border-box;
 
       .progress-header {
         display: flex;
@@ -107,6 +110,20 @@
       .progress-bar {
         height: 8px;
         border-radius: 4px;
+      }
+
+      .progress-slider {
+        width: 100%;
+        .slider-inner {
+          width: calc(100% - 24px);
+          margin-right: 24px;
+        }
+        mat-slider {
+          width: 100% !important;
+          min-width: 300px;
+          max-width: 100%;
+          display: block;
+        }
       }
     }
 

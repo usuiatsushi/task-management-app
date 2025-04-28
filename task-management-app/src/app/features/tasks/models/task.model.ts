@@ -13,4 +13,5 @@ export interface Task {
   updatedAt: Timestamp;
   userId: string;
   calendarEventId?: string;
+  progress?: number;
 } 

@@ -266,35 +266,32 @@ export class TaskService implements OnDestroy {
     }
   }
 
-  async updateTask(id: string, task: Partial<Task>): Promise<void> {
+  async updateTask(taskId: string, updateData: Partial<Task>): Promise<void> {
     try {
-      console.log('Updating task with ID:', id);
-      console.log('Update data received:', task);
+      console.log('Updating task with ID:', taskId);
+      console.log('Update data received:', updateData);
 
-      const taskDoc = doc(this.firestore, 'tasks', id);
+      const taskDoc = doc(this.firestore, 'tasks', taskId);
       
-      // 更新データの準備
-      const updateData: any = { ...task };
-
       // dueDateの処理
       if (updateData.dueDate) {
         if (updateData.dueDate instanceof Date) {
           updateData.dueDate = {
             seconds: Math.floor(updateData.dueDate.getTime() / 1000),
             nanoseconds: 0
-          };
+          } as any;
         } else if (updateData.dueDate instanceof Timestamp) {
           const date = updateData.dueDate.toDate();
           updateData.dueDate = {
             seconds: Math.floor(date.getTime() / 1000),
             nanoseconds: 0
-          };
+          } as any;
         } else if (typeof updateData.dueDate === 'object' && 'seconds' in updateData.dueDate) {
           // すでにタイムスタンプ形式の場合はそのまま使用
           updateData.dueDate = {
-            seconds: updateData.dueDate.seconds,
-            nanoseconds: updateData.dueDate.nanoseconds || 0
-          };
+            seconds: (updateData.dueDate as any).seconds,
+            nanoseconds: (updateData.dueDate as any).nanoseconds || 0
+          } as any;
         }
       }
 
@@ -303,7 +300,7 @@ export class TaskService implements OnDestroy {
       updateData.updatedAt = {
         seconds: Math.floor(now.getTime() / 1000),
         nanoseconds: 0
-      };
+      } as any;
 
       console.log('Final update data:', updateData);
       await updateDoc(taskDoc, updateData);

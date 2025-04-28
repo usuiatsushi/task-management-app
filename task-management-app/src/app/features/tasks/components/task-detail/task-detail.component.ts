@@ -11,6 +11,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { MatSliderModule } from '@angular/material/slider';
+import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 @Component({
   selector: 'app-task-detail',
@@ -22,26 +25,39 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
     MatProgressBarModule,
     RouterModule,
     MatDialogModule,
-    MatSnackBarModule
-  ]
+    MatSnackBarModule,
+    MatSliderModule,
+    FormsModule,
+    ReactiveFormsModule
+  ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskDetailComponent implements OnInit {
   task: (Task & { dueDate: Date; createdAt: Date; updatedAt: Date }) | null = null;
   loading = true;
   deleting = false;
+  progressControl = new FormControl(0);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private firestore: Firestore,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private taskService: TaskService
   ) { }
 
   async ngOnInit() {
     const taskId = this.route.snapshot.paramMap.get('id');
     if (taskId) {
       await this.loadTask(taskId);
+      if (this.task) {
+        this.progressControl.setValue(this.task.progress ?? 0);
+        this.progressControl.valueChanges.subscribe(value => {
+          this.task!.progress = value ?? 0;
+          this.onProgressChange(this.task!);
+        });
+      }
     }
     this.loading = false;
   }
@@ -141,5 +157,15 @@ export class TaskDetailComponent implements OnInit {
     } else {
       return 'primary';
     }
+  }
+
+  onProgressChange(task: Task) {
+    // 進捗率を保存（APIやFirestoreに反映）
+    this.taskService.updateTask(task.id, { progress: task.progress });
+  }
+
+  onSliderChange(event: any, task: Task) {
+    task.progress = event;
+    this.onProgressChange(task);
   }
 } 

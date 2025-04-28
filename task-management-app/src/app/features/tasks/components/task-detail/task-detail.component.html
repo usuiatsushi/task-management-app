@@ -19,14 +19,32 @@
     <div class="progress-section">
       <div class="progress-header">
         <h3>進捗状況</h3>
-        <span class="progress-percentage">{{ getProgressPercentage() }}%</span>
+        <span class="progress-percentage">{{ task.progress ?? getProgressPercentage() }}%</span>
       </div>
-      <mat-progress-bar
-        [mode]="'determinate'"
-        [value]="getProgressPercentage()"
-        [color]="getProgressColor()"
-        class="progress-bar">
-      </mat-progress-bar>
+      <!-- 未着手・完了：バーのみ -->
+      <ng-container *ngIf="task.status !== '進行中'; else sliderBlock">
+        <mat-progress-bar
+          [mode]="'determinate'"
+          [value]="task.progress ?? getProgressPercentage()"
+          [color]="getProgressColor()"
+          class="progress-bar">
+        </mat-progress-bar>
+      </ng-container>
+      <!-- 進行中：スライダー -->
+      <ng-template #sliderBlock>
+        <div class="progress-slider">
+          <div class="slider-inner">
+            <mat-slider style="width: 100%;">
+              <input matSliderThumb
+                [min]="0"
+                [max]="100"
+                [step]="1"
+                [value]="task.progress ?? 0"
+                (valueChange)="onSliderChange($event, task)">
+            </mat-slider>
+          </div>
+        </div>
+      </ng-template>
     </div>
 
     <div class="task-content">
