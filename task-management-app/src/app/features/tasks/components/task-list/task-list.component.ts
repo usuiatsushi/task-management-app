@@ -572,4 +572,13 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  public async onImportCSV(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    const text = await file.text();
+    console.log('インポートしたCSV内容:', text);
+    // 今後ここでCSVパース＆タスク登録処理を追加
+  }
 } 

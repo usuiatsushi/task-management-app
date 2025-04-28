@@ -40,6 +40,13 @@
         </button>
       </div>
 
+      <div class="import-buttons" style="margin-bottom: 16px;">
+        <input type="file" accept=".csv" (change)="onImportCSV($event)" style="display:none" #importInput>
+        <button mat-raised-button color="accent" (click)="importInput.click()">
+          インポート（CSV）
+        </button>
+      </div>
+
       <form [formGroup]="filterForm" class="task-list-filters">
         <mat-form-field class="category-field">
           <mat-label>カテゴリ</mat-label>
