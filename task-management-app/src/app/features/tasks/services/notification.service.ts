@@ -19,9 +19,15 @@ export class NotificationService {
       if (dueDate < now) {
         this.toastService.show(`${task.title}の期限が過ぎています`, 'error');
       } else if (dueDate <= threeDaysFromNow) {
-        const diffTime = dueDate.getTime() - now.getTime();
+        const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+        const diffTime = dueDateOnly.getTime() - nowDate.getTime();
         const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        this.toastService.show(`${task.title}の締め切りまであと${daysLeft}日`, 'warning');
+        if (daysLeft === 0) {
+          this.toastService.show(`${task.title}の締め切りは本日です`, 'warning');
+        } else {
+          this.toastService.show(`${task.title}の締め切りまであと${daysLeft}日`, 'warning');
+        }
       }
     });
   }
