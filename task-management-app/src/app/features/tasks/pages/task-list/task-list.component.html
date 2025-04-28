@@ -7,6 +7,15 @@
     </button>
   </div>
 
+  <div class="export-buttons" style="margin-bottom: 16px;">
+    <button mat-raised-button color="accent" (click)="exportTasksToCSV()">
+      エクスポート（CSV）
+    </button>
+    <button mat-raised-button color="primary" (click)="exportTasksToExcel()">
+      エクスポート（Excel）
+    </button>
+  </div>
+
   <table mat-table [dataSource]="tasks" class="mat-elevation-z8">
     <!-- タイトル列 -->
     <ng-container matColumnDef="title">
