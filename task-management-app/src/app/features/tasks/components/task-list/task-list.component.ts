@@ -31,6 +31,7 @@ import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, Na
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../models/task.model';
 import { Subscription } from 'rxjs';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -156,7 +157,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private fb: FormBuilder,
     private notificationService: NotificationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private authService: AuthService
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -492,6 +494,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('日付の更新に失敗しました:', error);
       this.snackBar.open('日付の更新に失敗しました', '閉じる', { duration: 3000 });
     }
+  }
+
+  async logout() {
+    await this.authService.logout();
+    this.router.navigate(['/auth/login']);
   }
 
   ngOnDestroy() {

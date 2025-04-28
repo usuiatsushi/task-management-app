@@ -32,7 +32,7 @@ export class LoginComponent {
         await signInWithEmailAndPassword(this.auth, email, password);
         this.router.navigate(['/tasks']);
       } catch (error) {
-        this.errorMessage = 'ログインに失敗しました。メールアドレスとパスワードを確認してください。';
+        this.errorMessage = 'ログインに失敗しました。もう一度お試しください。';
       }
     }
   }
@@ -40,8 +40,9 @@ export class LoginComponent {
   async loginWithGoogle() {
     try {
       await this.authService.loginWithGoogle();
+      this.router.navigate(['/tasks']);
     } catch (error) {
-      this.errorMessage = 'Googleログインに失敗しました。';
+      this.errorMessage = 'Googleログインに失敗しました。時間をおいて再度お試しください。';
       console.error(error);
     }
   }
