@@ -173,6 +173,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadTasks();
     this.setupFilterForm();
     this.categoryService.categories$.subscribe(categories => {
       this.categories = categories;
@@ -201,6 +202,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         if (Object.values(currentFilters).some(value => value)) {
           this.applyFilters();
         }
+
+        this.notificationService.checkTaskDeadlines(tasks);
 
         this.cdr.detectChanges();
       }

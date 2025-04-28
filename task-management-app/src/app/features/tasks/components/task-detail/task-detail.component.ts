@@ -206,12 +206,31 @@ export class TaskDetailComponent implements OnInit {
 
   checkDeadlineReminder() {
     if (!this.task?.dueDate) return;
+    let due: Date;
+    if (this.task.dueDate instanceof Date) {
+      due = this.task.dueDate;
+    } else if ((this.task.dueDate as any).toDate) {
+      due = (this.task.dueDate as any).toDate();
+    } else {
+      due = new Date(this.task.dueDate);
+    }
     const now = new Date();
-    const due = new Date(this.task.dueDate);
-    const diff = due.getTime() - now.getTime();
-    const oneDay = 24 * 60 * 60 * 1000;
-    if (diff > 0 && diff < oneDay) {
-      this.snackBar.open('締切が近づいています！', '閉じる', { duration: 5000 });
+    // 日付部分だけで差分日数を計算
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDue = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+    const diffDays = Math.ceil((startOfDue.getTime() - startOfToday.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays >= 0 && diffDays <= 7) { // 1週間以内なら通知
+      let message = '';
+      if (diffDays === 0) {
+        message = '締め切りは本日です！';
+      } else {
+        message = `締め切りまであと${diffDays}日です`;
+      }
+      this.snackBar.open(message, '閉じる', {
+        duration: 5000,
+        horizontalPosition: 'right',
+        verticalPosition: 'bottom'
+      });
     }
   }
 } 

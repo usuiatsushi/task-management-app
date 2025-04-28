@@ -18,6 +18,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { TaskService } from '../../services/task.service';
 import { CategoryService } from '../../services/category.service';
 import { CalendarService } from '../../services/calendar.service';
+import { Timestamp } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-task-form',
@@ -48,6 +49,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   taskId: string | null = null;
   loading = false;
   categories: string[] = [];
+  dueDateOnly: Date | null = null;
+  dueTimeOnly: string = '23:59'; // デフォルト
 
   constructor(
     private fb: FormBuilder,
@@ -209,9 +212,14 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     if (this.taskForm.valid) {
       try {
         this.loading = true;
+        // dueDateを23:59に設定
+        const date: Date = this.taskForm.value.dueDate;
+        const dueDate = new Date(date);
+        dueDate.setHours(23, 59, 0, 0);
+
         const taskData = {
           ...this.taskForm.value,
-          dueDate: this.taskForm.value.dueDate,
+          dueDate: dueDate, // Firestore用にTimestamp変換は既存ロジックで
           updatedAt: new Date()
         };
 
@@ -363,5 +371,17 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       assignedTo: '担当者'
     };
     return labels[controlName] || controlName;
+  }
+
+  // 保存時にdueDateを生成
+  saveTask() {
+    if (this.dueDateOnly && this.dueTimeOnly) {
+      const [hours, minutes] = this.dueTimeOnly.split(':').map(Number);
+      const dueDate = new Date(this.dueDateOnly);
+      dueDate.setHours(hours, minutes, 0, 0);
+      // Firestore用にTimestamp変換
+      const dueTimestamp = Timestamp.fromDate(dueDate);
+      // ...タスク保存処理
+    }
   }
 } 
