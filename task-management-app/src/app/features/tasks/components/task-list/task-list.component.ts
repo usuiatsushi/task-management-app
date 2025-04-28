@@ -149,6 +149,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('categorySelect') categorySelect!: MatSelect;
 
+  priorityOrder = { '高': 3, '中': 2, '低': 1 };
+  statusOrder = { '未着手': 1, '進行中': 2, '完了': 3 };
+
   constructor(
     private taskService: TaskService,
     private categoryService: CategoryService,
@@ -207,6 +210,17 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
+
+    // 優先度・ステータスのカスタムソート
+    this.dataSource.sortingDataAccessor = (item, property) => {
+      if (property === 'priority') {
+        return this.priorityOrder[item.priority as keyof typeof this.priorityOrder] || 0;
+      }
+      if (property === 'status') {
+        return this.statusOrder[item.status as keyof typeof this.statusOrder] || 0;
+      }
+      return item[property];
+    };
   }
 
   private setupFilterForm(): void {
