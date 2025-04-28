@@ -1,34 +1,79 @@
 import { Component } from '@angular/core';
-import { ToastService } from '../services/toast.service';
+import { ToastService } from '../../services/toast.service';
 import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-toast-container',
   template: `
     <div class="toast-container">
-      <div *ngFor="let toast of toastService.toasts$ | async" [class]="toast.type">
-        {{ toast.message }}
+      <div
+        *ngFor="let toast of toastService.toasts$ | async"
+        class="toast"
+        [ngStyle]="getStyle(toast.type)"
+      >
+        <span class="message">{{ toast.message }}</span>
+        <button mat-button (click)="toastService.remove(toast.id)" class="close-button">
+          確認
+        </button>
       </div>
     </div>
   `,
   styles: [`
-    .toast-container {
+    ::ng-deep .toast-container {
       position: fixed;
-      top: 24px;
-      right: 24px;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 9999;
       display: flex;
       flex-direction: column;
       gap: 12px;
+      align-items: center;
     }
-    .info { background: #2196f3; color: #fff; padding: 12px 24px; border-radius: 4px; }
-    .success { background: #4caf50; color: #fff; padding: 12px 24px; border-radius: 4px; }
-    .warning { background: #ff9800; color: #fff; padding: 12px 24px; border-radius: 4px; }
-    .error { background: #f44336; color: #fff; padding: 12px 24px; border-radius: 4px; }
+    ::ng-deep .toast {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      min-width: 300px;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px #000000;
+    }
+    ::ng-deep .message {
+      flex: 1;
+      font-weight: 500;
+    }
+    ::ng-deep .close-button {
+      color:rgb(255, 255, 255) !important;
+      margin-left: 16px;
+      opacity: 0.9;
+      transition: opacity 0.2s;
+    }
+    ::ng-deep .close-button:hover {
+      opacity: 1;
+    }
   `],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, MatButtonModule]
 })
 export class ToastContainerComponent {
   constructor(public toastService: ToastService) {}
+
+  getStyle(type: string | undefined) {
+    console.log('toast type:', type);
+    switch (type) {
+      case 'info':
+        return { background: ' #000000', color: ' #000000' };
+      case 'success':
+        return { background: ' #000000', color:'  #000000' };
+      case 'warning':
+        return { background: 'rgb(255, 170, 0)', color: 'rgb(0, 0, 0)' };
+      case 'error':
+        return { background: 'rgb(255, 0, 0)', color: 'rgb(0, 0, 0)' };
+      default:
+        return { background: ' #000000', color: ' #000000' };
+    }
+  }
 } 

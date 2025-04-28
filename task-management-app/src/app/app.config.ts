@@ -12,6 +12,7 @@ import { AngularFireModule } from '@angular/fire/compat';
 import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
 import { MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { provideAuth, getAuth } from '@angular/fire/auth';
+import { ToastService } from './shared/services/toast.service';
 
 export const MY_FORMATS = {
   parse: {
@@ -53,5 +54,6 @@ export const appConfig: ApplicationConfig = {
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
     { provide: MAT_DATE_LOCALE, useValue: 'ja-JP' },
     provideAuth(() => getAuth()),
+    ToastService,
   ]
 };

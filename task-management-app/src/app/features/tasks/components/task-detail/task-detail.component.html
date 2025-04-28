@@ -23,12 +23,12 @@
       </div>
       <!-- 未着手・完了：バーのみ -->
       <ng-container *ngIf="task.status !== '進行中'; else sliderBlock">
-        <mat-progress-bar
-          [mode]="'determinate'"
+      <mat-progress-bar
+        [mode]="'determinate'"
           [value]="task.progress ?? getProgressPercentage()"
-          [color]="getProgressColor()"
-          class="progress-bar">
-        </mat-progress-bar>
+        [color]="getProgressColor()"
+        class="progress-bar">
+      </mat-progress-bar>
       </ng-container>
       <!-- 進行中：スライダー -->
       <ng-template #sliderBlock>

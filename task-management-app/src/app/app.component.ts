@@ -1,13 +1,23 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, NavigationStart, RouterOutlet } from '@angular/router';
+import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
+import { ToastService } from './shared/services/toast.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, ToastContainerComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
   title = 'task-management-app';
+
+  constructor(private toastService: ToastService, private router: Router) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationStart) {
+        this.toastService.clearAll();
+      }
+    });
+  }
 }
