@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Firestore, doc, getDoc, deleteDoc } from '@angular/fire/firestore';
 import { TaskService } from '../../services/task.service';
-import { Task } from '../../models/task.model';
+import { Task, SubTask } from '../../models/task.model';
 import { Timestamp } from 'firebase/firestore';
 import { CommonModule } from '@angular/common';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
@@ -14,6 +14,7 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'app-task-detail',
@@ -37,6 +38,8 @@ export class TaskDetailComponent implements OnInit {
   loading = true;
   deleting = false;
   progressControl = new FormControl(0);
+  newSubTaskTitle = '';
+  newSubTaskAssignee = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -60,6 +63,7 @@ export class TaskDetailComponent implements OnInit {
       }
     }
     this.loading = false;
+    this.checkDeadlineReminder();
   }
 
   private async loadTask(taskId: string) {
@@ -167,5 +171,47 @@ export class TaskDetailComponent implements OnInit {
   onSliderChange(event: any, task: Task) {
     task.progress = event;
     this.onProgressChange(task);
+  }
+
+  addSubTask() {
+    if (!this.task) return;
+    const sub: SubTask = {
+      id: crypto.randomUUID(),
+      title: this.newSubTaskTitle,
+      assignee: this.newSubTaskAssignee,
+      done: false
+    };
+    this.task.subTasks = this.task.subTasks || [];
+    this.task.subTasks.push(sub);
+    this.newSubTaskTitle = '';
+    this.newSubTaskAssignee = '';
+    this.saveTask();
+  }
+
+  removeSubTask(sub: SubTask) {
+    if (!this.task) return;
+    this.task.subTasks = this.task.subTasks?.filter(s => s.id !== sub.id);
+    this.saveTask();
+  }
+
+  updateSubTask(sub: SubTask) {
+    this.saveTask();
+  }
+
+  saveTask() {
+    if (this.task) {
+      this.taskService.updateTask(this.task.id, { subTasks: this.task.subTasks });
+    }
+  }
+
+  checkDeadlineReminder() {
+    if (!this.task?.dueDate) return;
+    const now = new Date();
+    const due = new Date(this.task.dueDate);
+    const diff = due.getTime() - now.getTime();
+    const oneDay = 24 * 60 * 60 * 1000;
+    if (diff > 0 && diff < oneDay) {
+      this.snackBar.open('締切が近づいています！', '閉じる', { duration: 5000 });
+    }
   }
 } 

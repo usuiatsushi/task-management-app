@@ -72,6 +72,20 @@
         <h2>更新日時</h2>
         <p>{{ task.updatedAt | date:'yyyy/MM/dd HH:mm' }}</p>
       </div>
+
+      <div class="subtasks-section">
+        <h2>対応計画 & アクション管理</h2>
+        <ul>
+          <li *ngFor="let sub of task.subTasks">
+            <input type="checkbox" [(ngModel)]="sub.done" (change)="updateSubTask(sub)">
+            {{ sub.title }}（担当: {{ sub.assignee }}）
+            <button (click)="removeSubTask(sub)">削除</button>
+          </li>
+        </ul>
+        <input [(ngModel)]="newSubTaskTitle" placeholder="サブタスク名">
+        <input [(ngModel)]="newSubTaskAssignee" placeholder="担当者">
+        <button (click)="addSubTask()">追加</button>
+      </div>
     </div>
   </div>
 

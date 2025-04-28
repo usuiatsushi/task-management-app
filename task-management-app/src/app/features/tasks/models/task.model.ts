@@ -1,5 +1,12 @@
 import { Timestamp } from 'firebase/firestore';
 
+export interface SubTask {
+  id: string;
+  title: string;
+  assignee: string;
+  done: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -14,4 +21,5 @@ export interface Task {
   userId: string;
   calendarEventId?: string;
   progress?: number;
+  subTasks?: SubTask[];
 } 
