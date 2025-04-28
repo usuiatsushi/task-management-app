@@ -31,6 +31,15 @@
         </div>
       </div>
 
+      <div class="export-buttons" style="margin-bottom: 16px;">
+        <button mat-raised-button color="accent" (click)="exportTasksToCSV()">
+          エクスポート（CSV）
+        </button>
+        <button mat-raised-button color="primary" (click)="exportTasksToExcel()">
+          エクスポート（Excel）
+        </button>
+      </div>
+
       <form [formGroup]="filterForm" class="task-list-filters">
         <mat-form-field class="category-field">
           <mat-label>カテゴリ</mat-label>
