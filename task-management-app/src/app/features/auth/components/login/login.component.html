@@ -42,5 +42,10 @@
     <div class="register-link">
       アカウントをお持ちでない方は<a routerLink="/auth/register">こちら</a>から登録してください
     </div>
+
+    <!-- Googleログインボタンを追加 -->
+    <button type="button" (click)="loginWithGoogle()" style="margin-top: 16px; background: #4285f4; color: white; border: none; padding: 12px 24px; border-radius: 4px; font-size: 1em; cursor: pointer;">
+      Googleでログイン
+    </button>
   </form>
 </div> 

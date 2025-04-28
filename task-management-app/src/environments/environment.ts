@@ -1,13 +1,14 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "AIzaSyDGVGOqmLChcnfQf0e5BLzA0dUOKH2Keqc",
-    authDomain: "ua-250428.firebaseapp.com",
-    projectId: "ua-250428",
-    storageBucket: "ua-250428.firebasestorage.app",
-    messagingSenderId: "654955603337",
-    appId: "1:654955603337:web:0f7db206fe7d64c3cd6d58",
-    measurementId: "G-6J4KNWM9SL",
-    clientId: "654955603337-00000000000000000000000000000000.apps.googleusercontent.com"
+    apiKey: "AIzaSyDtfvkdvkps6QwTjwsEJ8-CBkl6TyGR-jU",
+    authDomain: "kensyu10095.firebaseapp.com",
+    databaseURL: "https://kensyu10095-default-rtdb.firebaseio.com",
+    projectId: "kensyu10095",
+    storageBucket: "kensyu10095.firebasestorage.app",
+    messagingSenderId: "263465065376",
+    appId: "1:263465065376:web:ef06d92faa796b8feee2c5",
+    measurementId: "G-5G9YN3PGSF",
+    clientId: "263465065376-vi713m0i7kg7piq1th85er3vue73g5uc.apps.googleusercontent.com"
   }
 }; 
