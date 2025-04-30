@@ -41,6 +41,7 @@ export class CommentSectionComponent implements OnInit {
   replyToCommentId: string | null = null;
   replyContent: string = '';
   showReplies: { [commentId: string]: boolean } = {};
+  openAction: { [commentId: string]: 'reply' | 'replies' | 'history' | null } = {};
 
   constructor(
     private commentService: CommentService,
@@ -203,5 +204,24 @@ export class CommentSectionComponent implements OnInit {
 
   toggleReplies(commentId: string): void {
     this.showReplies[commentId] = !this.showReplies[commentId];
+  }
+
+  toggleReplyAction(commentId: string): void {
+    this.openAction[commentId] = this.openAction[commentId] === 'reply' ? null : 'reply';
+    if (this.openAction[commentId] === 'reply') {
+      this.replyToCommentId = commentId;
+      this.replyContent = '';
+    } else {
+      this.replyToCommentId = null;
+      this.replyContent = '';
+    }
+  }
+
+  toggleRepliesAction(commentId: string): void {
+    this.openAction[commentId] = this.openAction[commentId] === 'replies' ? null : 'replies';
+  }
+
+  toggleHistoryAction(commentId: string): void {
+    this.openAction[commentId] = this.openAction[commentId] === 'history' ? null : 'history';
   }
 } 

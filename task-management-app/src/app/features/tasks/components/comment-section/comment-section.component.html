@@ -54,33 +54,38 @@
         <!-- アクションボタン行（左：返信・返信数、右：編集履歴） -->
         <div class="comment-actions-row">
           <div class="left-actions">
-            <button mat-button color="accent" (click)="startReply(comment.id)">返信</button>
-            <button *ngIf="getReplies(comment.id).length > 0" mat-button class="toggle-replies-btn" (click)="toggleReplies(comment.id)">
-              {{ showReplies[comment.id] ? '返信を隠す' : getReplies(comment.id).length + '件の返信を表示' }}
+            <button *ngIf="!openAction[comment.id]" mat-button color="accent" (click)="toggleReplyAction(comment.id)">返信</button>
+            <button *ngIf="!openAction[comment.id] && getReplies(comment.id).length > 0" mat-button class="toggle-replies-btn" (click)="toggleRepliesAction(comment.id)">
+              {{ getReplies(comment.id).length + '件の返信を表示' }}
             </button>
+            <button *ngIf="openAction[comment.id] === 'reply'" mat-button color="accent" (click)="toggleReplyAction(comment.id)">返信を閉じる</button>
+            <button *ngIf="openAction[comment.id] === 'replies'" mat-button class="toggle-replies-btn" (click)="toggleRepliesAction(comment.id)">返信を隠す</button>
           </div>
           <div class="right-actions">
-            <button mat-button (click)="toggleHistory(comment.id)">
-              {{ showHistory[comment.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
+            <button *ngIf="!openAction[comment.id]" mat-button (click)="toggleHistoryAction(comment.id)">
+              編集履歴を見る
+            </button>
+            <button *ngIf="openAction[comment.id] === 'history'" mat-button (click)="toggleHistoryAction(comment.id)">
+              編集履歴を閉じる
             </button>
           </div>
         </div>
-        <div *ngIf="replyToCommentId === comment.id" class="reply-form">
+        <div *ngIf="openAction[comment.id] === 'reply'" class="reply-form">
           <mat-form-field class="reply-input">
             <textarea matInput [(ngModel)]="replyContent" rows="2" placeholder="返信を入力してください"></textarea>
           </mat-form-field>
           <div class="edit-actions">
             <button mat-button color="primary" (click)="submitReply(comment)">返信を投稿</button>
-            <button mat-button (click)="cancelReply()">キャンセル</button>
+            <button mat-button (click)="toggleReplyAction(comment.id)">キャンセル</button>
           </div>
         </div>
-        <div *ngIf="showHistory[comment.id] && comment.editHistory?.length" class="edit-history">
+        <div *ngIf="openAction[comment.id] === 'history' && comment.editHistory?.length" class="edit-history">
           <div *ngFor="let history of comment.editHistory">
             <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
             <span>{{ history.content }}</span>
           </div>
         </div>
-        <div class="reply-list" *ngIf="getReplies(comment.id).length > 0 && showReplies[comment.id]">
+        <div class="reply-list" *ngIf="openAction[comment.id] === 'replies'">
           <ng-container *ngTemplateOutlet="commentThread; context: { $implicit: getReplies(comment.id) }"></ng-container>
         </div>
       </div>
