@@ -8,4 +8,7 @@ export interface Comment {
   content: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  isEdited: boolean;
+  editHistory?: { content: string; editedAt: Timestamp }[];
+  parentId?: string | null;
 } 

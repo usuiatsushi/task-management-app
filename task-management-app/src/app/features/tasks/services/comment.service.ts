@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, orderBy, updateDoc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, orderBy, updateDoc, Timestamp, getDoc } from '@angular/fire/firestore';
 import { Comment } from '../models/comment.model';
 
 @Injectable({
@@ -28,7 +28,7 @@ export class CommentService {
       const q = query(
         commentsRef, 
         where('taskId', '==', taskId),
-        orderBy('createdAt', 'desc')  // 作成日時の降順でソート
+        orderBy('updatedAt', 'desc')  // 更新日時の降順でソート
       );
       const querySnapshot = await getDocs(q);
       
@@ -61,9 +61,15 @@ export class CommentService {
     try {
       console.log('コメントを更新します:', commentId);
       const commentRef = doc(this.firestore, 'comments', commentId);
+      const commentSnap = await getDoc(commentRef);
+      const commentData = commentSnap.data() as Comment;
+      const newHistory = commentData.editHistory || [];
+      newHistory.push({ content: commentData.content, editedAt: commentData.updatedAt });
       await updateDoc(commentRef, {
         content: content,
-        updatedAt: new Date()
+        updatedAt: Timestamp.now(),
+        isEdited: true,
+        editHistory: newHistory
       });
       console.log('コメントが更新されました:', commentId);
     } catch (error) {

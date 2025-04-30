@@ -37,6 +37,7 @@ export class CommentSectionComponent implements OnInit {
   currentUser: any;
   editingCommentId: string | null = null;
   editContent: string = '';
+  showHistory: { [commentId: string]: boolean } = {};
 
   constructor(
     private commentService: CommentService,
@@ -80,7 +81,8 @@ export class CommentSectionComponent implements OnInit {
         userName: currentUser.displayName || '匿名ユーザー',
         content: this.commentForm.value.content,
         createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+        isEdited: false
       };
 
       await this.commentService.createComment(comment);
@@ -141,5 +143,9 @@ export class CommentSectionComponent implements OnInit {
   cancelEdit(): void {
     this.editingCommentId = null;
     this.editContent = '';
+  }
+
+  toggleHistory(commentId: string): void {
+    this.showHistory[commentId] = !this.showHistory[commentId];
   }
 } 

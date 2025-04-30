@@ -22,8 +22,8 @@
       <div class="comment-header">
         <span class="user-name">{{ comment.userName }}</span>
         <span class="comment-date">
-          {{ comment.createdAt.toDate() | date:'yyyy/MM/dd HH:mm' }}
-          <span *ngIf="comment.updatedAt && comment.updatedAt !== comment.createdAt" class="edited-mark">
+          {{ comment.updatedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}
+          <span *ngIf="comment.isEdited" class="edited-mark">
             (編集済み)
           </span>
         </span>
@@ -44,6 +44,15 @@
         <div class="edit-actions">
           <button mat-button color="primary" (click)="saveEdit(comment)">保存</button>
           <button mat-button (click)="cancelEdit()">キャンセル</button>
+        </div>
+      </div>
+      <button mat-button (click)="toggleHistory(comment.id)">
+        {{ showHistory[comment.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
+      </button>
+      <div *ngIf="showHistory[comment.id] && comment.editHistory?.length" class="edit-history">
+        <div *ngFor="let history of comment.editHistory">
+          <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
+          <span>{{ history.content }}</span>
         </div>
       </div>
     </div>
