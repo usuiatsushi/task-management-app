@@ -152,6 +152,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   priorityOrder = { '高': 3, '中': 2, '低': 1 };
   statusOrder = { '未着手': 1, '進行中': 2, '完了': 3 };
 
+  // デフォルトのカテゴリ選択肢
+  defaultCategories = ['技術的課題', '業務フロー', 'バグ修正', '新機能・改善提案'];
+
   constructor(
     private taskService: TaskService,
     private categoryService: CategoryService,
@@ -268,8 +271,17 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     };
   }
 
-  getUniqueCategories(): string[] {
-    return this.categories;
+  // フィルタリング用のカテゴリを取得
+  getFilterCategories(): string[] {
+    const categories = new Set(this.tasks.map(task => task.category));
+    return Array.from(categories).filter(category => category !== '');
+  }
+
+  // 編集用のカテゴリを取得（デフォルト + 現在のタスクのカテゴリ）
+  getEditCategories(): string[] {
+    const taskCategories = new Set(this.tasks.map(task => task.category));
+    const allCategories = new Set([...this.defaultCategories, ...taskCategories]);
+    return Array.from(allCategories).filter(category => category !== '');
   }
 
   getStatusClass(status: string): string {
@@ -489,17 +501,14 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onDateChange(task: any, event: any) {
-    const newDate = event.value;
-    if (!newDate) return;
-
     try {
-      console.log('Selected date:', newDate);
+      console.log('Selected date:', event.value);
       
-      // 日付をTimestamp形式のオブジェクトとして渡す
-      const timestamp = {
-        seconds: Math.floor(newDate.getTime() / 1000),
+      // 日付がクリアされた場合はnullを設定
+      const timestamp = event.value ? {
+        seconds: Math.floor(event.value.getTime() / 1000),
         nanoseconds: 0
-      };
+      } : null;
       
       console.log('Timestamp to be sent:', timestamp);
       await this.updateTaskField(task, 'dueDate', timestamp);
@@ -578,7 +587,298 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
     const text = await file.text();
-    console.log('インポートしたCSV内容:', text);
-    // 今後ここでCSVパース＆タスク登録処理を追加
+    
+    try {
+      // CSVをパース
+      const rows = text.split('\n').map(row => row.split(','));
+      const headers = rows[0];
+      const data = rows.slice(1);
+      
+      // タスクデータに変換
+      const tasks = data.map(row => {
+        const taskData: Omit<Task, 'id'> = {
+          title: row[headers.indexOf('Name')] || '',
+          description: row[headers.indexOf('Notes')] || '',
+          status: row[headers.indexOf('Section/Column')] as '未着手' | '進行中' | '完了' || '未着手',
+          priority: row[headers.indexOf('優先度')] as '低' | '中' | '高' || '中',
+          category: row[headers.indexOf('Category')] || '',
+          assignedTo: row[headers.indexOf('Assignee')] || '',
+          dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
+          userId: '',
+          createdAt: Timestamp.fromDate(new Date()),
+          updatedAt: Timestamp.fromDate(new Date())
+        };
+        return taskData;
+      });
+
+      // タスクを登録
+      for (const task of tasks) {
+        if (task.title) { // タイトルがあるものだけ登録
+          await this.taskService.createTask(task as Task);
+        }
+      }
+
+      this.snackBar.open(`${tasks.length}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      this.loadTasks(); // タスク一覧を更新
+    } catch (error) {
+      console.error('CSVのインポートに失敗しました:', error);
+      this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  public downloadSampleCSV() {
+    const csvContent = [
+      'Name,Notes,Section/Column,Due Date,Assignee,優先度',
+      'タスク管理アプリの機能追加,新しい機能を追加する必要があります,To-Do,2024/5/10,山田太郎,中',
+      'バグの修正対応,重要なバグを修正する,進行中,2024/5/15,鈴木一郎,高',
+      'ドキュメント作成,アプリケーションの使用方法をまとめる,To-Do,2024/5/20,佐藤花子,低'
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'sample_tasks.csv';
+    link.click();
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      // CSVの内容を確認してTrelloのCSVかどうかを判断
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result as string;
+        const firstLine = text.split('\n')[0];
+        // TrelloのCSVの特徴的なヘッダーを確認
+        if (firstLine.includes('Card ID') && firstLine.includes('Card Name') && firstLine.includes('List Name')) {
+          this.importTrelloCSV(file);
+        } else {
+          this.importTasksFromCSV(file);
+        }
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  // カテゴリを追加するメソッド
+  private addCategory(category: string): void {
+    if (!this.categories.includes(category)) {
+      this.categories.push(category);
+      this.categoryService.addCategory(category);
+    }
+  }
+
+  async importTrelloCSV(file: File): Promise<void> {
+    try {
+      const text = await file.text();
+      const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+      const headers = rows[0];
+      
+      // Trelloカテゴリを追加
+      this.addCategory('Trello');
+      
+      // ヘッダーのインデックスを取得
+      const titleIndex = headers.indexOf('Card Name');
+      const descriptionIndex = headers.indexOf('Card Description');
+      const statusIndex = headers.indexOf('List Name');
+      const dueDateIndex = headers.indexOf('Due Date');
+      const assigneeIndex = headers.indexOf('Members');
+      const assigneeNameIndex = headers.indexOf('Member Names');
+
+      const tasks = rows.slice(1).map(row => {
+        // タイトルが空の場合はスキップ
+        if (!row[titleIndex]?.trim()) {
+          return null;
+        }
+
+        // Trelloのステータスをアプリケーションのステータスに変換
+        const trelloStatus = row[statusIndex] || '';
+        let status: '未着手' | '進行中' | '完了';
+        switch (trelloStatus) {
+          case 'To Do':
+            status = '未着手';
+            break;
+          case '作業中':
+            status = '進行中';
+            break;
+          case '完了':
+            status = '完了';
+            break;
+          default:
+            status = '未着手';
+        }
+
+        // 担当者名を取得（Member Namesカラムがある場合はそれを使用）
+        const assignedTo = assigneeNameIndex !== -1 && row[assigneeNameIndex] 
+          ? row[assigneeNameIndex].trim() 
+          : row[assigneeIndex]?.trim() || '';
+
+        const taskData = {
+          title: row[titleIndex]?.trim() || '',
+          description: row[descriptionIndex]?.trim() || '',
+          status: status as '未着手' | '進行中' | '完了',
+          priority: '' as '低' | '中' | '高',
+          category: 'Trello',
+          assignedTo: assignedTo,
+          createdAt: Timestamp.fromDate(new Date()),
+          updatedAt: Timestamp.fromDate(new Date()),
+          userId: '', // 後で設定
+          dueDate: row[dueDateIndex]?.trim() ? Timestamp.fromDate(new Date(row[dueDateIndex])) : null
+        } as const;
+
+        return taskData;
+      }).filter(task => task !== null);
+
+      // タスクを登録
+      for (const task of tasks) {
+        try {
+          await this.taskService.createTask(task as Task);
+        } catch (error) {
+          console.error('Error creating task:', error);
+          this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
+            duration: 3000
+          });
+        }
+      }
+
+      this.snackBar.open('Trelloからタスクをインポートしました', '閉じる', {
+        duration: 3000
+      });
+      this.loadTasks(); // タスク一覧を更新
+    } catch (error) {
+      console.error('Error importing Trello CSV:', error);
+      this.snackBar.open('Trello CSVのインポートに失敗しました', '閉じる', {
+        duration: 3000
+      });
+    }
+  }
+
+  async importTasksFromCSV(file: File): Promise<void> {
+    try {
+      const text = await file.text();
+      const rows = text.split('\n').map(row => {
+        // CSVの行を適切に分割（カンマを含むフィールドに対応）
+        const matches = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+        return matches ? matches.map(val => val.replace(/^"|"$/g, '').trim()) : [];
+      });
+      const headers = rows[0];
+
+      // ヘッダーのインデックスを取得
+      const nameIndex = headers.indexOf('Name');
+      const notesIndex = headers.indexOf('Notes');
+      const sectionIndex = headers.indexOf('Section/Column');
+      const dueDateIndex = headers.indexOf('Due Date');
+      const assigneeIndex = headers.indexOf('Assignee');
+      const priorityIndex = headers.indexOf('優先度');
+      const statusIndex = headers.indexOf('ステータス');
+
+      const tasks = rows.slice(1)
+        .filter(row => row.length > 0 && row[nameIndex]?.trim())
+        .map(row => {
+          // Asanaのステータスを変換
+          let status: '未着手' | '進行中' | '完了';
+          const asanaSection = row[sectionIndex]?.trim() || '';
+          
+          switch (asanaSection.toLowerCase()) {
+            case 'to-do':
+            case 'todo':
+              status = '未着手';
+              break;
+            case '進行中':
+            case 'in progress':
+              status = '進行中';
+              break;
+            case '完了':
+            case 'done':
+            case 'completed':
+              status = '完了';
+              break;
+            default:
+              status = '未着手';
+          }
+
+          // 優先度の変換
+          let priority: '低' | '中' | '高' = '中';
+          const rawPriority = row[priorityIndex]?.trim().toLowerCase() || '';
+          if (rawPriority.includes('高') || rawPriority.includes('high')) {
+            priority = '高';
+          } else if (rawPriority.includes('低') || rawPriority.includes('low')) {
+            priority = '低';
+          }
+
+          // タスクの内容に基づいてカテゴリを決定
+          let category = '技術的課題';
+          const title = row[nameIndex]?.trim() || '';
+          const notes = row[notesIndex]?.trim() || '';
+          
+          if (title.includes('バグ') || notes.includes('バグ')) {
+            category = 'バグ修正';
+          } else if (title.includes('機能') || notes.includes('機能')) {
+            category = '新機能・改善提案';
+          } else if (title.includes('フロー') || notes.includes('フロー') || 
+                    title.includes('ドキュメント') || notes.includes('ドキュメント')) {
+            category = '業務フロー';
+          }
+
+          const dueDate = row[dueDateIndex]?.trim()
+            ? Timestamp.fromDate(new Date(row[dueDateIndex]))
+            : null;
+
+          const taskData: Omit<Task, 'id'> = {
+            title: title,
+            description: notes || '',
+            status: status,
+            priority: priority,
+            category: category,
+            assignedTo: row[assigneeIndex]?.trim() || '',
+            dueDate: dueDate,
+            userId: '',
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date())
+          };
+
+          return taskData;
+        });
+
+      // タスクを保存
+      for (const task of tasks) {
+        try {
+          await this.taskService.createTask(task as Task);
+        } catch (error) {
+          console.error('タスクの作成に失敗しました:', error);
+          this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
+            duration: 3000
+          });
+        }
+      }
+
+      this.snackBar.open(`${tasks.length}件のタスクをインポートしました`, '閉じる', {
+        duration: 3000,
+        panelClass: ['success-snackbar']
+      });
+      
+      // タスク一覧を更新
+      await this.loadTasks();
+    } catch (error) {
+      console.error('CSVのインポートに失敗しました:', error);
+      this.snackBar.open('CSVのインポートに失敗しました', '閉じる', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    }
+  }
+
+  private convertAsanaStatus(status: string): string {
+    switch (status) {
+      case 'To-Do':
+        return '未着手';
+      case '進行中':
+        return '進行中';
+      case '完了':
+        return '完了';
+      default:
+        return '未着手';
+    }
   }
 } 

@@ -13,8 +13,7 @@ export class CategoryService {
     '技術的課題',
     '業務フロー',
     'バグ修正',
-    '新機能・改善提案',
-    'その他'
+    '新機能・改善提案'
   ];
 
   constructor(private firestore: Firestore) {

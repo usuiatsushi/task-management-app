@@ -24,11 +24,19 @@
         </mat-form-field>
 
         <div class="category-section">
-          <mat-form-field appearance="outline" class="form-field">
+          <mat-form-field appearance="outline">
             <mat-label>カテゴリ</mat-label>
-            <mat-select formControlName="category">
+            <mat-select formControlName="category" [compareWith]="compareWith">
+              <mat-select-trigger>
+                {{taskForm.get('category')?.value}}
+              </mat-select-trigger>
               <mat-option *ngFor="let category of categories" [value]="category">
-                {{ category }}
+                <div class="category-option">
+                  <span>{{category}}</span>
+                  <button type="button" mat-icon-button (click)="$event.stopPropagation(); deleteCategory(category);">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </mat-option>
             </mat-select>
             <mat-error>{{ getErrorMessage('category') }}</mat-error>

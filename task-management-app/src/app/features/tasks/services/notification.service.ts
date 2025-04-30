@@ -14,11 +14,11 @@ export class NotificationService {
     const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
     tasks.forEach(task => {
-      const dueDate = task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate);
-      
-      if (dueDate < now) {
+      const dueDate = task.dueDate ? (task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate)) : null;
+        
+      if (dueDate && dueDate < now) {
         this.toastService.show(`${task.title}の期限が過ぎています`, 'error');
-      } else if (dueDate <= threeDaysFromNow) {
+      } else if (dueDate && dueDate > now && dueDate < threeDaysFromNow) {
         const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
         const diffTime = dueDateOnly.getTime() - nowDate.getTime();

@@ -51,7 +51,7 @@ export class TaskService implements OnDestroy {
                 description: data['description'] || '',
                 status: data['status'] || '未着手',
                 priority: data['priority'] || '中',
-                category: data['category'] || 'その他',
+                category: data['category'] || '',
                 assignedTo: data['assignedTo'] || '',
                 createdAt: data['createdAt'],
                 updatedAt: data['updatedAt'],
@@ -136,19 +136,18 @@ export class TaskService implements OnDestroy {
           const data = docSnapshot.data();
           console.log('Raw task data for ID:', docSnapshot.id, data);
 
-          // 現在のタイムスタンプを作成（デフォルト値用）
+          // 現在のタイムスタンプを作成
           const now = new Date();
-          const oneWeekLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
           // 日付フィールドの処理
-          let dueDate = oneWeekLater; // デフォルト値を設定
+          let dueDate: Date | null = null;
 
           if (data['dueDate']) {
             if (data['dueDate'] instanceof Timestamp) {
               const timestamp = data['dueDate'] as Timestamp;
               const tempDate = timestamp.toDate();
               if (tempDate.getTime() <= new Date(1970, 0, 1).getTime()) {
-                console.log('Invalid date detected (1970/1/1), setting to one week later for task:', docSnapshot.id);
+                console.log('Invalid date detected (1970/1/1), setting to null for task:', docSnapshot.id);
               } else {
                 console.log('Using existing due date for task:', docSnapshot.id);
                 dueDate = tempDate;
@@ -156,37 +155,11 @@ export class TaskService implements OnDestroy {
             } else if (typeof data['dueDate'] === 'object') {
               const seconds = data['dueDate'].seconds;
               if (!seconds || seconds <= 0) {
-                console.log('Invalid timestamp detected, setting to one week later for task:', docSnapshot.id);
+                console.log('Invalid timestamp detected, setting to null for task:', docSnapshot.id);
               } else {
                 dueDate = new Timestamp(seconds, data['dueDate'].nanoseconds || 0).toDate();
                 console.log('Converted timestamp to date for task:', docSnapshot.id);
               }
-            }
-          } else {
-            console.log('No due date found, setting to one week later for task:', docSnapshot.id);
-          }
-
-          // Firestoreの更新が必要かチェック
-          const isDefaultDate = dueDate.getTime() === oneWeekLater.getTime();
-          if (isDefaultDate) {
-            try {
-              const docRef = doc(this.firestore, 'tasks', docSnapshot.id);
-              console.log('Updating task due date in Firestore:', docSnapshot.id);
-              const updateData = {
-                dueDate: {
-                  seconds: Math.floor(dueDate.getTime() / 1000),
-                  nanoseconds: 0
-                },
-                updatedAt: {
-                  seconds: Math.floor(now.getTime() / 1000),
-                  nanoseconds: 0
-                }
-              };
-              await updateDoc(docRef, updateData);
-              console.log('Successfully updated task in Firestore:', docSnapshot.id);
-            } catch (error) {
-              console.error('Error updating task in Firestore:', docSnapshot.id, error);
-              // 更新に失敗しても処理は続行
             }
           }
 
@@ -198,17 +171,17 @@ export class TaskService implements OnDestroy {
             description: data['description'] || '',
             status: data['status'] || '未着手',
             priority: data['priority'] || '中',
-            category: data['category'] || 'その他',
+            category: data['category'] || '',
             assignedTo: data['assignedTo'] || '',
             createdAt: data['createdAt'] instanceof Timestamp ? data['createdAt'] : Timestamp.fromDate(now),
             updatedAt: data['updatedAt'] instanceof Timestamp ? data['updatedAt'] : Timestamp.fromDate(now),
-            dueDate: Timestamp.fromDate(dueDate)
+            dueDate: dueDate ? Timestamp.fromDate(dueDate) : null
           };
 
           console.log('Processed task data:', {
             id: processedData.id,
             title: processedData.title,
-            dueDate: processedData.dueDate.toDate()
+            dueDate: processedData.dueDate?.toDate() || null
           });
 
           return processedData as Task;
@@ -223,11 +196,11 @@ export class TaskService implements OnDestroy {
             description: errorData['description'] || '',
             status: errorData['status'] || '未着手',
             priority: errorData['priority'] || '中',
-            category: errorData['category'] || 'その他',
+            category: errorData['category'] || '',
             assignedTo: errorData['assignedTo'] || '',
             createdAt: Timestamp.fromDate(new Date()),
             updatedAt: Timestamp.fromDate(new Date()),
-            dueDate: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
+            dueDate: null
           } as Task;
         }
       }));

@@ -52,6 +52,9 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   dueDateOnly: Date | null = null;
   dueTimeOnly: string = '23:59'; // デフォルト
 
+  // カスタムコンパレータを追加
+  compareWith = (o1: any, o2: any) => o1 === o2;
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -97,9 +100,6 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     // カテゴリの読み込み
     this.categoryService.categories$.subscribe(categories => {
       this.categories = categories;
-      if (categories.length > 0 && !this.isEditMode) {
-        this.taskForm.patchValue({ category: categories[0] });
-      }
       this.cdr.detectChanges();
     });
 
@@ -269,9 +269,33 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   addNewCategory(): void {
     const newCategory = this.taskForm.get('newCategoryName')?.value;
     if (newCategory && !this.categories.includes(newCategory)) {
-      this.categories.push(newCategory);
-      this.taskForm.patchValue({ category: newCategory });
-      this.taskForm.get('newCategoryName')?.reset();
+      this.categoryService.addCategory(newCategory).then(() => {
+        this.taskForm.patchValue({ category: newCategory });
+        this.taskForm.get('newCategoryName')?.reset();
+      }).catch(error => {
+        console.error('カテゴリの追加に失敗しました:', error);
+        this.snackBar.open('カテゴリの追加に失敗しました', '閉じる', {
+          duration: 3000
+        });
+      });
+    }
+  }
+
+  deleteCategory(category: string): void {
+    if (category && this.categories.includes(category)) {
+      this.categoryService.deleteCategory(category).then(() => {
+        if (this.taskForm.get('category')?.value === category) {
+          this.taskForm.patchValue({ category: '' });
+        }
+        this.snackBar.open('カテゴリを削除しました', '閉じる', {
+          duration: 3000
+        });
+      }).catch(error => {
+        console.error('カテゴリの削除に失敗しました:', error);
+        this.snackBar.open('カテゴリの削除に失敗しました', '閉じる', {
+          duration: 3000
+        });
+      });
     }
   }
 

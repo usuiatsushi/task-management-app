@@ -40,10 +40,15 @@
         </button>
       </div>
 
-      <div class="import-buttons" style="margin-bottom: 16px;">
-        <input type="file" accept=".csv" (change)="onImportCSV($event)" style="display:none" #importInput>
-        <button mat-raised-button color="accent" (click)="importInput.click()">
-          インポート（CSV）
+      <div class="import-export-container">
+        <button mat-raised-button color="primary" (click)="downloadSampleCSV()">
+          <mat-icon>download</mat-icon>
+          サンプルCSVをダウンロード
+        </button>
+        <input type="file" accept=".csv" (change)="onFileSelected($event)" style="display: none" #fileInput>
+        <button mat-raised-button color="primary" (click)="fileInput.click()">
+          <mat-icon>upload</mat-icon>
+          CSVをインポート
         </button>
       </div>
 
@@ -52,7 +57,7 @@
           <mat-label>カテゴリ</mat-label>
           <mat-select formControlName="category">
             <mat-option value="">すべて</mat-option>
-            <mat-option *ngFor="let category of getUniqueCategories()" [value]="category">
+            <mat-option *ngFor="let category of getFilterCategories()" [value]="category">
               {{ category }}
             </mat-option>
           </mat-select>
@@ -114,7 +119,7 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header>カテゴリ</th>
             <td mat-cell *matCellDef="let task">
               <div *ngIf="editingTask?.id !== task.id || editingField !== 'category'; else editCategory">
-                <span class="editable-field" (click)="startEditing(task, 'category')">{{ task.category }}</span>
+                <span class="editable-field" (click)="startEditing(task, 'category')">{{ task.category || '' }}</span>
               </div>
               <ng-template #editCategory>
                 <mat-form-field class="edit-field">
@@ -124,7 +129,7 @@
                     (selectionChange)="onSelectChange(task, 'category', $event)"
                     (closed)="stopEditing()"
                     panelClass="task-field-select">
-                    <mat-option *ngFor="let category of getUniqueCategories()" [value]="category">
+                    <mat-option *ngFor="let category of getEditCategories()" [value]="category">
                       {{ category }}
                     </mat-option>
                   </mat-select>
@@ -186,7 +191,7 @@
             <td mat-cell *matCellDef="let task">
               <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
                 <span class="editable-field" (click)="startEditing(task, 'dueDate')">
-                  {{ getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d' }}
+                  {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
                 </span>
               </div>
               <ng-template #editDueDate>
