@@ -249,20 +249,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const tasks = await this.taskService.getTasks();
       console.log('Tasks loaded:', tasks);
-      this.tasks = tasks;
-      this.dataSource.data = tasks;
+      
+      // タスクリストを更新
+      this.tasks = [...tasks];
+      
+      // データソースを完全に再作成
+      this.dataSource = new MatTableDataSource<Task>(this.tasks);
+      
+      // データソースの設定を再適用
+      this.dataSource.sort = this.sort;
+      this.dataSource.paginator = this.paginator;
       this.dataSource.filterPredicate = this.createFilter();
+      
       this.notificationService.checkTaskDeadlines(tasks);
-      
-      // データソースのソートとページネーションを再設定
-      if (this.sort) {
-        this.dataSource.sort = this.sort;
-      }
-      if (this.paginator) {
-        this.dataSource.paginator = this.paginator;
-      }
-      
-      // フィルターを再適用
       this.applyFilters();
     } catch (error) {
       console.error('タスクの読み込みに失敗しました:', error);
@@ -663,13 +662,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
-      await this.loadTasks(); // タスク一覧を更新
+      
+      // タスクリストを更新
+      await this.loadTasks();
+      
     } catch (error) {
       console.error('CSVのインポートに失敗しました:', error);
       this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
     } finally {
       this.loading = false;
-      input.value = ''; // 入力フィールドをリセット
+      // 入力フィールドをリセット
+      input.value = '';
+      // 入力イベントを強制的に発火
+      input.dispatchEvent(new Event('change'));
     }
   }
 
