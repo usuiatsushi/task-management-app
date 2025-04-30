@@ -18,44 +18,98 @@
   </form>
 
   <div class="comments-list" *ngIf="comments.length > 0">
-    <div class="comment-item" *ngFor="let comment of comments">
-      <div class="comment-header">
-        <span class="user-name">{{ comment.userName }}</span>
-        <span class="comment-date">
-          {{ comment.updatedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}
-          <span *ngIf="comment.isEdited" class="edited-mark">
-            (編集済み)
+    <ng-container *ngFor="let comment of parentComments">
+      <div class="comment-item">
+        <div class="comment-header">
+          <span class="user-name">{{ comment.userName }}</span>
+          <span class="comment-date">
+            {{ comment.updatedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}
+            <span *ngIf="comment.isEdited" class="edited-mark">
+              (編集済み)
+            </span>
           </span>
-        </span>
-        <div class="comment-actions" *ngIf="comment.userId === currentUser?.uid">
-          <button mat-icon-button color="primary" (click)="startEditing(comment)" *ngIf="!isEditing(comment)">
-            <mat-icon>edit</mat-icon>
-          </button>
-          <button mat-icon-button color="warn" (click)="deleteComment(comment.id)">
-            <mat-icon>delete</mat-icon>
-          </button>
+          <div class="comment-actions" *ngIf="comment.userId === currentUser?.uid">
+            <button mat-icon-button color="primary" (click)="startEditing(comment)" *ngIf="!isEditing(comment)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteComment(comment.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+        <div class="comment-content" *ngIf="!isEditing(comment)">{{ comment.content }}</div>
+        <div class="comment-edit-form" *ngIf="isEditing(comment)">
+          <mat-form-field class="edit-input">
+            <textarea matInput [(ngModel)]="editContent" rows="3"></textarea>
+          </mat-form-field>
+          <div class="edit-actions">
+            <button mat-button color="primary" (click)="saveEdit(comment)">保存</button>
+            <button mat-button (click)="cancelEdit()">キャンセル</button>
+          </div>
+        </div>
+        <button mat-button (click)="toggleHistory(comment.id)">
+          {{ showHistory[comment.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
+        </button>
+        <div *ngIf="showHistory[comment.id] && comment.editHistory?.length" class="edit-history">
+          <div *ngFor="let history of comment.editHistory">
+            <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
+            <span>{{ history.content }}</span>
+          </div>
+        </div>
+        <button mat-button color="accent" (click)="startReply(comment.id)">返信</button>
+        <div *ngIf="replyToCommentId === comment.id" class="reply-form">
+          <mat-form-field class="reply-input">
+            <textarea matInput [(ngModel)]="replyContent" rows="2" placeholder="返信を入力してください"></textarea>
+          </mat-form-field>
+          <div class="edit-actions">
+            <button mat-button color="primary" (click)="submitReply(comment)">返信を投稿</button>
+            <button mat-button (click)="cancelReply()">キャンセル</button>
+          </div>
+        </div>
+        <div class="reply-list">
+          <ng-container *ngFor="let reply of getReplies(comment.id)">
+            <div class="reply-item">
+              <div class="comment-header">
+                <span class="user-name">{{ reply.userName }}</span>
+                <span class="comment-date">
+                  {{ reply.updatedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}
+                  <span *ngIf="reply.isEdited" class="edited-mark">
+                    (編集済み)
+                  </span>
+                </span>
+                <div class="comment-actions" *ngIf="reply.userId === currentUser?.uid">
+                  <button mat-icon-button color="primary" (click)="startEditing(reply)" *ngIf="!isEditing(reply)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteComment(reply.id)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="comment-content" *ngIf="!isEditing(reply)">{{ reply.content }}</div>
+              <div class="comment-edit-form" *ngIf="isEditing(reply)">
+                <mat-form-field class="edit-input">
+                  <textarea matInput [(ngModel)]="editContent" rows="3"></textarea>
+                </mat-form-field>
+                <div class="edit-actions">
+                  <button mat-button color="primary" (click)="saveEdit(reply)">保存</button>
+                  <button mat-button (click)="cancelEdit()">キャンセル</button>
+                </div>
+              </div>
+              <button mat-button (click)="toggleHistory(reply.id)">
+                {{ showHistory[reply.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
+              </button>
+              <div *ngIf="showHistory[reply.id] && reply.editHistory?.length" class="edit-history">
+                <div *ngFor="let history of reply.editHistory">
+                  <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
+                  <span>{{ history.content }}</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
         </div>
       </div>
-      <div class="comment-content" *ngIf="!isEditing(comment)">{{ comment.content }}</div>
-      <div class="comment-edit-form" *ngIf="isEditing(comment)">
-        <mat-form-field class="edit-input">
-          <textarea matInput [(ngModel)]="editContent" rows="3"></textarea>
-        </mat-form-field>
-        <div class="edit-actions">
-          <button mat-button color="primary" (click)="saveEdit(comment)">保存</button>
-          <button mat-button (click)="cancelEdit()">キャンセル</button>
-        </div>
-      </div>
-      <button mat-button (click)="toggleHistory(comment.id)">
-        {{ showHistory[comment.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
-      </button>
-      <div *ngIf="showHistory[comment.id] && comment.editHistory?.length" class="edit-history">
-        <div *ngFor="let history of comment.editHistory">
-          <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
-          <span>{{ history.content }}</span>
-        </div>
-      </div>
-    </div>
+    </ng-container>
   </div>
 
   <div class="no-comments" *ngIf="comments.length === 0 && !loading">

@@ -38,6 +38,8 @@ export class CommentSectionComponent implements OnInit {
   editingCommentId: string | null = null;
   editContent: string = '';
   showHistory: { [commentId: string]: boolean } = {};
+  replyToCommentId: string | null = null;
+  replyContent: string = '';
 
   constructor(
     private commentService: CommentService,
@@ -147,5 +149,54 @@ export class CommentSectionComponent implements OnInit {
 
   toggleHistory(commentId: string): void {
     this.showHistory[commentId] = !this.showHistory[commentId];
+  }
+
+  startReply(commentId: string): void {
+    this.replyToCommentId = commentId;
+    this.replyContent = '';
+  }
+
+  cancelReply(): void {
+    this.replyToCommentId = null;
+    this.replyContent = '';
+  }
+
+  async submitReply(parentComment: Comment): Promise<void> {
+    if (!this.replyContent.trim()) {
+      this.snackBar.open('返信内容を入力してください', '閉じる', { duration: 3000 });
+      return;
+    }
+    try {
+      this.loading = true;
+      const currentUser = this.auth.currentUser;
+      if (!currentUser) throw new Error('ユーザーが認証されていません');
+      const reply: Omit<Comment, 'id'> = {
+        taskId: this.taskId,
+        userId: currentUser.uid,
+        userName: currentUser.displayName || '匿名ユーザー',
+        content: this.replyContent,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        isEdited: false,
+        parentId: parentComment.id
+      };
+      await this.commentService.createComment(reply);
+      this.replyToCommentId = null;
+      this.replyContent = '';
+      await this.loadComments();
+    } catch (error) {
+      console.error('返信の投稿に失敗しました:', error);
+      this.snackBar.open('返信の投稿に失敗しました', '閉じる', { duration: 3000 });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  get parentComments(): Comment[] {
+    return this.comments.filter(c => !c.parentId);
+  }
+
+  getReplies(parentId: string): Comment[] {
+    return this.comments.filter(c => c.parentId === parentId);
   }
 } 

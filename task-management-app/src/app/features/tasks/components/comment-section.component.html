@@ -1,0 +1,19 @@
+<div class="comments-list" *ngIf="comments.length > 0">
+  <ng-container *ngFor="let comment of comments">
+    <ng-container *ngIf="!comment.parentId">
+      <div class="comment-item">
+        <!-- 親コメントの内容（省略） -->
+        <!-- ...既存の親コメント表示部分... -->
+        <!-- 返信リスト -->
+        <div class="reply-list">
+          <ng-container *ngFor="let reply of comments.filter(c => c.parentId === comment.id)">
+            <div class="reply-item">
+              <!-- 返信コメントの内容（省略） -->
+              <!-- ...既存の返信コメント表示部分... -->
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </ng-container>
+  </ng-container>
+</div> 
