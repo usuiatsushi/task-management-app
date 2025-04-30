@@ -2,7 +2,6 @@ import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Comment } from '../../models/comment.model';
-import { Task } from '../../models/task.model';
 import { CommentService } from 'src/app/features/tasks/services/comment.service';
 import { Auth } from '@angular/fire/auth';
 import { Timestamp } from 'firebase/firestore';
@@ -30,7 +29,7 @@ import { CommonModule } from '@angular/common';
   ]
 })
 export class CommentSectionComponent implements OnInit {
-  @Input() task!: Task;
+  @Input() taskId!: string;
   comments: Comment[] = [];
   commentForm: FormGroup;
   loading = false;
@@ -55,7 +54,7 @@ export class CommentSectionComponent implements OnInit {
   async loadComments(): Promise<void> {
     try {
       this.loading = true;
-      this.comments = await this.commentService.getCommentsByTaskId(this.task.id);
+      this.comments = await this.commentService.getCommentsByTaskId(this.taskId);
     } catch (error) {
       console.error('コメントの読み込みに失敗しました:', error);
       this.snackBar.open('コメントの読み込みに失敗しました', '閉じる', { duration: 3000 });
@@ -73,7 +72,7 @@ export class CommentSectionComponent implements OnInit {
       if (!currentUser) throw new Error('ユーザーが認証されていません');
 
       const comment: Omit<Comment, 'id'> = {
-        taskId: this.task.id,
+        taskId: this.taskId,
         userId: currentUser.uid,
         userName: currentUser.displayName || '匿名ユーザー',
         content: this.commentForm.value.content,
