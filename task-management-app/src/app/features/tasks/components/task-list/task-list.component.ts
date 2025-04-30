@@ -249,9 +249,21 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const tasks = await this.taskService.getTasks();
       console.log('Tasks loaded:', tasks);
+      this.tasks = tasks;
       this.dataSource.data = tasks;
       this.dataSource.filterPredicate = this.createFilter();
       this.notificationService.checkTaskDeadlines(tasks);
+      
+      // データソースのソートとページネーションを再設定
+      if (this.sort) {
+        this.dataSource.sort = this.sort;
+      }
+      if (this.paginator) {
+        this.dataSource.paginator = this.paginator;
+      }
+      
+      // フィルターを再適用
+      this.applyFilters();
     } catch (error) {
       console.error('タスクの読み込みに失敗しました:', error);
       this.snackBar.open('タスクの読み込みに失敗しました', '閉じる', { duration: 3000 });
