@@ -45,7 +45,7 @@
           <mat-icon>download</mat-icon>
           サンプルCSVをダウンロード
         </button>
-        <input type="file" accept=".csv" (change)="onImportCSV($event)" #fileInput style="display: none">
+        <input type="file" accept=".csv" (change)="onFileSelected($event)" #fileInput style="display: none">
         <button mat-button (click)="fileInput.click()">
           <mat-icon>file_upload</mat-icon>
           CSVインポート

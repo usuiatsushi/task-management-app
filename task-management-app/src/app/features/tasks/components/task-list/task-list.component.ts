@@ -722,30 +722,41 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      const reader = new FileReader();
+    if (!input.files || input.files.length === 0) {
+      this.snackBar.open('ファイルが選択されていません', '閉じる', { duration: 3000 });
+      return;
+    }
+
+    const file = input.files[0];
+    this.processFile(file).then(() => {
+      // ファイル入力フィールドをリセット
+      input.value = '';
+      // 入力イベントを強制的に発火
+      input.dispatchEvent(new Event('change'));
+    });
+  }
+
+  private async processFile(file: File): Promise<void> {
+    try {
+      const content = await file.text();
+      const fileType = this.detectFileType(file, content);
       
-      reader.onload = async (e) => {
-        const content = e.target?.result as string;
-        const fileType = this.detectFileType(file, content);
-        
-        switch (fileType) {
-          case FileType.ASANA:
-            await this.importAsanaCSV(file);
-            break;
-          case FileType.TRELLO:
-            await this.importTrelloCSV(file);
-            break;
-          case FileType.SAMPLE:
-            await this.importSampleCSV(file);
-            break;
-          default:
-            this.snackBar.open('サポートされていないファイル形式です', '閉じる', { duration: 3000 });
-        }
-      };
-      
-      reader.readAsText(file);
+      switch (fileType) {
+        case FileType.ASANA:
+          await this.importAsanaCSV(file);
+          break;
+        case FileType.TRELLO:
+          await this.importTrelloCSV(file);
+          break;
+        case FileType.SAMPLE:
+          await this.importSampleCSV(file);
+          break;
+        default:
+          this.snackBar.open('サポートされていないファイル形式です', '閉じる', { duration: 3000 });
+      }
+    } catch (error) {
+      console.error('ファイルの処理に失敗しました:', error);
+      this.snackBar.open('ファイルの処理に失敗しました', '閉じる', { duration: 3000 });
     }
   }
 
@@ -757,8 +768,79 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  async importAsanaCSV(file: File): Promise<void> {
+    try {
+      this.loading = true;
+      const text = await file.text();
+      const rows = text.split('\n').map(row => row.split(','));
+      const headers = rows[0];
+
+      // Asanaカテゴリを追加
+      this.addCategory('Asana');
+
+      const tasks = rows.slice(1).map(row => {
+        // Asanaのステータスを変換
+        const asanaStatus = row[headers.indexOf('Section/Column')] || '';
+        let status: '未着手' | '進行中' | '完了';
+        switch (asanaStatus) {
+          case 'To-Do':
+            status = '未着手';
+            break;
+          case '進行中':
+            status = '進行中';
+            break;
+          case '完了':
+            status = '完了';
+            break;
+          default:
+            status = '未着手';
+        }
+
+        const taskData: Omit<Task, 'id'> = {
+          title: row[headers.indexOf('Name')] || '',
+          description: row[headers.indexOf('Notes')] || '',
+          status: status,
+          priority: row[headers.indexOf('優先度')] as '低' | '中' | '高' || '中',
+          category: 'Asana',
+          assignedTo: row[headers.indexOf('Assignee')] || '',
+          dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
+          userId: '',
+          createdAt: Timestamp.fromDate(new Date()),
+          updatedAt: Timestamp.fromDate(new Date())
+        };
+        return taskData;
+      });
+
+      let successCount = 0;
+      for (const task of tasks) {
+        try {
+          await this.taskService.createTask(task);
+          successCount++;
+        } catch (error) {
+          console.error('Error creating task:', error);
+          this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
+            duration: 3000
+          });
+        }
+      }
+
+      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', {
+        duration: 3000
+      });
+      await this.loadTasks();
+    } catch (error) {
+      console.error('Error importing Asana CSV:', error);
+      this.snackBar.open('Asana CSVのインポートに失敗しました', '閉じる', {
+        duration: 3000
+      });
+    } finally {
+      this.loading = false;
+    }
+  }
+
   async importTrelloCSV(file: File): Promise<void> {
     try {
+      this.loading = true;
       const text = await file.text();
       const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
       const headers = rows[0];
@@ -818,10 +900,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         return taskData;
       }).filter(task => task !== null);
 
-      // タスクを登録
+      let successCount = 0;
       for (const task of tasks) {
         try {
           await this.taskService.createTask(task as Task);
+          successCount++;
         } catch (error) {
           console.error('Error creating task:', error);
           this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
@@ -830,84 +913,17 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
-      this.snackBar.open('Trelloからタスクをインポートしました', '閉じる', {
+      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', {
         duration: 3000
       });
-      this.loadTasks(); // タスク一覧を更新
+      await this.loadTasks();
     } catch (error) {
       console.error('Error importing Trello CSV:', error);
       this.snackBar.open('Trello CSVのインポートに失敗しました', '閉じる', {
         duration: 3000
       });
-    }
-  }
-
-  async importAsanaCSV(file: File): Promise<void> {
-    try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const text = e.target?.result as string;
-        const rows = text.split('\n').map(row => row.split(','));
-        const headers = rows[0];
-
-        // Asanaカテゴリを追加
-        this.addCategory('Asana');
-
-        const tasks = rows.slice(1).map(row => {
-          // Asanaのステータスを変換
-          const asanaStatus = row[headers.indexOf('Section/Column')] || '';
-          let status: '未着手' | '進行中' | '完了';
-          switch (asanaStatus) {
-            case 'To-Do':
-              status = '未着手';
-              break;
-            case '進行中':
-              status = '進行中';
-              break;
-            case '完了':
-              status = '完了';
-              break;
-            default:
-              status = '未着手';
-          }
-
-          const taskData: Omit<Task, 'id'> = {
-            title: row[headers.indexOf('Name')] || '',
-            description: row[headers.indexOf('Notes')] || '',
-            status: status,
-            priority: row[headers.indexOf('優先度')] as '低' | '中' | '高' || '中',
-            category: 'Asana',
-            assignedTo: row[headers.indexOf('Assignee')] || '',
-            dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
-            userId: '',
-            createdAt: Timestamp.fromDate(new Date()),
-            updatedAt: Timestamp.fromDate(new Date())
-          };
-          return taskData;
-        });
-
-        for (const task of tasks) {
-          try {
-            await this.taskService.createTask(task);
-          } catch (error) {
-            console.error('Error creating task:', error);
-            this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
-              duration: 3000
-            });
-          }
-        }
-
-        this.snackBar.open('CSVからタスクをインポートしました', '閉じる', {
-          duration: 3000
-        });
-      };
-
-      reader.readAsText(file);
-    } catch (error) {
-      console.error('Error importing CSV:', error);
-      this.snackBar.open('CSVのインポートに失敗しました', '閉じる', {
-        duration: 3000
-      });
+    } finally {
+      this.loading = false;
     }
   }
 
