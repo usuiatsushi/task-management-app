@@ -69,6 +69,7 @@ export class CommentSectionComponent implements OnInit {
     try {
       this.loading = true;
       const currentUser = this.auth.currentUser;
+      console.log('現在のユーザー:', currentUser);
       if (!currentUser) throw new Error('ユーザーが認証されていません');
 
       const comment: Omit<Comment, 'id'> = {
@@ -80,6 +81,7 @@ export class CommentSectionComponent implements OnInit {
         updatedAt: Timestamp.now()
       };
 
+      console.log('投稿するコメント:', comment);
       await this.commentService.createComment(comment);
       this.commentForm.reset();
       await this.loadComments();

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, orderBy } from '@angular/fire/firestore';
 import { Comment } from '../models/comment.model';
 
 @Injectable({
@@ -9,24 +9,51 @@ export class CommentService {
   constructor(private firestore: Firestore) {}
 
   async createComment(comment: Omit<Comment, 'id'>): Promise<string> {
-    const commentsRef = collection(this.firestore, 'comments');
-    const docRef = await addDoc(commentsRef, comment);
-    return docRef.id;
+    try {
+      console.log('コメントを作成します:', comment);
+      const commentsRef = collection(this.firestore, 'comments');
+      const docRef = await addDoc(commentsRef, comment);
+      console.log('コメントが作成されました:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('コメント作成時のエラー:', error);
+      throw error;
+    }
   }
 
   async getCommentsByTaskId(taskId: string): Promise<Comment[]> {
-    const commentsRef = collection(this.firestore, 'comments');
-    const q = query(commentsRef, where('taskId', '==', taskId));
-    const querySnapshot = await getDocs(q);
-    
-    return querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Comment));
+    try {
+      console.log('タスクIDでコメントを取得します:', taskId);
+      const commentsRef = collection(this.firestore, 'comments');
+      const q = query(
+        commentsRef, 
+        where('taskId', '==', taskId),
+        orderBy('createdAt', 'desc')  // 作成日時の降順でソート
+      );
+      const querySnapshot = await getDocs(q);
+      
+      const comments = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Comment));
+      
+      console.log('取得したコメント:', comments);
+      return comments;
+    } catch (error) {
+      console.error('コメント取得時のエラー:', error);
+      throw error;
+    }
   }
 
   async deleteComment(commentId: string): Promise<void> {
-    const commentRef = doc(this.firestore, 'comments', commentId);
-    await deleteDoc(commentRef);
+    try {
+      console.log('コメントを削除します:', commentId);
+      const commentRef = doc(this.firestore, 'comments', commentId);
+      await deleteDoc(commentRef);
+      console.log('コメントが削除されました:', commentId);
+    } catch (error) {
+      console.error('コメント削除時のエラー:', error);
+      throw error;
+    }
   }
 } 
