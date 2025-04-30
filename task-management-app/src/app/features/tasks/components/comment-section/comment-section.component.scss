@@ -146,4 +146,17 @@
   height: 28px;
   font-size: 1.1em;
   padding: 0 4px;
+}
+
+.reply-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.toggle-replies-btn {
+  min-width: unset;
+  font-size: 0.92em;
+  padding: 0 6px;
 } 

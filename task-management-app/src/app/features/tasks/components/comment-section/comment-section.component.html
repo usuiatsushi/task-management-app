@@ -60,7 +60,12 @@
             <span>{{ history.content }}</span>
           </div>
         </div>
-        <button mat-button color="accent" (click)="startReply(comment.id)">返信</button>
+        <div class="reply-actions-row">
+          <button mat-button color="accent" (click)="startReply(comment.id)">返信</button>
+          <button *ngIf="getReplies(comment.id).length > 0" mat-button class="toggle-replies-btn" (click)="toggleReplies(comment.id)">
+            {{ showReplies[comment.id] ? '返信を隠す' : getReplies(comment.id).length + '件の返信を表示' }}
+          </button>
+        </div>
         <div *ngIf="replyToCommentId === comment.id" class="reply-form">
           <mat-form-field class="reply-input">
             <textarea matInput [(ngModel)]="replyContent" rows="2" placeholder="返信を入力してください"></textarea>
@@ -70,13 +75,8 @@
             <button mat-button (click)="cancelReply()">キャンセル</button>
           </div>
         </div>
-        <div class="reply-list" *ngIf="getReplies(comment.id).length > 0">
-          <button mat-button class="toggle-replies-btn" (click)="toggleReplies(comment.id)">
-            {{ showReplies[comment.id] ? '返信を隠す' : getReplies(comment.id).length + '件の返信を表示' }}
-          </button>
-          <ng-container *ngIf="showReplies[comment.id]">
-            <ng-container *ngTemplateOutlet="commentThread; context: { $implicit: getReplies(comment.id) }"></ng-container>
-          </ng-container>
+        <div class="reply-list" *ngIf="getReplies(comment.id).length > 0 && showReplies[comment.id]">
+          <ng-container *ngTemplateOutlet="commentThread; context: { $implicit: getReplies(comment.id) }"></ng-container>
         </div>
       </div>
     </ng-container>
