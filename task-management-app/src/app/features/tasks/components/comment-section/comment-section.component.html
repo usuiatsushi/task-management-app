@@ -21,12 +21,31 @@
     <div class="comment-item" *ngFor="let comment of comments">
       <div class="comment-header">
         <span class="user-name">{{ comment.userName }}</span>
-        <span class="comment-date">{{ comment.createdAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>
-        <button mat-icon-button color="warn" (click)="deleteComment(comment.id)" *ngIf="comment.userId === currentUser?.uid">
-          <mat-icon>delete</mat-icon>
-        </button>
+        <span class="comment-date">
+          {{ comment.createdAt.toDate() | date:'yyyy/MM/dd HH:mm' }}
+          <span *ngIf="comment.updatedAt && comment.updatedAt !== comment.createdAt" class="edited-mark">
+            (編集済み)
+          </span>
+        </span>
+        <div class="comment-actions" *ngIf="comment.userId === currentUser?.uid">
+          <button mat-icon-button color="primary" (click)="startEditing(comment)" *ngIf="!isEditing(comment)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="deleteComment(comment.id)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
       </div>
-      <div class="comment-content">{{ comment.content }}</div>
+      <div class="comment-content" *ngIf="!isEditing(comment)">{{ comment.content }}</div>
+      <div class="comment-edit-form" *ngIf="isEditing(comment)">
+        <mat-form-field class="edit-input">
+          <textarea matInput [(ngModel)]="editContent" rows="3"></textarea>
+        </mat-form-field>
+        <div class="edit-actions">
+          <button mat-button color="primary" (click)="saveEdit(comment)">保存</button>
+          <button mat-button (click)="cancelEdit()">キャンセル</button>
+        </div>
+      </div>
     </div>
   </div>
 

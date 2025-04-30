@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, orderBy } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, getDocs, query, where, deleteDoc, doc, orderBy, updateDoc } from '@angular/fire/firestore';
 import { Comment } from '../models/comment.model';
 
 @Injectable({
@@ -53,6 +53,21 @@ export class CommentService {
       console.log('コメントが削除されました:', commentId);
     } catch (error) {
       console.error('コメント削除時のエラー:', error);
+      throw error;
+    }
+  }
+
+  async updateComment(commentId: string, content: string): Promise<void> {
+    try {
+      console.log('コメントを更新します:', commentId);
+      const commentRef = doc(this.firestore, 'comments', commentId);
+      await updateDoc(commentRef, {
+        content: content,
+        updatedAt: new Date()
+      });
+      console.log('コメントが更新されました:', commentId);
+    } catch (error) {
+      console.error('コメント更新時のエラー:', error);
       throw error;
     }
   }

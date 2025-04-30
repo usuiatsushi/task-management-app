@@ -1,5 +1,5 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Comment } from '../../models/comment.model';
 import { CommentService } from 'src/app/features/tasks/services/comment.service';
@@ -20,6 +20,7 @@ import { CommonModule } from '@angular/common';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -34,6 +35,8 @@ export class CommentSectionComponent implements OnInit {
   commentForm: FormGroup;
   loading = false;
   currentUser: any;
+  editingCommentId: string | null = null;
+  editContent: string = '';
 
   constructor(
     private commentService: CommentService,
@@ -69,7 +72,6 @@ export class CommentSectionComponent implements OnInit {
     try {
       this.loading = true;
       const currentUser = this.auth.currentUser;
-      console.log('現在のユーザー:', currentUser);
       if (!currentUser) throw new Error('ユーザーが認証されていません');
 
       const comment: Omit<Comment, 'id'> = {
@@ -81,7 +83,6 @@ export class CommentSectionComponent implements OnInit {
         updatedAt: Timestamp.now()
       };
 
-      console.log('投稿するコメント:', comment);
       await this.commentService.createComment(comment);
       this.commentForm.reset();
       await this.loadComments();
@@ -104,5 +105,41 @@ export class CommentSectionComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  // 編集機能のメソッド
+  startEditing(comment: Comment): void {
+    this.editingCommentId = comment.id;
+    this.editContent = comment.content;
+  }
+
+  isEditing(comment: Comment): boolean {
+    return this.editingCommentId === comment.id;
+  }
+
+  async saveEdit(comment: Comment): Promise<void> {
+    if (!this.editContent.trim()) {
+      this.snackBar.open('コメントを入力してください', '閉じる', { duration: 3000 });
+      return;
+    }
+
+    try {
+      this.loading = true;
+      await this.commentService.updateComment(comment.id, this.editContent);
+      this.editingCommentId = null;
+      this.editContent = '';
+      await this.loadComments();
+      this.snackBar.open('コメントを更新しました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('コメントの更新に失敗しました:', error);
+      this.snackBar.open('コメントの更新に失敗しました', '閉じる', { duration: 3000 });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  cancelEdit(): void {
+    this.editingCommentId = null;
+    this.editContent = '';
   }
 } 
