@@ -60,6 +60,14 @@ const MY_FORMATS = {
   },
 };
 
+// ファイルタイプの列挙型
+enum FileType {
+  ASANA = 'ASANA',
+  TRELLO = 'TRELLO',
+  SAMPLE = 'SAMPLE',
+  UNKNOWN = 'UNKNOWN'
+}
+
 @Component({
   selector: 'app-task-list',
   templateUrl: './task-list.component.html',
@@ -646,22 +654,53 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     document.body.removeChild(link);
   }
 
+  // ファイルタイプを判定するメソッド
+  private detectFileType(file: File, content: string): FileType {
+    const firstLine = content.split('\n')[0];
+    
+    // AsanaのCSV判定
+    if (firstLine.includes('Name') && firstLine.includes('Section/Column') && firstLine.includes('Assignee')) {
+      return FileType.ASANA;
+    }
+    
+    // TrelloのCSV判定
+    if (firstLine.includes('Card ID') && firstLine.includes('Card Name') && firstLine.includes('List Name')) {
+      return FileType.TRELLO;
+    }
+    
+    // サンプルCSV判定
+    if (firstLine.includes('タイトル') && firstLine.includes('説明') && firstLine.includes('ステータス')) {
+      return FileType.SAMPLE;
+    }
+    
+    return FileType.UNKNOWN;
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      // CSVの内容を確認してTrelloのCSVかどうかを判断
       const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        const firstLine = text.split('\n')[0];
-        // TrelloのCSVの特徴的なヘッダーを確認
-        if (firstLine.includes('Card ID') && firstLine.includes('Card Name') && firstLine.includes('List Name')) {
-          this.importTrelloCSV(file);
-        } else {
-          this.importTasksFromCSV(file);
+      
+      reader.onload = async (e) => {
+        const content = e.target?.result as string;
+        const fileType = this.detectFileType(file, content);
+        
+        switch (fileType) {
+          case FileType.ASANA:
+            await this.importAsanaCSV(file);
+            break;
+          case FileType.TRELLO:
+            await this.importTrelloCSV(file);
+            break;
+          case FileType.SAMPLE:
+            await this.importSampleCSV(file);
+            break;
+          default:
+            this.snackBar.open('サポートされていないファイル形式です', '閉じる', { duration: 3000 });
         }
       };
+      
       reader.readAsText(file);
     }
   }
@@ -759,7 +798,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async importTasksFromCSV(file: File): Promise<void> {
+  async importAsanaCSV(file: File): Promise<void> {
     try {
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -838,6 +877,104 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         return '完了';
       default:
         return '未着手';
+    }
+  }
+
+  private generateTaskId(): string {
+    return Math.random().toString(36).substring(2, 15);
+  }
+
+  async importSampleCSV(file: File): Promise<void> {
+    try {
+      const reader = new FileReader();
+      const tasks: Task[] = [];
+
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        const lines = text.split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+
+          const values = lines[i].split(',').map(value => value.trim());
+          const task: Task = {
+            id: this.generateTaskId(),
+            title: values[headers.indexOf('タイトル')] || '',
+            description: values[headers.indexOf('説明')] || '',
+            status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
+            priority: (values[headers.indexOf('優先度')] as '低' | '中' | '高') || '中',
+            category: values[headers.indexOf('カテゴリ')] || '',
+            assignedTo: values[headers.indexOf('担当者')] || '',
+            dueDate: values[headers.indexOf('期限')] ? Timestamp.fromDate(new Date(values[headers.indexOf('期限')])) : null,
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date()),
+            userId: 'user1'
+          };
+
+          tasks.push(task);
+        }
+
+        for (const task of tasks) {
+          await this.taskService.createTask(task);
+        }
+        this.snackBar.open('タスクをインポートしました', '閉じる', { duration: 3000 });
+        this.loadTasks();
+      };
+
+      reader.readAsText(file);
+    } catch (error) {
+      console.error('CSVインポートエラー:', error);
+      this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  async createSampleTasks() {
+    const sampleTasks = [
+      {
+        title: 'プロジェクト計画書の作成',
+        description: '新規プロジェクトの計画書を作成する',
+        status: '未着手' as const,
+        priority: '高' as const,
+        category: 'プロジェクト管理',
+        assignedTo: '山田太郎',
+        dueDate: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        userId: 'user1'
+      },
+      {
+        title: '週次レポートの提出',
+        description: '今週の進捗状況をまとめたレポートを作成する',
+        status: '進行中' as const,
+        priority: '中' as const,
+        category: '報告',
+        assignedTo: '佐藤花子',
+        dueDate: Timestamp.fromDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        userId: 'user1'
+      },
+      {
+        title: 'チームミーティングの準備',
+        description: '来週のチームミーティングの資料を準備する',
+        status: '未着手' as const,
+        priority: '低' as const,
+        category: '会議',
+        assignedTo: '鈴木一郎',
+        dueDate: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        userId: 'user1'
+      }
+    ];
+
+    for (const task of sampleTasks) {
+      try {
+        await this.taskService.createTask(task);
+      } catch (error) {
+        console.error('タスクの作成に失敗しました:', error);
+      }
     }
   }
 } 
