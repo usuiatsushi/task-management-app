@@ -33,7 +33,7 @@ import { MatButtonModule } from '@angular/material/button';
     }
     ::ng-deep .toast-container {
       position: fixed;
-      bottom: 24px;
+      top: 24px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 9999;
