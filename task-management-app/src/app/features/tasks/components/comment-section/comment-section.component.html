@@ -71,7 +71,12 @@
           </div>
         </div>
         <div class="reply-list" *ngIf="getReplies(comment.id).length > 0">
-          <ng-container *ngTemplateOutlet="commentThread; context: { $implicit: getReplies(comment.id) }"></ng-container>
+          <button mat-button class="toggle-replies-btn" (click)="toggleReplies(comment.id)">
+            {{ showReplies[comment.id] ? '返信を隠す' : getReplies(comment.id).length + '件の返信を表示' }}
+          </button>
+          <ng-container *ngIf="showReplies[comment.id]">
+            <ng-container *ngTemplateOutlet="commentThread; context: { $implicit: getReplies(comment.id) }"></ng-container>
+          </ng-container>
         </div>
       </div>
     </ng-container>

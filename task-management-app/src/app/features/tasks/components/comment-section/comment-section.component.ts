@@ -40,6 +40,7 @@ export class CommentSectionComponent implements OnInit {
   showHistory: { [commentId: string]: boolean } = {};
   replyToCommentId: string | null = null;
   replyContent: string = '';
+  showReplies: { [commentId: string]: boolean } = {};
 
   constructor(
     private commentService: CommentService,
@@ -198,5 +199,9 @@ export class CommentSectionComponent implements OnInit {
 
   getReplies(parentId: string): Comment[] {
     return this.comments.filter(c => c.parentId === parentId);
+  }
+
+  toggleReplies(commentId: string): void {
+    this.showReplies[commentId] = !this.showReplies[commentId];
   }
 } 
