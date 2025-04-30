@@ -148,11 +148,22 @@
   padding: 0 4px;
 }
 
-.reply-actions-row {
+.comment-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.2rem;
+}
+
+.left-actions {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.2rem;
+}
+
+.right-actions {
+  display: flex;
+  align-items: center;
 }
 
 .toggle-replies-btn {

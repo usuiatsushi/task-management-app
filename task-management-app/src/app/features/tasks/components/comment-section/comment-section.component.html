@@ -51,20 +51,19 @@
             <button mat-button (click)="cancelEdit()">キャンセル</button>
           </div>
         </div>
-        <button mat-button (click)="toggleHistory(comment.id)">
-          {{ showHistory[comment.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
-        </button>
-        <div *ngIf="showHistory[comment.id] && comment.editHistory?.length" class="edit-history">
-          <div *ngFor="let history of comment.editHistory">
-            <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
-            <span>{{ history.content }}</span>
+        <!-- アクションボタン行（左：返信・返信数、右：編集履歴） -->
+        <div class="comment-actions-row">
+          <div class="left-actions">
+            <button mat-button color="accent" (click)="startReply(comment.id)">返信</button>
+            <button *ngIf="getReplies(comment.id).length > 0" mat-button class="toggle-replies-btn" (click)="toggleReplies(comment.id)">
+              {{ showReplies[comment.id] ? '返信を隠す' : getReplies(comment.id).length + '件の返信を表示' }}
+            </button>
           </div>
-        </div>
-        <div class="reply-actions-row">
-          <button mat-button color="accent" (click)="startReply(comment.id)">返信</button>
-          <button *ngIf="getReplies(comment.id).length > 0" mat-button class="toggle-replies-btn" (click)="toggleReplies(comment.id)">
-            {{ showReplies[comment.id] ? '返信を隠す' : getReplies(comment.id).length + '件の返信を表示' }}
-          </button>
+          <div class="right-actions">
+            <button mat-button (click)="toggleHistory(comment.id)">
+              {{ showHistory[comment.id] ? '編集履歴を閉じる' : '編集履歴を見る' }}
+            </button>
+          </div>
         </div>
         <div *ngIf="replyToCommentId === comment.id" class="reply-form">
           <mat-form-field class="reply-input">
@@ -73,6 +72,12 @@
           <div class="edit-actions">
             <button mat-button color="primary" (click)="submitReply(comment)">返信を投稿</button>
             <button mat-button (click)="cancelReply()">キャンセル</button>
+          </div>
+        </div>
+        <div *ngIf="showHistory[comment.id] && comment.editHistory?.length" class="edit-history">
+          <div *ngFor="let history of comment.editHistory">
+            <span>{{ history.editedAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>：
+            <span>{{ history.content }}</span>
           </div>
         </div>
         <div class="reply-list" *ngIf="getReplies(comment.id).length > 0 && showReplies[comment.id]">
