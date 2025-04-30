@@ -79,18 +79,35 @@ export class ImportService {
   }
 
   private async importSampleFile(fileContent: string): Promise<void> {
-    const data = JSON.parse(fileContent);
-    const tasks = data.map((task: any) => ({
-      title: task.title,
-      description: task.description || '',
-      dueDate: task.dueDate ? new Date(task.dueDate) : null,
-      priority: task.priority || 'medium',
-      status: task.status || 'pending',
-      category: task.category || '未分類',
-      assignee: task.assignee || '未割り当て'
-    }));
+    try {
+      const rows = fileContent.split('\n').map(row => row.split(','));
+      const headers = rows[0].map(header => header.trim());
+      
+      const tasks = rows.slice(1).map(row => {
+        // 空の行をスキップ
+        if (row.length < headers.length) return null;
 
-    await this.saveTasks(tasks);
+        const taskData = {
+          title: row[headers.indexOf('タイトル')]?.trim() || '',
+          description: row[headers.indexOf('説明')]?.trim() || '',
+          status: row[headers.indexOf('ステータス')]?.trim() || '未着手',
+          priority: row[headers.indexOf('優先度')]?.trim() || '中',
+          category: row[headers.indexOf('カテゴリ')]?.trim() || '技術的課題',
+          assignedTo: row[headers.indexOf('担当者')]?.trim() || '未割り当て',
+          dueDate: row[headers.indexOf('期限')]?.trim() ? new Date(row[headers.indexOf('期限')].trim()) : null
+        };
+
+        // タイトルが空の場合はスキップ
+        if (!taskData.title) return null;
+
+        return taskData;
+      }).filter(task => task !== null);
+
+      await this.saveTasks(tasks);
+    } catch (error) {
+      console.error('サンプルCSVのインポートに失敗しました:', error);
+      throw new Error('サンプルCSVのインポートに失敗しました');
+    }
   }
 
   private async importOtherFile(fileContent: string): Promise<void> {

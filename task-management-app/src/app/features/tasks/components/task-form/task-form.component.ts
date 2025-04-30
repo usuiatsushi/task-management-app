@@ -270,8 +270,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     const newCategory = this.taskForm.get('newCategoryName')?.value;
     if (newCategory && !this.categories.includes(newCategory)) {
       this.categoryService.addCategory(newCategory).then(() => {
-        this.taskForm.patchValue({ category: newCategory });
-        this.taskForm.get('newCategoryName')?.reset();
+      this.taskForm.patchValue({ category: newCategory });
+      this.taskForm.get('newCategoryName')?.reset();
       }).catch(error => {
         console.error('カテゴリの追加に失敗しました:', error);
         this.snackBar.open('カテゴリの追加に失敗しました', '閉じる', {
