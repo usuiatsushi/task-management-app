@@ -86,6 +86,11 @@
         <input [(ngModel)]="newSubTaskAssignee" placeholder="担当者">
         <button (click)="addSubTask()">追加</button>
       </div>
+
+      <div class="comments-section">
+        <h2>コメント</h2>
+        <app-comment-section [taskId]="task.id"></app-comment-section>
+      </div>
     </div>
   </div>
 

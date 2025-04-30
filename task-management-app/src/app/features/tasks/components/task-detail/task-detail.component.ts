@@ -15,6 +15,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { interval } from 'rxjs';
+import { CommentSectionComponent } from '../comment-section/comment-section.component';
 
 @Component({
   selector: 'app-task-detail',
@@ -29,7 +30,8 @@ import { interval } from 'rxjs';
     MatSnackBarModule,
     MatSliderModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    CommentSectionComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
