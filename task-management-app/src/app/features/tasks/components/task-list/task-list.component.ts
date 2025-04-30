@@ -592,54 +592,81 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public async onImportCSV(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
+    if (!input.files || input.files.length === 0) {
+      this.snackBar.open('ファイルが選択されていません', '閉じる', { duration: 3000 });
+      return;
+    }
+
     const file = input.files[0];
-    const text = await file.text();
-    
+    if (!file.name.endsWith('.csv')) {
+      this.snackBar.open('CSVファイルを選択してください', '閉じる', { duration: 3000 });
+      return;
+    }
+
     try {
+      this.loading = true;
+      const text = await file.text();
+      
       // CSVをパース
-      const rows = text.split('\n').map(row => row.split(','));
+      const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
+      if (rows.length < 2) {
+        this.snackBar.open('CSVファイルが空です', '閉じる', { duration: 3000 });
+        return;
+      }
+
       const headers = rows[0];
       const data = rows.slice(1);
       
       // タスクデータに変換
       const tasks = data.map(row => {
         const taskData: Omit<Task, 'id'> = {
-          title: row[headers.indexOf('Name')] || '',
-          description: row[headers.indexOf('Notes')] || '',
-          status: row[headers.indexOf('Section/Column')] as '未着手' | '進行中' | '完了' || '未着手',
-          priority: row[headers.indexOf('優先度')] as '低' | '中' | '高' || '中',
-          category: row[headers.indexOf('Category')] || '',
-          assignedTo: row[headers.indexOf('Assignee')] || '',
-          dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
-          userId: '',
+          title: row[headers.indexOf('タイトル')] || '',
+          description: row[headers.indexOf('説明')] || '',
+          status: (row[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
+          priority: (row[headers.indexOf('優先度')] as '低' | '中' | '高') || '中',
+          category: row[headers.indexOf('カテゴリ')] || '',
+          assignedTo: row[headers.indexOf('担当者')] || '',
+          dueDate: row[headers.indexOf('期限')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('期限')])) : null,
+          userId: 'user1',
           createdAt: Timestamp.fromDate(new Date()),
           updatedAt: Timestamp.fromDate(new Date())
         };
         return taskData;
-      });
+      }).filter(task => task.title.trim() !== ''); // タイトルが空のタスクを除外
+
+      if (tasks.length === 0) {
+        this.snackBar.open('有効なタスクデータが見つかりません', '閉じる', { duration: 3000 });
+        return;
+      }
 
       // タスクを登録
+      let successCount = 0;
       for (const task of tasks) {
-        if (task.title) { // タイトルがあるものだけ登録
-          await this.taskService.createTask(task as Task);
+        try {
+          await this.taskService.createTask(task);
+          successCount++;
+        } catch (error) {
+          console.error('タスクの作成に失敗しました:', error);
         }
       }
 
-      this.snackBar.open(`${tasks.length}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
-      this.loadTasks(); // タスク一覧を更新
+      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      await this.loadTasks(); // タスク一覧を更新
     } catch (error) {
       console.error('CSVのインポートに失敗しました:', error);
       this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
+    } finally {
+      this.loading = false;
+      input.value = ''; // 入力フィールドをリセット
     }
   }
 
   public downloadSampleCSV() {
     const sampleData = [
       ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'],
-      ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '開発', '山田太郎', '2024-03-31'],
-      ['タスク2', 'サンプルタスク2の説明', '進行中', '中', 'テスト', '鈴木花子', '2024-04-15'],
-      ['タスク3', 'サンプルタスク3の説明', '完了', '低', 'ドキュメント', '佐藤一郎', '2024-04-30']
+      ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '技術的課題', '山田太郎', '2024-03-31'],
+      ['タスク2', 'サンプルタスク2の説明', '進行中', '中', '業務フロー', '鈴木花子', '2024-04-15'],
+      ['タスク3', 'サンプルタスク3の説明', '完了', '低', '新機能・改善提案', '佐藤一郎', '2024-04-30']
     ];
 
     const csvContent = sampleData.map(row => row.join(',')).join('\n');
@@ -926,55 +953,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error) {
       console.error('CSVインポートエラー:', error);
       this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
-    }
-  }
-
-  async createSampleTasks() {
-    const sampleTasks = [
-      {
-        title: 'プロジェクト計画書の作成',
-        description: '新規プロジェクトの計画書を作成する',
-        status: '未着手' as const,
-        priority: '高' as const,
-        category: '技術的課題',
-        assignedTo: '山田太郎',
-        dueDate: Timestamp.fromDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        userId: 'user1'
-      },
-      {
-        title: '週次レポートの提出',
-        description: '今週の進捗状況をまとめたレポートを作成する',
-        status: '進行中' as const,
-        priority: '中' as const,
-        category: '業務フロー',
-        assignedTo: '佐藤花子',
-        dueDate: Timestamp.fromDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        userId: 'user1'
-      },
-      {
-        title: 'チームミーティングの準備',
-        description: '来週のチームミーティングの資料を準備する',
-        status: '未着手' as const,
-        priority: '低' as const,
-        category: '新機能・改善提案',
-        assignedTo: '鈴木一郎',
-        dueDate: Timestamp.fromDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)),
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        userId: 'user1'
-      }
-    ];
-
-    for (const task of sampleTasks) {
-      try {
-        await this.taskService.createTask(task);
-      } catch (error) {
-        console.error('タスクの作成に失敗しました:', error);
-      }
     }
   }
 } 
