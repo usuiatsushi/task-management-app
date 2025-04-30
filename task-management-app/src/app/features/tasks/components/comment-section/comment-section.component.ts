@@ -185,6 +185,7 @@ export class CommentSectionComponent implements OnInit {
       await this.commentService.createComment(reply);
       this.replyToCommentId = null;
       this.replyContent = '';
+      this.openAction[parentComment.id] = 'replies';
       await this.loadComments();
     } catch (error) {
       console.error('返信の投稿に失敗しました:', error);
