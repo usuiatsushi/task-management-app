@@ -1,0 +1,40 @@
+<div class="comment-section">
+  <h3>コメント</h3>
+  
+  <form [formGroup]="commentForm" (ngSubmit)="onSubmit()" class="comment-form">
+    <mat-form-field class="comment-input">
+      <mat-label>コメントを入力</mat-label>
+      <textarea matInput formControlName="content" rows="3" placeholder="コメントを入力してください"></textarea>
+      <mat-error *ngIf="commentForm.get('content')?.hasError('required')">
+        コメントを入力してください
+      </mat-error>
+      <mat-error *ngIf="commentForm.get('content')?.hasError('maxlength')">
+        コメントは500文字以内で入力してください
+      </mat-error>
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid || loading">
+      コメントを投稿
+    </button>
+  </form>
+
+  <div class="comments-list" *ngIf="comments.length > 0">
+    <div class="comment-item" *ngFor="let comment of comments">
+      <div class="comment-header">
+        <span class="user-name">{{ comment.userName }}</span>
+        <span class="comment-date">{{ comment.createdAt.toDate() | date:'yyyy/MM/dd HH:mm' }}</span>
+        <button mat-icon-button color="warn" (click)="deleteComment(comment.id)" *ngIf="comment.userId === currentUser?.uid">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+      <div class="comment-content">{{ comment.content }}</div>
+    </div>
+  </div>
+
+  <div class="no-comments" *ngIf="comments.length === 0 && !loading">
+    コメントはまだありません
+  </div>
+
+  <div class="loading-spinner" *ngIf="loading">
+    <mat-spinner diameter="30"></mat-spinner>
+  </div>
+</div> 
