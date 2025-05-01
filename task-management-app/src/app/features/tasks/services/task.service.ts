@@ -35,7 +35,7 @@ export class TaskService implements OnDestroy {
   private initializeAuthListener() {
     this.authSubscription = this.authService.authState$.subscribe((isAuthenticated: boolean) => {
       if (isAuthenticated) {
-        this.initializeTasksListener();
+    this.initializeTasksListener();
       } else {
         if (this.unsubscribe) {
           this.unsubscribe();
@@ -128,7 +128,7 @@ export class TaskService implements OnDestroy {
       errorMessage = '認証が必要です。ログインしてください。';
     } else if (error.code === 'failed-precondition') {
       errorMessage = 'データベースの接続に問題が発生しました。';
-    }
+      }
     this.snackBar.open(errorMessage, '閉じる', { 
       duration: 5000,
       panelClass: ['error-snackbar']

@@ -266,6 +266,70 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // カレンダー連携ボタンの処理
+  async onCalendarSync() {
+    if (!navigator.onLine) {
+      this.handleError(new Error('network-error'));
+      return;
+    }
+
+    if (this.taskForm.valid) {
+      try {
+        this.loading = true;
+        // dueDateを23:59に設定
+        const date: Date = this.taskForm.value.dueDate;
+        const dueDate = new Date(date);
+        dueDate.setHours(23, 59, 0, 0);
+
+        const taskData = {
+          ...this.taskForm.value,
+          dueDate: dueDate, // Firestore用にTimestamp変換は既存ロジックで
+          updatedAt: new Date()
+        };
+
+        if (this.isEditMode && this.taskId) {
+          const taskRef = doc(this.firestore, 'tasks', this.taskId);
+          await updateDoc(taskRef, taskData);
+          await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
+          this.snackBar.open('タスクを更新しました', '閉じる', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        } else {
+          const tasksRef = collection(this.firestore, 'tasks');
+          const docRef = await addDoc(tasksRef, {
+            ...taskData,
+            createdAt: new Date()
+          });
+          await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
+          this.snackBar.open('タスクを作成しました', '閉じる', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        }
+
+        this.router.navigate(['/tasks']);
+      } catch (error) {
+        console.error('タスクの保存に失敗しました:', error);
+        this.handleError(error);
+      } finally {
+        this.loading = false;
+      }
+    } else {
+      Object.keys(this.taskForm.controls).forEach(key => {
+        const control = this.taskForm.get(key);
+        if (control) {
+          control.markAsTouched();
+        }
+      });
+
+      this.snackBar.open('入力内容に誤りがあります。エラーメッセージをご確認ください。', '閉じる', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+    }
+  }
+
   addNewCategory(): void {
     const newCategory = this.taskForm.get('newCategoryName')?.value;
     if (newCategory && !this.categories.includes(newCategory)) {
@@ -296,17 +360,6 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           duration: 3000
         });
       });
-    }
-  }
-
-  onCalendarSync() {
-    if (this.taskForm.valid) {
-      const taskData = this.taskForm.value;
-      if (this.isEditMode && this.taskId) {
-        this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
-      } else {
-        this.calendarService.addTaskToCalendar(taskData);
-      }
     }
   }
 
