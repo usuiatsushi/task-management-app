@@ -80,15 +80,23 @@
 
       .mention-label {
         color: #666;
+        font-size: 0.9em;
       }
 
       .mention-user {
-        font-weight: 500;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 0.9em;
-        background-color: #e3f2fd;
-        color: #1976d2;
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        margin-right: 8px;
+
+        .mention-symbol {
+          color: #1976d2;
+        }
+
+        .mention-name {
+          color: #1976d2;
+          font-weight: 500;
+        }
       }
     }
 
