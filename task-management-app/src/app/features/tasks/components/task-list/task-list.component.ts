@@ -543,25 +543,29 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       const result = await dialogRef.afterClosed().toPromise();
       const shouldSyncWithCalendar = result === true;
 
-      // タスクの更新
-      await this.updateTaskField(task, 'dueDate', timestamp);
-      
       // カレンダー連携が必要な場合
       if (shouldSyncWithCalendar) {
-        if (task.calendarEventId) {
+        const oldCalendarEventId = task.calendarEventId; // 古いイベントIDを保存
+        
+        // タスクの更新（calendarEventIdを一時的にnullに）
+        await this.updateTaskField(task, 'dueDate', timestamp);
+        await this.updateTaskField(task, 'calendarEventId', null);
+        
+        if (oldCalendarEventId) {
           try {
-            // 既存のカレンダーイベントを削除
-            await this.calendarService.deleteCalendarEvent(task);
-            console.log('古いカレンダーイベントを削除しました:', task.calendarEventId);
+            // 古いカレンダーイベントを削除
+            await this.calendarService.deleteCalendarEvent({ ...task, calendarEventId: oldCalendarEventId });
+            console.log('古いカレンダーイベントを削除しました:', oldCalendarEventId);
           } catch (error) {
             console.error('古いカレンダーイベントの削除に失敗しました:', error);
           }
-          // 新しいカレンダーイベントを作成
-          await this.calendarService.addTaskToCalendar({ ...task, dueDate: timestamp });
-        } else {
-          // 新しいカレンダーイベントを作成
-          await this.calendarService.addTaskToCalendar({ ...task, dueDate: timestamp });
         }
+        
+        // 新しいカレンダーイベントを作成
+        await this.calendarService.addTaskToCalendar({ ...task, dueDate: timestamp });
+      } else {
+        // カレンダー連携なしでタスクのみ更新
+        await this.updateTaskField(task, 'dueDate', timestamp);
       }
       
       // 更新後にタスクリストを再読み込み
