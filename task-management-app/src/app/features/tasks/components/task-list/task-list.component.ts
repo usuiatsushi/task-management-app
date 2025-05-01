@@ -524,7 +524,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async onDateChange(task: any, event: any) {
     try {
-      console.log('Selected date:', event.value);
+      console.log('日付変更処理を開始:', task.id, task.title);
+      console.log('選択された日付:', event.value);
       
       // 日付がクリアされた場合はnullを設定
       const timestamp = event.value ? {
@@ -532,7 +533,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         nanoseconds: 0
       } : null;
       
-      console.log('Timestamp to be sent:', timestamp);
+      console.log('変換後のタイムスタンプ:', timestamp);
 
       // カレンダー連携の確認ダイアログを表示
       const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
@@ -542,57 +543,68 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
       const result = await dialogRef.afterClosed().toPromise();
       const shouldSyncWithCalendar = result === true;
+      console.log('カレンダー連携の選択結果:', shouldSyncWithCalendar);
 
       // カレンダー連携が必要な場合
       if (shouldSyncWithCalendar) {
         const oldCalendarEventId = task.calendarEventId; // 古いイベントIDを保存
+        console.log('古いカレンダーイベントID:', oldCalendarEventId);
         
         // 古いカレンダーイベントを削除
         if (oldCalendarEventId) {
           try {
+            console.log('古いカレンダーイベントの削除を開始');
             await this.calendarService.deleteCalendarEvent({ ...task, calendarEventId: oldCalendarEventId });
-            console.log('古いカレンダーイベントを削除しました:', oldCalendarEventId);
+            console.log('古いカレンダーイベントの削除が完了');
           } catch (error) {
             console.error('古いカレンダーイベントの削除に失敗しました:', error);
             this.snackBar.open('古いカレンダーイベントの削除に失敗しました', '閉じる', { duration: 3000 });
-            return; // エラーが発生した場合は処理を中断
+            return;
           }
         }
         
         // タスクの更新（calendarEventIdを一時的に空文字列に）
         try {
+          console.log('タスクの更新を開始');
           await this.taskService.updateTask(task.id, { 
             dueDate: timestamp,
             calendarEventId: ''
           });
+          console.log('タスクの更新が完了');
         } catch (error) {
           console.error('タスクの更新に失敗しました:', error);
           this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
-          return; // エラーが発生した場合は処理を中断
+          return;
         }
         
         // 新しいカレンダーイベントを作成
         try {
+          console.log('新しいカレンダーイベントの作成を開始');
           const newTask = { ...task, dueDate: timestamp, calendarEventId: '' };
           await this.calendarService.addTaskToCalendar(newTask);
+          console.log('新しいカレンダーイベントの作成が完了');
         } catch (error) {
           console.error('新しいカレンダーイベントの作成に失敗しました:', error);
           this.snackBar.open('新しいカレンダーイベントの作成に失敗しました', '閉じる', { duration: 3000 });
-          return; // エラーが発生した場合は処理を中断
+          return;
         }
       } else {
         // カレンダー連携なしでタスクのみ更新
         try {
+          console.log('カレンダー連携なしでタスクを更新');
           await this.taskService.updateTask(task.id, { dueDate: timestamp });
+          console.log('タスクの更新が完了');
         } catch (error) {
           console.error('タスクの更新に失敗しました:', error);
           this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
-          return; // エラーが発生した場合は処理を中断
+          return;
         }
       }
       
       // 更新後にタスクリストを再読み込み
+      console.log('タスクリストの再読み込みを開始');
       await this.loadTasks();
+      console.log('タスクリストの再読み込みが完了');
       this.stopEditing();
     } catch (error) {
       console.error('日付の更新に失敗しました:', error);

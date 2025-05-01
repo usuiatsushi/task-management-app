@@ -142,18 +142,35 @@ export class CalendarService {
 
   async deleteCalendarEvent(task: Task): Promise<void> {
     try {
-      if (task.calendarEventId) {
-        const headers = await this.getAuthHeaders();
-        await this.http.delete(
-          `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events/${task.calendarEventId}`,
-          { headers }
-        ).toPromise();
+      console.log('カレンダーイベントの削除を開始:', task.calendarEventId);
       
-        this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
+      if (!task.calendarEventId) {
+        console.warn('削除するカレンダーイベントIDが存在しません');
+        return;
       }
-    } catch (error) {
+
+      const headers = await this.getAuthHeaders();
+      console.log('認証ヘッダーを取得しました');
+
+      const response = await this.http.delete(
+        `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events/${task.calendarEventId}`,
+        { headers }
+      ).toPromise();
+
+      console.log('カレンダーイベントの削除が成功しました:', task.calendarEventId);
+      this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
+    } catch (error: any) {
       console.error('カレンダーからの削除に失敗しました:', error);
-      this.snackBar.open('カレンダーからの削除に失敗しました', '閉じる', { duration: 3000 });
+      if (error.status === 404) {
+        console.warn('カレンダーイベントが見つかりませんでした:', task.calendarEventId);
+        this.snackBar.open('カレンダーイベントが見つかりませんでした', '閉じる', { duration: 3000 });
+      } else if (error.status === 403) {
+        console.error('カレンダーへのアクセス権限がありません');
+        this.snackBar.open('カレンダーへのアクセス権限がありません', '閉じる', { duration: 3000 });
+      } else {
+        this.snackBar.open('カレンダーからの削除に失敗しました', '閉じる', { duration: 3000 });
+      }
+      throw error; // エラーを再スローして上位のエラーハンドリングに委ねる
     }
   }
 } 
