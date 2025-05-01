@@ -32,6 +32,8 @@ import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../models/task.model';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/services/auth.service';
+import { CalendarService } from '../../services/calendar.service';
+import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -172,7 +174,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private fb: FormBuilder,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
-    private authService: AuthService
+    private authService: AuthService,
+    private calendarService: CalendarService
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -530,7 +533,36 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       } : null;
       
       console.log('Timestamp to be sent:', timestamp);
+
+      // カレンダー連携の確認ダイアログを表示
+      const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
+        width: '350px',
+        data: { taskTitle: task.title }
+      });
+
+      const result = await dialogRef.afterClosed().toPromise();
+      const shouldSyncWithCalendar = result === true;
+
+      // タスクの更新
       await this.updateTaskField(task, 'dueDate', timestamp);
+      
+      // カレンダー連携が必要な場合
+      if (shouldSyncWithCalendar) {
+        if (task.calendarEventId) {
+          try {
+            // 既存のカレンダーイベントを削除
+            await this.calendarService.deleteCalendarEvent(task);
+            console.log('古いカレンダーイベントを削除しました:', task.calendarEventId);
+          } catch (error) {
+            console.error('古いカレンダーイベントの削除に失敗しました:', error);
+          }
+          // 新しいカレンダーイベントを作成
+          await this.calendarService.addTaskToCalendar({ ...task, dueDate: timestamp });
+        } else {
+          // 新しいカレンダーイベントを作成
+          await this.calendarService.addTaskToCalendar({ ...task, dueDate: timestamp });
+        }
+      }
       
       // 更新後にタスクリストを再読み込み
       await this.loadTasks();
