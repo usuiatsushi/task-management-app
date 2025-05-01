@@ -82,7 +82,9 @@ export class CommentSectionComponent implements OnInit {
 
   async loadUsers(): Promise<void> {
     try {
+      console.log('Loading users...');
       this.users = await this.userService.getAllUsers();
+      console.log('Users loaded:', this.users.length);
     } catch (error) {
       console.error('ユーザーの読み込みに失敗しました:', error);
     }
@@ -94,16 +96,29 @@ export class CommentSectionComponent implements OnInit {
     const cursorPos = textarea.selectionStart;
     this.cursorPosition = cursorPos;
 
-    // @の位置を検索
-    const lastAtPos = content.lastIndexOf('@', cursorPos);
+    console.log('Content change:', {
+      content,
+      cursorPos,
+      users: this.users.length
+    });
+
+    // 全角・半角の@を検索
+    const lastAtPos = Math.max(
+      content.lastIndexOf('@', cursorPos),
+      content.lastIndexOf('＠', cursorPos)
+    );
+    console.log('Last @ position:', lastAtPos);
     
     if (lastAtPos !== -1 && lastAtPos < cursorPos) {
       const textAfterAt = content.slice(lastAtPos + 1, cursorPos);
+      console.log('Text after @:', textAfterAt);
+      
       // スペースが含まれていない場合のみユーザーリストを表示
       if (!textAfterAt.includes(' ')) {
         this.mentionStart = lastAtPos;
         this.filterUsers(textAfterAt);
         this.showUserList = true;
+        console.log('Showing user list:', this.filteredUsers.length);
         return;
       }
     }
@@ -111,8 +126,8 @@ export class CommentSectionComponent implements OnInit {
     this.showUserList = false;
     this.mentionStart = -1;
     
-    // メンションの抽出
-    const mentions = content.match(/@[\w-]+/g) || [];
+    // メンションの抽出（全角・半角の@に対応）
+    const mentions = content.match(/[@＠][\w-]+/g) || [];
     this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
   }
 

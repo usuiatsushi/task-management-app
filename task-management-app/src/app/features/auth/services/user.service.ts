@@ -9,12 +9,15 @@ export class UserService {
 
   async getAllUsers(): Promise<any[]> {
     try {
+      console.log('Fetching users from Firestore...');
       const usersRef = collection(this.firestore, 'users');
       const querySnapshot = await getDocs(usersRef);
-      return querySnapshot.docs.map(doc => ({
+      const users = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
+      console.log('Users fetched:', users.length);
+      return users;
     } catch (error) {
       console.error('ユーザー情報の取得に失敗しました:', error);
       return [];
