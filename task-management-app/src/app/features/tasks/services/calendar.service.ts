@@ -53,9 +53,13 @@ export class CalendarService {
         
         this.snackBar.open('カレンダーにタスクを追加しました', '閉じる', { duration: 3000 });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('カレンダーへの追加に失敗しました:', error);
-      this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
+      if (error.code === 'auth/cancelled-popup-request') {
+        this.snackBar.open('Google認証がキャンセルされました', '閉じる', { duration: 3000 });
+      } else {
+        this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
+      }
     }
   }
 

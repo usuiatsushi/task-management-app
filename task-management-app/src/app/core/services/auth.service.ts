@@ -34,9 +34,12 @@ export class AuthService {
       }
       
       return credential.accessToken;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google認証に失敗しました:', error);
-      throw error;
+      if (error.code === 'auth/cancelled-popup-request') {
+        throw error;
+      }
+      throw new Error('認証に失敗しました');
     }
   }
 
