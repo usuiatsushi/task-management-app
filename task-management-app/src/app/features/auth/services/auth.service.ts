@@ -1,18 +1,49 @@
 import { Injectable } from '@angular/core';
-import { Auth, GoogleAuthProvider, signInWithPopup, signOut } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from '@angular/fire/auth';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  constructor(private auth: Auth) {}
+  private authState = new BehaviorSubject<boolean>(false);
+  authState$ = this.authState.asObservable();
+
+  constructor(private auth: Auth) {
+    onAuthStateChanged(this.auth, user => {
+      if (user) {
+        console.log('Auth state changed: Logged in', user.uid);
+        this.authState.next(true);
+      } else {
+        console.log('Auth state changed: Logged out');
+        this.authState.next(false);
+      }
+    });
+  }
 
   async loginWithGoogle(): Promise<void> {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(this.auth, provider);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      await signInWithPopup(this.auth, provider);
+    } catch (error) {
+      console.error('ログインに失敗しました:', error);
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
-    await signOut(this.auth);
+    try {
+      await signOut(this.auth);
+    } catch (error) {
+      console.error('ログアウトに失敗しました:', error);
+      throw error;
+    }
+  }
+
+  getCurrentUser() {
+    return this.auth.currentUser;
   }
 } 

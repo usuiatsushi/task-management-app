@@ -8,27 +8,36 @@ service cloud.firestore {
 
     // ユーザーのルール
     match /users/{userId} {
-      allow read: if true;  // すべてのユーザーが読み取り可能
+      allow list, get: if isAuthenticated();  // 認証済みユーザーのみアクセス可能
       allow create, update: if isAuthenticated() && request.auth.uid == userId;
       allow delete: if false;  // ユーザー削除は禁止
     }
 
     // タスクのルール
     match /tasks/{taskId} {
-      allow read, write: if true;  // すべてのユーザーが読み書き可能
+      allow list, get: if isAuthenticated();  // 明示的に一覧取得と個別取得を許可
+      allow create, update, delete: if isAuthenticated();
     }
     
     // カテゴリのルール
     match /categories/{categoryId} {
-      allow read: if true;  // すべてのユーザーが読み取り可能
+      allow list, get: if isAuthenticated();  // 明示的に一覧取得と個別取得を許可
       allow create, update, delete: if isAuthenticated();
     }
 
     // コメントのルール
     match /comments/{commentId} {
-      allow read: if true;  // すべてのユーザーが読み取り可能
+      allow list, get: if isAuthenticated();  // 明示的に一覧取得と個別取得を許可
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // 通知のルール
+    match /notifications/{notificationId} {
+      allow list, get: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
+      allow delete: if false;
     }
   }
 } 

@@ -1,9 +1,10 @@
-import { Injectable, OnDestroy, NgZone } from '@angular/core';
+import { Injectable, OnDestroy, NgZone, Inject } from '@angular/core';
 import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { Task } from '../models/task.model';
 import { Timestamp } from 'firebase/firestore';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService } from '../../../auth/services/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,11 +15,13 @@ export class TaskService implements OnDestroy {
   private unsubscribe: (() => void) | null = null;
   private onlineHandler: () => void;
   private offlineHandler: () => void;
+  private authSubscription: Subscription | null = null;
 
   constructor(
     private firestore: Firestore,
     private snackBar: MatSnackBar,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    @Inject(AuthService) private authService: AuthService
   ) {
     this.onlineHandler = this.handleOnlineStatus.bind(this);
     this.offlineHandler = this.handleOnlineStatus.bind(this);
@@ -26,7 +29,21 @@ export class TaskService implements OnDestroy {
     window.addEventListener('online', this.onlineHandler);
     window.addEventListener('offline', this.offlineHandler);
     
-    this.initializeTasksListener();
+    this.initializeAuthListener();
+  }
+
+  private initializeAuthListener() {
+    this.authSubscription = this.authService.authState$.subscribe((isAuthenticated: boolean) => {
+      if (isAuthenticated) {
+        this.initializeTasksListener();
+      } else {
+        if (this.unsubscribe) {
+          this.unsubscribe();
+          this.unsubscribe = null;
+        }
+        this.tasksSubject.next([]);
+      }
+    });
   }
 
   private initializeTasksListener() {
@@ -95,7 +112,9 @@ export class TaskService implements OnDestroy {
   ngOnDestroy() {
     if (this.unsubscribe) {
       this.unsubscribe();
-      this.unsubscribe = null;
+    }
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
     }
     window.removeEventListener('online', this.onlineHandler);
     window.removeEventListener('offline', this.offlineHandler);
@@ -103,21 +122,12 @@ export class TaskService implements OnDestroy {
 
   private handleError(error: any) {
     let errorMessage = 'エラーが発生しました';
-    
-    if (error instanceof Error) {
-      if (!navigator.onLine || error.message === 'network-error') {
-        errorMessage = 'ネットワークエラーが発生しました。インターネット接続をご確認ください。';
-      } else if (error.message.includes('permission-denied')) {
-        errorMessage = '権限がありません。ログインしているかご確認ください。';
-      } else if (error.message.includes('quota')) {
-        errorMessage = 'サービスの制限に達しました。しばらく時間をおいて再度お試しください。';
-      }
+    if (error.code === 'permission-denied') {
+      errorMessage = 'アクセス権限がありません';
+    } else if (error.code === 'unauthenticated') {
+      errorMessage = '認証が必要です';
     }
-    
-    this.snackBar.open(errorMessage, '閉じる', { 
-      duration: 5000,
-      panelClass: ['error-snackbar']
-    });
+    this.snackBar.open(errorMessage, '閉じる', { duration: 3000 });
   }
 
   async getTasks(): Promise<Task[]> {

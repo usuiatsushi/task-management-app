@@ -2,7 +2,7 @@
   "indexes": [
     {
       "collectionGroup": "comments",
-      "queryScope": "COLLECTION",
+      "queryScope": "COLLECTION_GROUP",
       "fields": [
         {
           "fieldPath": "taskId",
@@ -11,13 +11,23 @@
         {
           "fieldPath": "createdAt",
           "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "taskId",
+          "order": "ASCENDING"
         },
         {
-          "fieldPath": "__name__",
+          "fieldPath": "updatedAt",
           "order": "DESCENDING"
         }
       ]
     }
   ],
   "fieldOverrides": []
-} 
+}
