@@ -547,14 +547,16 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // カレンダー連携が必要な場合
       if (shouldSyncWithCalendar) {
-        const oldCalendarEventId = task.calendarEventId; // 古いイベントIDを保存
+        // 最新のタスク情報を取得
+        const currentTask = await this.taskService.getTask(task.id);
+        const oldCalendarEventId = currentTask.calendarEventId;
         console.log('古いカレンダーイベントID:', oldCalendarEventId);
         
         // 古いカレンダーイベントを削除
         if (oldCalendarEventId) {
           try {
             console.log('古いカレンダーイベントの削除を開始');
-            await this.calendarService.deleteCalendarEvent({ ...task, calendarEventId: oldCalendarEventId });
+            await this.calendarService.deleteCalendarEvent({ ...currentTask, calendarEventId: oldCalendarEventId });
             console.log('古いカレンダーイベントの削除が完了');
           } catch (error) {
             console.error('古いカレンダーイベントの削除に失敗しました:', error);
@@ -580,7 +582,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         // 新しいカレンダーイベントを作成
         try {
           console.log('新しいカレンダーイベントの作成を開始');
-          const newTask = { ...task, dueDate: timestamp, calendarEventId: '' };
+          const newTask = { ...currentTask, dueDate: timestamp, calendarEventId: '' };
           await this.calendarService.addTaskToCalendar(newTask);
           console.log('新しいカレンダーイベントの作成が完了');
         } catch (error) {

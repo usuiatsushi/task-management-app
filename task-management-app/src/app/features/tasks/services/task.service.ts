@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy, NgZone, Inject } from '@angular/core';
-import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData, getDoc } from '@angular/fire/firestore';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { Task } from '../models/task.model';
 import { Timestamp } from 'firebase/firestore';
@@ -133,6 +133,18 @@ export class TaskService implements OnDestroy {
       duration: 5000,
       panelClass: ['error-snackbar']
     });
+  }
+
+  private convertTimestampToDate(timestamp: any): Date {
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
+    } else if (typeof timestamp === 'object' && 'seconds' in timestamp) {
+      return new Date(timestamp.seconds * 1000);
+    } else if (typeof timestamp === 'string') {
+      return new Date(timestamp);
+    } else {
+      return new Date(timestamp);
+    }
   }
 
   async getTasks(): Promise<Task[]> {
@@ -302,5 +314,36 @@ export class TaskService implements OnDestroy {
   async deleteTask(id: string): Promise<void> {
     const taskDoc = doc(this.firestore, 'tasks', id);
     await deleteDoc(taskDoc);
+  }
+
+  async getTask(taskId: string): Promise<Task> {
+    try {
+      console.log('Fetching task from Firestore:', taskId);
+      const taskDoc = await getDoc(doc(this.firestore, 'tasks', taskId));
+      
+      if (!taskDoc.exists()) {
+        throw new Error(`Task with ID ${taskId} not found`);
+      }
+      
+      const taskData = taskDoc.data();
+      console.log('Raw task data for ID:', taskId, taskData);
+      
+      // タイムスタンプをDateに変換
+      if (taskData && 'dueDate' in taskData) {
+        taskData['dueDate'] = this.convertTimestampToDate(taskData['dueDate']);
+        console.log('Converted timestamp to date for task:', taskId);
+      }
+      
+      const task = {
+        id: taskDoc.id,
+        ...taskData
+      } as Task;
+      
+      console.log('Processed task data:', task);
+      return task;
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      throw error;
+    }
   }
 }
