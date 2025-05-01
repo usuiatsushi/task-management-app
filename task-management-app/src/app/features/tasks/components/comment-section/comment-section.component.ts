@@ -106,32 +106,35 @@ export class CommentSectionComponent implements OnInit {
       const commentId = await this.commentService.createComment(comment);
       this.commentForm.reset();
       await this.loadComments();
+      this.snackBar.open('コメントを投稿しました', '閉じる', { duration: 3000 });
 
-      // 通知を送信
-      await this.notificationService.createNotification({
-        type: 'comment',
-        userId: currentUser.uid,
-        taskId: this.taskId,
-        commentId: commentId,
-        message: `${currentUser.displayName || '匿名ユーザー'}さんがコメントを投稿しました`,
-        createdAt: Timestamp.now(),
-        isRead: false
-      });
-
-      // メンションされたユーザーに通知を送信
-      for (const username of this.mentionedUsers) {
+      try {
+        // 通知を送信
         await this.notificationService.createNotification({
-          type: 'mention',
+          type: 'comment',
           userId: currentUser.uid,
           taskId: this.taskId,
           commentId: commentId,
-          message: `${currentUser.displayName || '匿名ユーザー'}さんがあなたにメンションしました`,
+          message: `${currentUser.displayName || '匿名ユーザー'}さんがコメントを投稿しました`,
           createdAt: Timestamp.now(),
           isRead: false
         });
-      }
 
-      this.snackBar.open('コメントを投稿しました', '閉じる', { duration: 3000 });
+        // メンションされたユーザーに通知を送信
+        for (const username of this.mentionedUsers) {
+          await this.notificationService.createNotification({
+            type: 'mention',
+            userId: currentUser.uid,
+            taskId: this.taskId,
+            commentId: commentId,
+            message: `${currentUser.displayName || '匿名ユーザー'}さんがあなたにメンションしました`,
+            createdAt: Timestamp.now(),
+            isRead: false
+          });
+        }
+      } catch (error) {
+        console.error('通知の送信に失敗しました:', error);
+      }
     } catch (error) {
       console.error('コメントの投稿に失敗しました:', error);
       this.snackBar.open('コメントの投稿に失敗しました', '閉じる', { duration: 3000 });
@@ -227,20 +230,23 @@ export class CommentSectionComponent implements OnInit {
       this.replyContent = '';
       this.openAction[parentComment.id] = 'replies';
       await this.loadComments();
-
-      // 返信の通知を送信
-      await this.notificationService.createNotification({
-        type: 'reply',
-        userId: currentUser.uid,
-        taskId: this.taskId,
-        commentId: replyId,
-        parentCommentId: parentComment.id,
-        message: `${currentUser.displayName || '匿名ユーザー'}さんが返信しました`,
-        createdAt: Timestamp.now(),
-        isRead: false
-      });
-
       this.snackBar.open('返信を投稿しました', '閉じる', { duration: 3000 });
+
+      try {
+        // 返信の通知を送信
+        await this.notificationService.createNotification({
+          type: 'reply',
+          userId: currentUser.uid,
+          taskId: this.taskId,
+          commentId: replyId,
+          parentCommentId: parentComment.id,
+          message: `${currentUser.displayName || '匿名ユーザー'}さんが返信しました`,
+          createdAt: Timestamp.now(),
+          isRead: false
+        });
+      } catch (error) {
+        console.error('通知の送信に失敗しました:', error);
+      }
     } catch (error) {
       console.error('返信の投稿に失敗しました:', error);
       this.snackBar.open('返信の投稿に失敗しました', '閉じる', { duration: 3000 });
