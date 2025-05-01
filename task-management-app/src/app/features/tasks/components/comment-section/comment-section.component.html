@@ -16,6 +16,8 @@
       <mat-hint align="end">{{ commentForm.get('content')?.value?.length || 0 }}/500</mat-hint>
     </mat-form-field>
 
+    <div class="comment-preview" [innerHTML]="getFormattedContent()"></div>
+
     <div class="user-list" *ngIf="showUserList">
       <div class="user-item" *ngFor="let user of filteredUsers" (click)="selectUser(user)">
         <span class="user-name">{{ user.displayName }}</span>
@@ -58,11 +60,11 @@
         </div>
         <div class="comment-content" *ngIf="!isEditing(comment)">
           <div class="content-preview" *ngIf="isCollapsed[comment.id]">
-            {{ comment.content | slice:0:100 }}{{ comment.content.length > 100 ? '...' : '' }}
+            <span [innerHTML]="getCommentContent(comment)"></span>
             <button mat-button color="primary" (click)="toggleCollapse(comment.id)">続きを読む</button>
           </div>
           <div class="content-full" *ngIf="!isCollapsed[comment.id]">
-            {{ comment.content }}
+            <span [innerHTML]="getCommentContent(comment)"></span>
             <button mat-button color="primary" (click)="toggleCollapse(comment.id)" *ngIf="comment.content.length > 100">
               折りたたむ
             </button>

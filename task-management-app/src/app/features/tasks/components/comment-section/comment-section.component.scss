@@ -81,6 +81,25 @@
       }
     }
 
+    .comment-preview {
+      padding: 8px;
+      min-height: 24px;
+      background-color: #fff;
+      border-radius: 4px;
+      margin-top: -8px;
+    }
+
+    .mention-highlight {
+      color: #1976d2;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
     button {
       align-self: flex-end;
     }
@@ -133,6 +152,17 @@
 
         .content-full {
           white-space: pre-wrap;
+        }
+
+        .mention-highlight {
+          color: #1976d2;
+          font-weight: 500;
+          cursor: pointer;
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
         }
       }
 

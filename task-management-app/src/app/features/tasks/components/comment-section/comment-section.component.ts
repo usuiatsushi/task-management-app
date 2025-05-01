@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../services/notification.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { UserService } from '../../../auth/services/user.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-comment-section',
@@ -64,7 +65,8 @@ export class CommentSectionComponent implements OnInit {
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     private notificationService: NotificationService,
-    private userService: UserService
+    private userService: UserService,
+    private sanitizer: DomSanitizer
   ) {
     this.commentForm = this.fb.group({
       content: ['', [Validators.required, Validators.maxLength(500)]]
@@ -422,19 +424,27 @@ export class CommentSectionComponent implements OnInit {
     this.isCollapsed[commentId] = !this.isCollapsed[commentId];
   }
 
-  getFormattedContent(): Array<{type: 'text' | 'mention', content: string}> {
-    const content = this.commentForm.get('content')?.value || 'コメントを入力してください';
-    const segments: Array<{type: 'text' | 'mention', content: string}> = [];
-    const parts = content.split(/(@[\w-]+)/g);
-    
-    parts.forEach((part: string) => {
-      if (part.startsWith('@')) {
-        segments.push({ type: 'mention', content: part });
-      } else if (part) {
-        segments.push({ type: 'text', content: part });
-      }
-    });
-    
-    return segments;
+  // コメント内のメンションをハイライト表示する
+  highlightMentions(content: string): SafeHtml {
+    const mentionPattern = /[@＠][\w一-龠ぁ-んァ-ン]+/g;
+    const highlightedContent = content.replace(mentionPattern, match => 
+      `<span class="mention-highlight">${match}</span>`
+    );
+    return this.sanitizer.bypassSecurityTrustHtml(highlightedContent);
+  }
+
+  // 入力中のコメントのメンションをハイライト表示する
+  getFormattedContent(): SafeHtml {
+    const content = this.commentForm.get('content')?.value || '';
+    return this.highlightMentions(content);
+  }
+
+  // コメント表示用のメソッド
+  getCommentContent(comment: Comment): SafeHtml {
+    const content = comment.content;
+    if (content.length > 100 && this.isCollapsed[comment.id]) {
+      return this.highlightMentions(content.slice(0, 100));
+    }
+    return this.highlightMentions(content);
   }
 } 
