@@ -30,7 +30,10 @@
           <span class="comment-date">現在</span>
         </div>
         <div class="preview-body">
-          {{ commentForm.get('content')?.value || 'コメントを入力してください' }}
+          <ng-container *ngFor="let segment of getFormattedContent()">
+            <span *ngIf="segment.type === 'text'" [innerHTML]="segment.content | markdown"></span>
+            <span *ngIf="segment.type === 'mention'" class="mention-preview">{{ segment.content }}</span>
+          </ng-container>
         </div>
       </div>
     </div>

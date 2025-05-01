@@ -12,6 +12,23 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../services/notification.service';
+import { marked } from 'marked';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: 'markdown',
+  standalone: true
+})
+export class MarkdownPipe implements PipeTransform {
+  constructor(private sanitizer: DomSanitizer) {}
+
+  transform(value: string): any {
+    if (!value) return '';
+    const html = marked.parse(value, { async: false }) as string;
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+}
 
 @Component({
   selector: 'app-comment-section',
@@ -27,7 +44,8 @@ import { NotificationService } from '../../services/notification.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MarkdownPipe
   ]
 })
 export class CommentSectionComponent implements OnInit {
@@ -292,5 +310,21 @@ export class CommentSectionComponent implements OnInit {
 
   togglePreview(): void {
     this.showPreview = !this.showPreview;
+  }
+
+  getFormattedContent(): Array<{type: 'text' | 'mention', content: string}> {
+    const content = this.commentForm.get('content')?.value || 'コメントを入力してください';
+    const segments: Array<{type: 'text' | 'mention', content: string}> = [];
+    const parts = content.split(/(@[\w-]+)/g);
+    
+    parts.forEach((part: string) => {
+      if (part.startsWith('@')) {
+        segments.push({ type: 'mention', content: part });
+      } else if (part) {
+        segments.push({ type: 'text', content: part });
+      }
+    });
+    
+    return segments;
   }
 } 
