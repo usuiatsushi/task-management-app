@@ -15,6 +15,7 @@ export const environment = {
     apiKey: 'YOUR_API_KEY'
   },
   security: {
-    crossOriginOpenerPolicy: 'same-origin-allow-popups'
+    crossOriginOpenerPolicy: 'same-origin-allow-popups',
+    crossOriginEmbedderPolicy: 'require-corp'
   }
 }; 

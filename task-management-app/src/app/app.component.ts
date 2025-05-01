@@ -23,12 +23,19 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Cross-Origin-Opener-Policyの設定を適用
-    if (environment.security?.crossOriginOpenerPolicy) {
-      const meta = document.createElement('meta');
-      meta.httpEquiv = 'Cross-Origin-Opener-Policy';
-      meta.content = environment.security.crossOriginOpenerPolicy;
-      document.head.appendChild(meta);
+    // セキュリティ設定を適用
+    if (environment.security) {
+      // Cross-Origin-Opener-Policy
+      const coopMeta = document.createElement('meta');
+      coopMeta.httpEquiv = 'Cross-Origin-Opener-Policy';
+      coopMeta.content = environment.security.crossOriginOpenerPolicy;
+      document.head.appendChild(coopMeta);
+
+      // Cross-Origin-Embedder-Policy
+      const coepMeta = document.createElement('meta');
+      coepMeta.httpEquiv = 'Cross-Origin-Embedder-Policy';
+      coepMeta.content = environment.security.crossOriginEmbedderPolicy;
+      document.head.appendChild(coepMeta);
     }
   }
 }
