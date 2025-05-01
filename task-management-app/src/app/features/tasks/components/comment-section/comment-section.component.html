@@ -6,7 +6,7 @@
       <mat-label>コメントを入力</mat-label>
       <textarea #commentInput matInput formControlName="content" 
         cdkTextareaAutosize
-        [cdkAutosizeMinRows]="3"
+        [cdkAutosizeMinRows]="1"
         [cdkAutosizeMaxRows]="10"
         placeholder="コメントを入力してください (@でメンション)" 
         (input)="onContentChange($event)"></textarea>
