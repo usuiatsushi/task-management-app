@@ -70,6 +70,10 @@ export class CommentSectionComponent implements OnInit {
     try {
       this.loading = true;
       this.comments = await this.commentService.getCommentsByTaskId(this.taskId);
+      // 100文字を超えるコメントを自動的に折りたたむ
+      this.comments.forEach(comment => {
+        this.isCollapsed[comment.id] = comment.content.length > 100;
+      });
     } catch (error) {
       console.error('コメントの読み込みに失敗しました:', error);
       this.snackBar.open('コメントの読み込みに失敗しました', '閉じる', { duration: 3000 });
