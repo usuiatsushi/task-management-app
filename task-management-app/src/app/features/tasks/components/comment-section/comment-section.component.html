@@ -4,7 +4,10 @@
   <form [formGroup]="commentForm" (ngSubmit)="onSubmit()" class="comment-form">
     <mat-form-field class="comment-input">
       <mat-label>コメントを入力</mat-label>
-      <textarea #commentInput matInput formControlName="content" rows="3" 
+      <textarea #commentInput matInput formControlName="content" 
+        cdkTextareaAutosize
+        [cdkAutosizeMinRows]="3"
+        [cdkAutosizeMaxRows]="10"
         placeholder="コメントを入力してください (@でメンション)" 
         (input)="onContentChange($event)"></textarea>
       <mat-error *ngIf="commentForm.get('content')?.hasError('required')">

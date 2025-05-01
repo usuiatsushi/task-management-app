@@ -15,6 +15,8 @@ import { NotificationService } from '../../services/notification.service';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { UserService } from '../../../auth/services/user.service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { TextFieldModule } from '@angular/cdk/text-field';
+import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 
 @Component({
   selector: 'app-comment-section',
@@ -31,12 +33,14 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatAutocompleteModule
+    MatAutocompleteModule,
+    TextFieldModule
   ]
 })
 export class CommentSectionComponent implements OnInit {
   @Input() taskId!: string;
   @ViewChild('commentInput') commentInput!: ElementRef;
+  @ViewChild(CdkTextareaAutosize) autosize!: CdkTextareaAutosize;
   
   comments: Comment[] = [];
   commentForm: FormGroup;
