@@ -15,7 +15,7 @@ export interface Task {
   priority: '低' | '中' | '高';
   category: string;
   assignedTo: string;
-  dueDate: Timestamp | null;
+  dueDate: Timestamp | { seconds: number; nanoseconds: number } | Date | string | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   userId: string;

@@ -33,7 +33,21 @@ export class CalendarService {
   async addTaskToCalendar(task: Task): Promise<void> {
     try {
       if (task.dueDate) {
-        const dueDate = task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate);
+        let dueDate: Date;
+        if (task.dueDate instanceof Timestamp) {
+          dueDate = task.dueDate.toDate();
+        } else if (typeof task.dueDate === 'object' && 'seconds' in task.dueDate) {
+          dueDate = new Date(task.dueDate.seconds * 1000);
+        } else if (typeof task.dueDate === 'string') {
+          dueDate = new Date(task.dueDate);
+        } else {
+          dueDate = new Date(task.dueDate);
+        }
+
+        if (isNaN(dueDate.getTime())) {
+          throw new Error('Invalid due date');
+        }
+
         const event = {
           summary: task.title,
           description: task.description,
@@ -75,16 +89,30 @@ export class CalendarService {
   async updateCalendarEvent(task: Task): Promise<void> {
     try {
       if (task.dueDate && task.calendarEventId) {
-        const dueDate = task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate);
+        let dueDate: Date;
+        if (task.dueDate instanceof Timestamp) {
+          dueDate = task.dueDate.toDate();
+        } else if (typeof task.dueDate === 'object' && 'seconds' in task.dueDate) {
+          dueDate = new Date(task.dueDate.seconds * 1000);
+        } else if (typeof task.dueDate === 'string') {
+          dueDate = new Date(task.dueDate);
+        } else {
+          dueDate = new Date(task.dueDate);
+        }
+
+        if (isNaN(dueDate.getTime())) {
+          throw new Error('Invalid due date');
+        }
+
         const event = {
           summary: task.title,
           description: task.description,
           start: {
-            date: dueDate.toISOString().split('T')[0], // 日付のみを抽出
+            date: dueDate.toISOString().split('T')[0],
             timeZone: 'Asia/Tokyo'
           },
           end: {
-            date: dueDate.toISOString().split('T')[0], // 日付のみを抽出
+            date: dueDate.toISOString().split('T')[0],
             timeZone: 'Asia/Tokyo'
           }
         };

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, addDoc, query, where, getDocs, updateDoc, doc } from '@angular/fire/firestore';
 import { Notification } from '../models/notification.model';
 import { Timestamp } from 'firebase/firestore';
+import { Task } from '../models/task.model';
 
 @Injectable({
   providedIn: 'root'
@@ -39,19 +40,41 @@ export class NotificationService {
     await Promise.all(notifications.map(notification => this.markAsRead(notification.id!)));
   }
 
-  async checkTaskDeadlines(tasks: any[]): Promise<void> {
+  async checkTaskDeadlines(tasks: Task[]): Promise<void> {
     const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
     for (const task of tasks) {
-      if (task.dueDate && task.dueDate.toDate() < now && task.status !== '完了') {
-        await this.createNotification({
-          type: 'deadline',
-          userId: task.userId,
-          taskId: task.id,
-          message: `タスク「${task.title}」の期限が過ぎています`,
-          createdAt: Timestamp.now(),
-          isRead: false
-        });
+      if (task.dueDate) {
+        let dueDate: Date;
+        if (task.dueDate instanceof Timestamp) {
+          dueDate = task.dueDate.toDate();
+        } else if (typeof task.dueDate === 'object' && 'seconds' in task.dueDate) {
+          dueDate = new Date(task.dueDate.seconds * 1000);
+        } else if (typeof task.dueDate === 'string') {
+          dueDate = new Date(task.dueDate);
+        } else {
+          dueDate = new Date(task.dueDate);
+        }
+
+        if (isNaN(dueDate.getTime())) {
+          console.error('Invalid due date for task:', task);
+          continue;
+        }
+
+        // 期限が明日のタスクをチェック
+        if (dueDate.toDateString() === tomorrow.toDateString()) {
+          await this.showNotification(
+            '期限が近づいています',
+            `タスク「${task.title}」の期限が明日です。`
+          );
         }
       }
+    }
+  }
+
+  async showNotification(title: string, message: string): Promise<void> {
+    // Implementation of showNotification method
   }
 } 
