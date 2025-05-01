@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, Subscription } from 'rxjs';
 import { Task } from '../models/task.model';
 import { Timestamp } from 'firebase/firestore';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService } from '../../auth/services/auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -123,11 +123,16 @@ export class TaskService implements OnDestroy {
   private handleError(error: any) {
     let errorMessage = 'エラーが発生しました';
     if (error.code === 'permission-denied') {
-      errorMessage = 'アクセス権限がありません';
+      errorMessage = 'アクセス権限がありません。ログイン状態を確認してください。';
     } else if (error.code === 'unauthenticated') {
-      errorMessage = '認証が必要です';
+      errorMessage = '認証が必要です。ログインしてください。';
+    } else if (error.code === 'failed-precondition') {
+      errorMessage = 'データベースの接続に問題が発生しました。';
     }
-    this.snackBar.open(errorMessage, '閉じる', { duration: 3000 });
+    this.snackBar.open(errorMessage, '閉じる', { 
+      duration: 5000,
+      panelClass: ['error-snackbar']
+    });
   }
 
   async getTasks(): Promise<Task[]> {

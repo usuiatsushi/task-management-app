@@ -8,26 +8,27 @@ service cloud.firestore {
 
     // ユーザーのルール
     match /users/{userId} {
-      allow list, get: if isAuthenticated();  // 認証済みユーザーのみアクセス可能
+      allow list, get: if isAuthenticated();
       allow create, update: if isAuthenticated() && request.auth.uid == userId;
-      allow delete: if false;  // ユーザー削除は禁止
+      allow delete: if false;
     }
 
     // タスクのルール
     match /tasks/{taskId} {
-      allow list, get: if isAuthenticated();  // 明示的に一覧取得と個別取得を許可
-      allow create, update, delete: if isAuthenticated();
+      allow list, get: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
     
     // カテゴリのルール
     match /categories/{categoryId} {
-      allow list, get: if isAuthenticated();  // 明示的に一覧取得と個別取得を許可
+      allow list, get: if isAuthenticated();
       allow create, update, delete: if isAuthenticated();
     }
 
     // コメントのルール
     match /comments/{commentId} {
-      allow list, get: if isAuthenticated();  // 明示的に一覧取得と個別取得を許可
+      allow list, get: if isAuthenticated();
       allow create: if isAuthenticated();
       allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
     }
