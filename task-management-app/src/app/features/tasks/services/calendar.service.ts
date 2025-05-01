@@ -104,7 +104,7 @@ export class CalendarService {
           { headers }
         ).toPromise();
       
-      this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
+        this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
       }
     } catch (error) {
       console.error('カレンダーからの削除に失敗しました:', error);

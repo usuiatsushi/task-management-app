@@ -245,12 +245,13 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           
           if (shouldSyncWithCalendar) {
             if (currentTaskData.calendarEventId) {
-              // 既存のカレンダーイベントを削除
-              await this.calendarService.deleteCalendarEvent({ 
-                ...currentTaskData,
-                id: this.taskId,
-                calendarEventId: currentTaskData.calendarEventId 
-              });
+              try {
+                // 既存のカレンダーイベントを削除
+                await this.calendarService.deleteCalendarEvent(currentTaskData);
+                console.log('古いカレンダーイベントを削除しました:', currentTaskData.calendarEventId);
+              } catch (error) {
+                console.error('古いカレンダーイベントの削除に失敗しました:', error);
+              }
               // 新しいカレンダーイベントを作成
               await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
             } else {
