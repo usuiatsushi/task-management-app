@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Comment } from '../../models/comment.model';
@@ -12,6 +12,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../services/notification.service';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { UserService } from '../../../auth/services/user.service';
 
 @Component({
   selector: 'app-comment-section',
@@ -27,11 +29,14 @@ import { NotificationService } from '../../services/notification.service';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatAutocompleteModule
   ]
 })
 export class CommentSectionComponent implements OnInit {
   @Input() taskId!: string;
+  @ViewChild('commentInput') commentInput!: ElementRef;
+  
   comments: Comment[] = [];
   commentForm: FormGroup;
   loading = false;
@@ -46,12 +51,20 @@ export class CommentSectionComponent implements OnInit {
   isCollapsed: { [commentId: string]: boolean } = {};
   mentionedUsers: string[] = [];
 
+  // メンション関連の新しいプロパティ
+  users: any[] = [];
+  filteredUsers: any[] = [];
+  showUserList = false;
+  cursorPosition = 0;
+  mentionStart = -1;
+
   constructor(
     private commentService: CommentService,
     private auth: Auth,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private userService: UserService
   ) {
     this.commentForm = this.fb.group({
       content: ['', [Validators.required, Validators.maxLength(500)]]
@@ -61,8 +74,75 @@ export class CommentSectionComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadComments();
+    this.loadUsers();
     this.auth.onAuthStateChanged(user => {
       this.currentUser = user;
+    });
+  }
+
+  async loadUsers(): Promise<void> {
+    try {
+      this.users = await this.userService.getAllUsers();
+    } catch (error) {
+      console.error('ユーザーの読み込みに失敗しました:', error);
+    }
+  }
+
+  onContentChange(event: any): void {
+    const textarea = event.target;
+    const content = textarea.value;
+    const cursorPos = textarea.selectionStart;
+    this.cursorPosition = cursorPos;
+
+    // @の位置を検索
+    const lastAtPos = content.lastIndexOf('@', cursorPos);
+    
+    if (lastAtPos !== -1 && lastAtPos < cursorPos) {
+      const textAfterAt = content.slice(lastAtPos + 1, cursorPos);
+      // スペースが含まれていない場合のみユーザーリストを表示
+      if (!textAfterAt.includes(' ')) {
+        this.mentionStart = lastAtPos;
+        this.filterUsers(textAfterAt);
+        this.showUserList = true;
+        return;
+      }
+    }
+
+    this.showUserList = false;
+    this.mentionStart = -1;
+    
+    // メンションの抽出
+    const mentions = content.match(/@[\w-]+/g) || [];
+    this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
+  }
+
+  filterUsers(query: string): void {
+    if (!query) {
+      this.filteredUsers = this.users;
+    } else {
+      this.filteredUsers = this.users.filter(user =>
+        user.displayName.toLowerCase().includes(query.toLowerCase()) ||
+        user.email.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+  }
+
+  selectUser(user: any): void {
+    const content = this.commentForm.get('content')?.value;
+    const beforeMention = content.slice(0, this.mentionStart);
+    const afterMention = content.slice(this.cursorPosition);
+    const newContent = `${beforeMention}@${user.displayName}${afterMention}`;
+    
+    this.commentForm.patchValue({ content: newContent });
+    this.showUserList = false;
+    this.mentionStart = -1;
+
+    // カーソルを適切な位置に移動
+    const newCursorPos = this.mentionStart + user.displayName.length + 1;
+    setTimeout(() => {
+      const textarea = this.commentInput.nativeElement;
+      textarea.focus();
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
     });
   }
 
@@ -80,12 +160,6 @@ export class CommentSectionComponent implements OnInit {
     } finally {
       this.loading = false;
     }
-  }
-
-  onContentChange(event: any): void {
-    const content = event.target.value;
-    const mentions = content.match(/@[\w-]+/g) || [];
-    this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
   }
 
   async onSubmit(): Promise<void> {

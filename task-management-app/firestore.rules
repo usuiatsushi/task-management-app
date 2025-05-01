@@ -6,6 +6,13 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // ユーザーのルール
+    match /users/{userId} {
+      allow list, get: if isAuthenticated();  // 認証済みユーザーのみアクセス可能
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false;  // ユーザー削除は禁止
+    }
+
     // タスクのルール
     match /tasks/{taskId} {
       allow list, get: if true;  // 明示的に一覧取得と個別取得を許可

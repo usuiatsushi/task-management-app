@@ -4,7 +4,9 @@
   <form [formGroup]="commentForm" (ngSubmit)="onSubmit()" class="comment-form">
     <mat-form-field class="comment-input">
       <mat-label>コメントを入力</mat-label>
-      <textarea matInput formControlName="content" rows="3" placeholder="コメントを入力してください (@でメンション)" (input)="onContentChange($event)"></textarea>
+      <textarea #commentInput matInput formControlName="content" rows="3" 
+        placeholder="コメントを入力してください (@でメンション)" 
+        (input)="onContentChange($event)"></textarea>
       <mat-error *ngIf="commentForm.get('content')?.hasError('required')">
         コメントを入力してください
       </mat-error>
@@ -13,6 +15,14 @@
       </mat-error>
       <mat-hint align="end">{{ commentForm.get('content')?.value?.length || 0 }}/500</mat-hint>
     </mat-form-field>
+
+    <div class="user-list" *ngIf="showUserList">
+      <div class="user-item" *ngFor="let user of filteredUsers" (click)="selectUser(user)">
+        <span class="user-name">{{ user.displayName }}</span>
+        <span class="user-email">{{ user.email }}</span>
+      </div>
+    </div>
+
     <div class="mentions" *ngIf="mentionedUsers.length > 0">
       <span class="mention-label">メンション:</span>
       <span class="mention-user" *ngFor="let user of mentionedUsers">{{ '@' }}{{ user }}</span>
