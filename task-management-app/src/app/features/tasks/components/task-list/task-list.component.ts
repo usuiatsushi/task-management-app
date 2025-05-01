@@ -547,28 +547,48 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       if (shouldSyncWithCalendar) {
         const oldCalendarEventId = task.calendarEventId; // 古いイベントIDを保存
         
-        // タスクの更新（calendarEventIdを一時的に空文字列に）
-        await this.taskService.updateTask(task.id, { 
-          dueDate: timestamp,
-          calendarEventId: ''
-        });
-        
+        // 古いカレンダーイベントを削除
         if (oldCalendarEventId) {
           try {
-            // 古いカレンダーイベントを削除
             await this.calendarService.deleteCalendarEvent({ ...task, calendarEventId: oldCalendarEventId });
             console.log('古いカレンダーイベントを削除しました:', oldCalendarEventId);
           } catch (error) {
             console.error('古いカレンダーイベントの削除に失敗しました:', error);
+            this.snackBar.open('古いカレンダーイベントの削除に失敗しました', '閉じる', { duration: 3000 });
+            return; // エラーが発生した場合は処理を中断
           }
         }
         
+        // タスクの更新（calendarEventIdを一時的に空文字列に）
+        try {
+          await this.taskService.updateTask(task.id, { 
+            dueDate: timestamp,
+            calendarEventId: ''
+          });
+        } catch (error) {
+          console.error('タスクの更新に失敗しました:', error);
+          this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
+          return; // エラーが発生した場合は処理を中断
+        }
+        
         // 新しいカレンダーイベントを作成
-        const newTask = { ...task, dueDate: timestamp, calendarEventId: '' };
-        await this.calendarService.addTaskToCalendar(newTask);
+        try {
+          const newTask = { ...task, dueDate: timestamp, calendarEventId: '' };
+          await this.calendarService.addTaskToCalendar(newTask);
+        } catch (error) {
+          console.error('新しいカレンダーイベントの作成に失敗しました:', error);
+          this.snackBar.open('新しいカレンダーイベントの作成に失敗しました', '閉じる', { duration: 3000 });
+          return; // エラーが発生した場合は処理を中断
+        }
       } else {
         // カレンダー連携なしでタスクのみ更新
-        await this.taskService.updateTask(task.id, { dueDate: timestamp });
+        try {
+          await this.taskService.updateTask(task.id, { dueDate: timestamp });
+        } catch (error) {
+          console.error('タスクの更新に失敗しました:', error);
+          this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
+          return; // エラーが発生した場合は処理を中断
+        }
       }
       
       // 更新後にタスクリストを再読み込み
