@@ -547,9 +547,13 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       if (shouldSyncWithCalendar) {
         const oldCalendarEventId = task.calendarEventId; // 古いイベントIDを保存
         
-        // タスクの更新（calendarEventIdを一時的にnullに）
-        await this.updateTaskField(task, 'dueDate', timestamp);
-        await this.updateTaskField(task, 'calendarEventId', null);
+        // タスクの更新（calendarEventIdを一時的に空文字列に）
+        const updateData: Partial<Task> = {
+          dueDate: timestamp,
+          calendarEventId: ''
+        };
+        
+        await this.taskService.updateTask(task.id, updateData);
         
         if (oldCalendarEventId) {
           try {
@@ -565,7 +569,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         await this.calendarService.addTaskToCalendar({ ...task, dueDate: timestamp });
       } else {
         // カレンダー連携なしでタスクのみ更新
-        await this.updateTaskField(task, 'dueDate', timestamp);
+        await this.taskService.updateTask(task.id, { dueDate: timestamp });
       }
       
       // 更新後にタスクリストを再読み込み
