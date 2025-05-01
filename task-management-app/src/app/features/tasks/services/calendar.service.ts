@@ -4,6 +4,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Timestamp } from 'firebase/firestore';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../../../app/core/services/auth.service';
+import { doc, updateDoc } from 'firebase/firestore';
+import { Firestore } from '@angular/fire/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +18,8 @@ export class CalendarService {
   constructor(
     private snackBar: MatSnackBar,
     private http: HttpClient,
-    @Inject(AuthService) private authService: AuthService
+    @Inject(AuthService) private authService: AuthService,
+    private firestore: Firestore
   ) {}
 
   private async getAuthHeaders(): Promise<HttpHeaders> {
@@ -45,11 +48,17 @@ export class CalendarService {
         };
 
         const headers = await this.getAuthHeaders();
-        const response = await this.http.post(
+        const response: any = await this.http.post(
           `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events`,
           event,
           { headers }
         ).toPromise();
+        
+        if (response && response.id) {
+          const taskRef = doc(this.firestore, 'tasks', task.id);
+          await updateDoc(taskRef, { calendarEventId: response.id });
+          console.log('カレンダーイベントIDを保存しました:', response.id);
+        }
         
         this.snackBar.open('カレンダーにタスクを追加しました', '閉じる', { duration: 3000 });
       }
@@ -58,7 +67,7 @@ export class CalendarService {
       if (error.code === 'auth/cancelled-popup-request') {
         this.snackBar.open('Google認証がキャンセルされました', '閉じる', { duration: 3000 });
       } else {
-      this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
+        this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
       }
     }
   }
