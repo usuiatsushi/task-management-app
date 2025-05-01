@@ -25,7 +25,7 @@
 
     <div class="mentions" *ngIf="mentionedUsers.length > 0">
       <span class="mention-label">メンション:</span>
-      <span class="mention-user" *ngFor="let user of mentionedUsers">{{ '@' }}{{ user }}</span>
+      <span class="mention-user" *ngFor="let user of mentionedUsers">{{'@'}}{{ user }}</span>
     </div>
     <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid || loading">
       コメントを投稿

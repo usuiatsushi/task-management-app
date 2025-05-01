@@ -96,10 +96,14 @@ export class CommentSectionComponent implements OnInit {
     const cursorPos = textarea.selectionStart;
     this.cursorPosition = cursorPos;
 
+    // カーソル位置の座標を取得
+    const { offsetLeft, offsetTop } = this.getCursorCoordinates(textarea, cursorPos);
+
     console.log('Content change:', {
       content,
       cursorPos,
-      users: this.users.length
+      users: this.users.length,
+      cursorCoords: { x: offsetLeft, y: offsetTop }
     });
 
     // 全角・半角の@を検索
@@ -118,6 +122,16 @@ export class CommentSectionComponent implements OnInit {
         this.mentionStart = lastAtPos;
         this.filterUsers(textAfterAt);
         this.showUserList = true;
+        
+        // ユーザーリストの位置を設定
+        setTimeout(() => {
+          const userList = document.querySelector('.user-list') as HTMLElement;
+          if (userList) {
+            userList.style.left = `${offsetLeft}px`;
+            userList.style.top = `${offsetTop}px`;
+          }
+        });
+        
         console.log('Showing user list:', this.filteredUsers.length);
         return;
       }
@@ -129,6 +143,32 @@ export class CommentSectionComponent implements OnInit {
     // メンションの抽出（全角・半角の@に対応）
     const mentions = content.match(/[@＠][\w-]+/g) || [];
     this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
+  }
+
+  // カーソル位置の座標を取得するヘルパーメソッド
+  private getCursorCoordinates(textarea: HTMLTextAreaElement, position: number): { offsetLeft: number; offsetTop: number } {
+    // 一時的な要素を作成してテキストエリアの内容をコピー
+    const div = document.createElement('div');
+    div.style.cssText = window.getComputedStyle(textarea, null).cssText;
+    div.style.height = 'auto';
+    div.style.position = 'absolute';
+    div.style.visibility = 'hidden';
+    div.style.whiteSpace = 'pre-wrap';
+    
+    // カーソル位置までのテキストを取得
+    const textBeforeCursor = textarea.value.substring(0, position);
+    const span = document.createElement('span');
+    span.textContent = textBeforeCursor;
+    div.appendChild(span);
+    
+    document.body.appendChild(div);
+    const coordinates = {
+      offsetLeft: textarea.offsetLeft + span.offsetLeft,
+      offsetTop: textarea.offsetTop + span.offsetTop - textarea.scrollTop
+    };
+    document.body.removeChild(div);
+    
+    return coordinates;
   }
 
   filterUsers(query: string): void {
