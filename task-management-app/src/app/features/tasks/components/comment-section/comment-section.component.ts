@@ -99,14 +99,23 @@ export class CommentSectionComponent implements OnInit {
     // カーソル位置の座標を取得
     const { offsetLeft, offsetTop } = this.getCursorCoordinates(textarea, cursorPos);
 
+    console.log('Content change:', {
+      content,
+      cursorPos,
+      users: this.users.length,
+      cursorCoords: { x: offsetLeft, y: offsetTop }
+    });
+
     // 全角・半角の@を検索
     const lastAtPos = Math.max(
       content.lastIndexOf('@', cursorPos),
       content.lastIndexOf('＠', cursorPos)
     );
-
+    console.log('Last @ position:', lastAtPos);
+    
     if (lastAtPos !== -1 && lastAtPos < cursorPos) {
       const textAfterAt = content.slice(lastAtPos + 1, cursorPos);
+      console.log('Text after @:', textAfterAt);
       
       // スペースが含まれていない場合のみユーザーリストを表示
       if (!textAfterAt.includes(' ')) {
@@ -122,6 +131,8 @@ export class CommentSectionComponent implements OnInit {
             userList.style.top = `${offsetTop}px`;
           }
         });
+        
+        console.log('Showing user list:', this.filteredUsers.length);
         return;
       }
     }
@@ -130,29 +141,8 @@ export class CommentSectionComponent implements OnInit {
     this.mentionStart = -1;
     
     // メンションの抽出（全角・半角の@に対応）
-    const mentions = content.match(/[@＠][^\s]+/g) || [];
+    const mentions = content.match(/[@＠][\w-]+/g) || [];
     this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
-
-    // 入力欄のテキストを装飾
-    this.decorateInputText(textarea);
-  }
-
-  // 入力欄のテキストを装飾するメソッド
-  private decorateInputText(textarea: HTMLTextAreaElement): void {
-    const content = textarea.value;
-    const cursorPos = textarea.selectionStart;
-    
-    // メンションを青色で表示するためのスタイルを適用
-    const styledContent = content.replace(
-      /[@＠][^\s]+/g,
-      match => `<span style="color: #1976d2;">${match}</span>`
-    );
-    
-    // スタイル適用後のテキストを表示
-    const displayArea = textarea.parentElement?.querySelector('.styled-content');
-    if (displayArea) {
-      displayArea.innerHTML = styledContent;
-    }
   }
 
   // カーソル位置の座標を取得するヘルパーメソッド
