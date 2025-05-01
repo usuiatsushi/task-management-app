@@ -152,13 +152,22 @@ export class CalendarService {
       const headers = await this.getAuthHeaders();
       console.log('認証ヘッダーを取得しました');
 
-      const response = await this.http.delete(
-        `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events/${task.calendarEventId}`,
-        { headers }
-      ).toPromise();
+      try {
+        const response = await this.http.delete(
+          `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events/${task.calendarEventId}`,
+          { headers }
+        ).toPromise();
 
-      console.log('カレンダーイベントの削除が成功しました:', task.calendarEventId);
-      this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
+        console.log('カレンダーイベントの削除が成功しました:', task.calendarEventId);
+        this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
+      } catch (error: any) {
+        // 410 Goneエラーの場合は、イベントがすでに削除されているとみなして処理を続行
+        if (error.status === 410) {
+          console.log('カレンダーイベントはすでに削除されています:', task.calendarEventId);
+          return;
+        }
+        throw error;
+      }
     } catch (error: any) {
       console.error('カレンダーからの削除に失敗しました:', error);
       if (error.status === 404) {
@@ -170,7 +179,7 @@ export class CalendarService {
       } else {
         this.snackBar.open('カレンダーからの削除に失敗しました', '閉じる', { duration: 3000 });
       }
-      throw error; // エラーを再スローして上位のエラーハンドリングに委ねる
+      throw error;
     }
   }
 } 
