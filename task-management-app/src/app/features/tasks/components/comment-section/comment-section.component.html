@@ -14,21 +14,15 @@
         コメントは500文字以内で入力してください
       </mat-error>
       <mat-hint align="end">{{ commentForm.get('content')?.value?.length || 0 }}/500</mat-hint>
+
+      <div class="user-list" *ngIf="showUserList">
+        <div class="user-item" *ngFor="let user of filteredUsers" (click)="selectUser(user)">
+          <span class="user-name">{{ user.displayName }}</span>
+          <span class="user-email">{{ user.email }}</span>
+        </div>
+      </div>
     </mat-form-field>
 
-    <div class="comment-preview" [innerHTML]="getFormattedContent()"></div>
-
-    <div class="user-list" *ngIf="showUserList">
-      <div class="user-item" *ngFor="let user of filteredUsers" (click)="selectUser(user)">
-        <span class="user-name">{{ user.displayName }}</span>
-        <span class="user-email">{{ user.email }}</span>
-      </div>
-    </div>
-
-    <div class="mentions" *ngIf="mentionedUsers.length > 0">
-      <span class="mention-label">メンション:</span>
-      <span class="mention-user" *ngFor="let user of mentionedUsers">{{ '@' }}{{ user }}</span>
-    </div>
     <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid || loading">
       コメントを投稿
     </button>
@@ -60,11 +54,11 @@
         </div>
         <div class="comment-content" *ngIf="!isEditing(comment)">
           <div class="content-preview" *ngIf="isCollapsed[comment.id]">
-            <span [innerHTML]="getCommentContent(comment)"></span>
+            <div [innerHTML]="getCommentContent(comment)"></div>
             <button mat-button color="primary" (click)="toggleCollapse(comment.id)">続きを読む</button>
           </div>
           <div class="content-full" *ngIf="!isCollapsed[comment.id]">
-            <span [innerHTML]="getCommentContent(comment)"></span>
+            <div [innerHTML]="getCommentContent(comment)"></div>
             <button mat-button color="primary" (click)="toggleCollapse(comment.id)" *ngIf="comment.content.length > 100">
               折りたたむ
             </button>
@@ -79,7 +73,6 @@
             <button mat-button (click)="cancelEdit()">キャンセル</button>
           </div>
         </div>
-        <!-- アクションボタン行（左：返信・返信数、右：編集履歴） -->
         <div class="comment-actions-row">
           <div class="left-actions">
             <button *ngIf="!openAction[comment.id]" mat-button color="accent" (click)="toggleReplyAction(comment.id)">返信</button>

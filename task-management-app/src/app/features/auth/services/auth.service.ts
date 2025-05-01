@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from '@angular/fire/auth';
+import { Auth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from '@angular/fire/auth';
 import { BehaviorSubject } from 'rxjs';
 import { Firestore, collection, doc, setDoc, getDoc } from '@angular/fire/firestore';
 
@@ -70,5 +70,15 @@ export class AuthService {
 
   getCurrentUser() {
     return this.auth.currentUser;
+  }
+
+  async signup(email: string, password: string) {
+    const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+    return userCredential.user;
+  }
+
+  async login(email: string, password: string) {
+    const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+    return userCredential.user;
   }
 } 

@@ -52,7 +52,7 @@ export class CommentSectionComponent implements OnInit {
   isCollapsed: { [commentId: string]: boolean } = {};
   mentionedUsers: string[] = [];
 
-  // メンション関連の新しいプロパティ
+  // メンション関連のプロパティ
   users: any[] = [];
   filteredUsers: any[] = [];
   showUserList = false;
@@ -98,79 +98,36 @@ export class CommentSectionComponent implements OnInit {
     const cursorPos = textarea.selectionStart;
     this.cursorPosition = cursorPos;
 
-    // カーソル位置の座標を取得
-    const { offsetLeft, offsetTop } = this.getCursorCoordinates(textarea, cursorPos);
-
-    console.log('Content change:', {
-      content,
-      cursorPos,
-      users: this.users.length,
-      cursorCoords: { x: offsetLeft, y: offsetTop }
-    });
-
     // 全角・半角の@を検索
     const lastAtPos = Math.max(
       content.lastIndexOf('@', cursorPos),
       content.lastIndexOf('＠', cursorPos)
     );
-    console.log('Last @ position:', lastAtPos);
     
     if (lastAtPos !== -1 && lastAtPos < cursorPos) {
       const textAfterAt = content.slice(lastAtPos + 1, cursorPos);
-      console.log('Text after @:', textAfterAt);
       
       // スペースが含まれていない場合のみユーザーリストを表示
       if (!textAfterAt.includes(' ')) {
+        // 直前の文字が@でないことを確認
+        if (lastAtPos > 0) {
+          const prevChar = content[lastAtPos - 1];
+          if (prevChar === '@' || prevChar === '＠') {
+            this.showUserList = false;
+            this.mentionStart = -1;
+            return;
+          }
+        }
+        
         this.mentionStart = lastAtPos;
         this.filterUsers(textAfterAt);
         this.showUserList = true;
-        
-        // ユーザーリストの位置を設定
-        setTimeout(() => {
-          const userList = document.querySelector('.user-list') as HTMLElement;
-          if (userList) {
-            userList.style.left = `${offsetLeft}px`;
-            userList.style.top = `${offsetTop}px`;
-          }
-        });
-        
-        console.log('Showing user list:', this.filteredUsers.length);
         return;
       }
     }
 
     this.showUserList = false;
     this.mentionStart = -1;
-    
-    // メンションの抽出（全角・半角の@に対応）
-    const mentions = content.match(/[@＠][\w-]+/g) || [];
-    this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
-  }
-
-  // カーソル位置の座標を取得するヘルパーメソッド
-  private getCursorCoordinates(textarea: HTMLTextAreaElement, position: number): { offsetLeft: number; offsetTop: number } {
-    // 一時的な要素を作成してテキストエリアの内容をコピー
-    const div = document.createElement('div');
-    div.style.cssText = window.getComputedStyle(textarea, null).cssText;
-    div.style.height = 'auto';
-    div.style.position = 'absolute';
-    div.style.visibility = 'hidden';
-    div.style.whiteSpace = 'pre-wrap';
-    
-    // カーソル位置までのテキストを取得
-    const textBeforeCursor = textarea.value.substring(0, position);
-    const span = document.createElement('span');
-    span.textContent = textBeforeCursor;
-    div.appendChild(span);
-    
-    document.body.appendChild(div);
-    const coordinates = {
-      offsetLeft: textarea.offsetLeft + span.offsetLeft,
-      offsetTop: textarea.offsetTop + span.offsetTop - textarea.scrollTop
-    };
-    document.body.removeChild(div);
-    
-    return coordinates;
   }
 
   filterUsers(query: string): void {
@@ -424,27 +381,19 @@ export class CommentSectionComponent implements OnInit {
     this.isCollapsed[commentId] = !this.isCollapsed[commentId];
   }
 
-  // コメント内のメンションをハイライト表示する
-  highlightMentions(content: string): SafeHtml {
-    const mentionPattern = /[@＠][\w一-龠ぁ-んァ-ン]+/g;
-    const highlightedContent = content.replace(mentionPattern, match => 
-      `<span class="mention-highlight">${match}</span>`
-    );
-    return this.sanitizer.bypassSecurityTrustHtml(highlightedContent);
-  }
-
-  // 入力中のコメントのメンションをハイライト表示する
-  getFormattedContent(): SafeHtml {
-    const content = this.commentForm.get('content')?.value || '';
-    return this.highlightMentions(content);
-  }
-
   // コメント表示用のメソッド
   getCommentContent(comment: Comment): SafeHtml {
     const content = comment.content;
-    if (content.length > 100 && this.isCollapsed[comment.id]) {
-      return this.highlightMentions(content.slice(0, 100));
-    }
-    return this.highlightMentions(content);
+    // メンションパターンを改善（改行を含まないように）
+    const mentionPattern = /[@＠]([\w一-龠ぁ-んァ-ン]+)/g;
+    const lines = content.split('\n');
+    
+    const processedLines = lines.map(line => {
+      return line.replace(mentionPattern, (match, name) => {
+        return `<span class="mention-highlight">@${name}</span>`;
+      });
+    });
+
+    return this.sanitizer.bypassSecurityTrustHtml(processedLines.join('\n'));
   }
 } 
