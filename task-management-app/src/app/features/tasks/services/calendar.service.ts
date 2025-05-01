@@ -5,20 +5,6 @@ import { Timestamp } from 'firebase/firestore';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../../../../app/core/services/auth.service';
 
-interface CalendarEventResponse {
-  id: string;
-  summary: string;
-  description: string;
-  start: {
-    date: string;
-    timeZone: string;
-  };
-  end: {
-    date: string;
-    timeZone: string;
-  };
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -59,16 +45,11 @@ export class CalendarService {
         };
 
         const headers = await this.getAuthHeaders();
-        const response = await this.http.post<CalendarEventResponse>(
+        const response = await this.http.post(
           `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events`,
           event,
           { headers }
         ).toPromise();
-        
-        if (response) {
-          // カレンダーイベントIDをタスクに保存
-          task.calendarEventId = response.id;
-        }
         
         this.snackBar.open('カレンダーにタスクを追加しました', '閉じる', { duration: 3000 });
       }
@@ -79,7 +60,6 @@ export class CalendarService {
       } else {
         this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
       }
-      throw error;
     }
   }
 

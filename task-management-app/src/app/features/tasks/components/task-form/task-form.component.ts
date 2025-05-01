@@ -226,6 +226,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         if (this.isEditMode && this.taskId) {
           const taskRef = doc(this.firestore, 'tasks', this.taskId);
           await updateDoc(taskRef, taskData);
+          await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
           this.snackBar.open('タスクを更新しました', '閉じる', { 
             duration: 3000,
             panelClass: ['success-snackbar']
@@ -236,6 +237,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
             ...taskData,
             createdAt: new Date()
           });
+          await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
           this.snackBar.open('タスクを作成しました', '閉じる', { 
             duration: 3000,
             panelClass: ['success-snackbar']
@@ -284,28 +286,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           dueDate: dueDate
         };
 
-        // 既存のカレンダーイベントがある場合は削除
-        if (this.isEditMode && this.taskId) {
-          const taskRef = doc(this.firestore, 'tasks', this.taskId);
-          const taskDoc = await getDoc(taskRef);
-          const currentTask = taskDoc.data() as Task;
-          
-          if (currentTask.calendarEventId) {
-            await this.calendarService.deleteCalendarEvent(currentTask);
-          }
-        }
-
-        // 新しいカレンダーイベントを作成
         await this.calendarService.addTaskToCalendar(taskData);
-        
-        // カレンダーイベントIDをタスクに保存
-        if (this.isEditMode && this.taskId) {
-          const taskRef = doc(this.firestore, 'tasks', this.taskId);
-          await updateDoc(taskRef, {
-            calendarEventId: taskData.calendarEventId
-          });
-        }
-
         this.snackBar.open('カレンダーにタスクを追加しました', '閉じる', { 
           duration: 3000,
           panelClass: ['success-snackbar']

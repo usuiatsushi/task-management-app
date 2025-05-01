@@ -13,7 +13,7 @@ export class TaskService {
     private calendarService: CalendarService
   ) {}
 
-  // タスクを作成
+  // タスクを作成し、カレンダーにも登録
   createTask(task: Omit<Task, 'id' | 'calendarEventId' | 'createdAt' | 'updatedAt'>): Promise<any> {
     console.log('Creating task with data:', task);
     const newTask: Omit<Task, 'id'> = {
@@ -27,7 +27,50 @@ export class TaskService {
       this.firestore.collection('tasks').add(newTask)
         .then(docRef => {
           console.log('Task created in Firestore:', docRef.id);
-          resolve(docRef);
+          // タスクに期限がある場合、カレンダーに登録
+          if (newTask.dueDate) {
+            console.log('Attempting to create calendar event for task:', {
+              id: docRef.id,
+              title: newTask.title,
+              dueDate: newTask.dueDate
+            });
+
+            this.calendarService.createEventFromTask({
+              ...newTask,
+              id: docRef.id
+            }).pipe(
+              catchError(error => {
+                console.error('Calendar API Error:', error);
+                if (error.error && error.error.error) {
+                  console.error('Calendar API Error Details:', error.error.error);
+                }
+                throw error;
+              })
+            ).subscribe(
+              calendarEvent => {
+                console.log('Calendar event created successfully:', calendarEvent);
+                // カレンダーイベントIDをタスクに保存
+                this.firestore.collection('tasks').doc(docRef.id)
+                  .update({ calendarEventId: calendarEvent.id })
+                  .then(() => {
+                    console.log('Task updated with calendar event ID:', calendarEvent.id);
+                    resolve(docRef);
+                  })
+                  .catch(error => {
+                    console.error('Error updating task with calendar event ID:', error);
+                    reject(error);
+                  });
+              },
+              error => {
+                console.error('Error creating calendar event:', error);
+                // カレンダーイベントの作成に失敗しても、タスクは作成済みなのでresolveする
+                resolve(docRef);
+              }
+            );
+          } else {
+            console.log('No due date set, skipping calendar event creation');
+            resolve(docRef);
+          }
         })
         .catch(error => {
           console.error('Error creating task in Firestore:', error);
