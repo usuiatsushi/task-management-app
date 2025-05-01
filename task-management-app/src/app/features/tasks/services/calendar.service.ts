@@ -58,7 +58,7 @@ export class CalendarService {
       if (error.code === 'auth/cancelled-popup-request') {
         this.snackBar.open('Google認証がキャンセルされました', '閉じる', { duration: 3000 });
       } else {
-        this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
+      this.snackBar.open('カレンダーへの追加に失敗しました', '閉じる', { duration: 3000 });
       }
     }
   }
@@ -103,8 +103,8 @@ export class CalendarService {
           `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events/${task.calendarEventId}`,
           { headers }
         ).toPromise();
-        
-        this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
+      
+      this.snackBar.open('カレンダーからイベントを削除しました', '閉じる', { duration: 3000 });
       }
     } catch (error) {
       console.error('カレンダーからの削除に失敗しました:', error);

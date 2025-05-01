@@ -238,9 +238,25 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
 
         if (this.isEditMode && this.taskId) {
           const taskRef = doc(this.firestore, 'tasks', this.taskId);
+          const currentTask = await getDoc(taskRef);
+          const currentTaskData = currentTask.data() as Task;
+          
           await updateDoc(taskRef, taskData);
+          
           if (shouldSyncWithCalendar) {
-            await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
+            if (currentTaskData.calendarEventId) {
+              // 既存のカレンダーイベントを削除
+              await this.calendarService.deleteCalendarEvent({ 
+                ...currentTaskData,
+                id: this.taskId,
+                calendarEventId: currentTaskData.calendarEventId 
+              });
+              // 新しいカレンダーイベントを作成
+              await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
+            } else {
+              // 新しいカレンダーイベントを作成
+              await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
+            }
           }
           this.snackBar.open('タスクを更新しました', '閉じる', { 
             duration: 3000,
