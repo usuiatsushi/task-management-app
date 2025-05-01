@@ -131,7 +131,7 @@ export class CommentSectionComponent implements OnInit {
     
     // メンションの抽出（全角・半角の@に対応）
     const mentions = content.match(/[@＠][^\s]+/g) || [];
-    this.mentionedUsers = mentions.map(mention => mention.substring(1));
+    this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
 
     // 入力欄のテキストを装飾
     this.decorateInputText(textarea);
