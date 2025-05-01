@@ -4,9 +4,12 @@
   <form [formGroup]="commentForm" (ngSubmit)="onSubmit()" class="comment-form">
     <mat-form-field class="comment-input">
       <mat-label>コメントを入力</mat-label>
-      <textarea #commentInput matInput formControlName="content" rows="3" 
-        placeholder="コメントを入力してください (@でメンション)" 
-        (input)="onContentChange($event)"></textarea>
+      <div class="input-container">
+        <textarea #commentInput matInput formControlName="content" rows="3" 
+          placeholder="コメントを入力してください (@でメンション)" 
+          (input)="onContentChange($event)"></textarea>
+        <div class="styled-content"></div>
+      </div>
       <mat-error *ngIf="commentForm.get('content')?.hasError('required')">
         コメントを入力してください
       </mat-error>
@@ -26,8 +29,8 @@
     <div class="mentions" *ngIf="mentionedUsers.length > 0">
       <span class="mention-label">メンション:</span>
       <span class="mention-user" *ngFor="let user of mentionedUsers">
-        <span class="mention-symbol">{{ '@' }}</span>
-        <span class="mention-name">{{ user }}</span>
+        <span class="mention-symbol" style="color: #1976d2;">&#64;</span>
+        <span class="mention-name" style="color: #1976d2;">{{ user }}</span>
       </span>
     </div>
     <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid || loading">
