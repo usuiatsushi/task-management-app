@@ -24,6 +24,10 @@
         &::selection {
           background-color: rgba(25, 118, 210, 0.1);
         }
+
+        &::placeholder {
+          color: #757575;
+        }
       }
     }
 
@@ -79,16 +83,12 @@
       }
 
       .mention-user {
-        color: #1976d2;
         font-weight: 500;
         padding: 2px 8px;
         border-radius: 4px;
         font-size: 0.9em;
         background-color: #e3f2fd;
-
-        &::first-letter {
-          color: #1976d2;
-        }
+        color: #1976d2;
       }
     }
 
