@@ -4,14 +4,36 @@
   <form [formGroup]="commentForm" (ngSubmit)="onSubmit()" class="comment-form">
     <mat-form-field class="comment-input">
       <mat-label>コメントを入力</mat-label>
-      <textarea matInput formControlName="content" rows="3" placeholder="コメントを入力してください"></textarea>
+      <textarea matInput formControlName="content" rows="3" placeholder="コメントを入力してください (@でメンション)" (input)="onContentChange($event)"></textarea>
       <mat-error *ngIf="commentForm.get('content')?.hasError('required')">
         コメントを入力してください
       </mat-error>
       <mat-error *ngIf="commentForm.get('content')?.hasError('maxlength')">
         コメントは500文字以内で入力してください
       </mat-error>
+      <mat-hint align="end">{{ commentForm.get('content')?.value?.length || 0 }}/500</mat-hint>
     </mat-form-field>
+    <div class="mentions" *ngIf="mentionedUsers.length > 0">
+      <span class="mention-label">メンション:</span>
+      <span class="mention-user" *ngFor="let user of mentionedUsers">{{ '@' }}{{ user }}</span>
+    </div>
+    <div class="preview-toggle">
+      <button mat-button type="button" (click)="togglePreview()">
+        {{ showPreview ? 'プレビューを隠す' : 'プレビューを表示' }}
+      </button>
+    </div>
+    <div class="preview-content" *ngIf="showPreview">
+      <h4>プレビュー</h4>
+      <div class="preview-comment">
+        <div class="preview-header">
+          <span class="user-name">{{ currentUser?.displayName || '匿名ユーザー' }}</span>
+          <span class="comment-date">現在</span>
+        </div>
+        <div class="preview-body">
+          {{ commentForm.get('content')?.value || 'コメントを入力してください' }}
+        </div>
+      </div>
+    </div>
     <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid || loading">
       コメントを投稿
     </button>
@@ -23,7 +45,7 @@
 
   <ng-template #commentThread let-commentsList>
     <ng-container *ngFor="let comment of commentsList">
-      <div class="comment-item" [ngClass]="{ 'reply-item': comment.parentId }">
+      <div class="comment-item" [ngClass]="{ 'reply-item': comment.parentId, 'collapsed': isCollapsed[comment.id] }">
         <div class="comment-header">
           <span class="user-name">{{ comment.userName }}</span>
           <span class="comment-date">
@@ -41,7 +63,18 @@
             </button>
           </div>
         </div>
-        <div class="comment-content" *ngIf="!isEditing(comment)">{{ comment.content }}</div>
+        <div class="comment-content" *ngIf="!isEditing(comment)">
+          <div class="content-preview" *ngIf="isCollapsed[comment.id]">
+            {{ comment.content | slice:0:100 }}{{ comment.content.length > 100 ? '...' : '' }}
+            <button mat-button color="primary" (click)="toggleCollapse(comment.id)">続きを読む</button>
+          </div>
+          <div class="content-full" *ngIf="!isCollapsed[comment.id]">
+            {{ comment.content }}
+            <button mat-button color="primary" (click)="toggleCollapse(comment.id)" *ngIf="comment.content.length > 100">
+              折りたたむ
+            </button>
+          </div>
+        </div>
         <div class="comment-edit-form" *ngIf="isEditing(comment)">
           <mat-form-field class="edit-input">
             <textarea matInput [(ngModel)]="editContent" rows="3"></textarea>

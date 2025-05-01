@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-comment-section',
@@ -42,12 +43,16 @@ export class CommentSectionComponent implements OnInit {
   replyContent: string = '';
   showReplies: { [commentId: string]: boolean } = {};
   openAction: { [commentId: string]: 'reply' | 'replies' | 'history' | null } = {};
+  isCollapsed: { [commentId: string]: boolean } = {};
+  showPreview: boolean = false;
+  mentionedUsers: string[] = [];
 
   constructor(
     private commentService: CommentService,
     private auth: Auth,
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private notificationService: NotificationService
   ) {
     this.commentForm = this.fb.group({
       content: ['', [Validators.required, Validators.maxLength(500)]]
@@ -57,6 +62,9 @@ export class CommentSectionComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadComments();
+    this.auth.onAuthStateChanged(user => {
+      this.currentUser = user;
+    });
   }
 
   async loadComments(): Promise<void> {
@@ -69,6 +77,12 @@ export class CommentSectionComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  onContentChange(event: any): void {
+    const content = event.target.value;
+    const mentions = content.match(/@[\w-]+/g) || [];
+    this.mentionedUsers = mentions.map((mention: string) => mention.substring(1));
   }
 
   async onSubmit(): Promise<void> {
@@ -89,9 +103,35 @@ export class CommentSectionComponent implements OnInit {
         isEdited: false
       };
 
-      await this.commentService.createComment(comment);
+      const commentId = await this.commentService.createComment(comment);
       this.commentForm.reset();
       await this.loadComments();
+
+      // 通知を送信
+      await this.notificationService.createNotification({
+        type: 'comment',
+        userId: currentUser.uid,
+        taskId: this.taskId,
+        commentId: commentId,
+        message: `${currentUser.displayName || '匿名ユーザー'}さんがコメントを投稿しました`,
+        createdAt: Timestamp.now(),
+        isRead: false
+      });
+
+      // メンションされたユーザーに通知を送信
+      for (const username of this.mentionedUsers) {
+        await this.notificationService.createNotification({
+          type: 'mention',
+          userId: currentUser.uid,
+          taskId: this.taskId,
+          commentId: commentId,
+          message: `${currentUser.displayName || '匿名ユーザー'}さんがあなたにメンションしました`,
+          createdAt: Timestamp.now(),
+          isRead: false
+        });
+      }
+
+      this.snackBar.open('コメントを投稿しました', '閉じる', { duration: 3000 });
     } catch (error) {
       console.error('コメントの投稿に失敗しました:', error);
       this.snackBar.open('コメントの投稿に失敗しました', '閉じる', { duration: 3000 });
@@ -182,11 +222,25 @@ export class CommentSectionComponent implements OnInit {
         isEdited: false,
         parentId: parentComment.id
       };
-      await this.commentService.createComment(reply);
+      const replyId = await this.commentService.createComment(reply);
       this.replyToCommentId = null;
       this.replyContent = '';
       this.openAction[parentComment.id] = 'replies';
       await this.loadComments();
+
+      // 返信の通知を送信
+      await this.notificationService.createNotification({
+        type: 'reply',
+        userId: currentUser.uid,
+        taskId: this.taskId,
+        commentId: replyId,
+        parentCommentId: parentComment.id,
+        message: `${currentUser.displayName || '匿名ユーザー'}さんが返信しました`,
+        createdAt: Timestamp.now(),
+        isRead: false
+      });
+
+      this.snackBar.open('返信を投稿しました', '閉じる', { duration: 3000 });
     } catch (error) {
       console.error('返信の投稿に失敗しました:', error);
       this.snackBar.open('返信の投稿に失敗しました', '閉じる', { duration: 3000 });
@@ -224,5 +278,13 @@ export class CommentSectionComponent implements OnInit {
 
   toggleHistoryAction(commentId: string): void {
     this.openAction[commentId] = this.openAction[commentId] === 'history' ? null : 'history';
+  }
+
+  toggleCollapse(commentId: string): void {
+    this.isCollapsed[commentId] = !this.isCollapsed[commentId];
+  }
+
+  togglePreview(): void {
+    this.showPreview = !this.showPreview;
   }
 } 

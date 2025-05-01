@@ -1,34 +1,57 @@
 import { Injectable } from '@angular/core';
-import { ToastService } from '../../../shared/services/toast.service';
-import { Task } from '../models/task.model';
+import { Firestore, collection, addDoc, query, where, getDocs, updateDoc, doc } from '@angular/fire/firestore';
+import { Notification } from '../models/notification.model';
 import { Timestamp } from 'firebase/firestore';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  constructor(private toastService: ToastService) {}
+  constructor(private firestore: Firestore) {}
 
-  checkTaskDeadlines(tasks: Task[]): void {
+  async createNotification(notification: Omit<Notification, 'id'>): Promise<string> {
+    const notificationsRef = collection(this.firestore, 'notifications');
+    const docRef = await addDoc(notificationsRef, notification);
+    return docRef.id;
+  }
+
+  async getUnreadNotifications(userId: string): Promise<Notification[]> {
+    const notificationsRef = collection(this.firestore, 'notifications');
+    const q = query(
+      notificationsRef,
+      where('userId', '==', userId),
+      where('isRead', '==', false)
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Notification));
+  }
+
+  async markAsRead(notificationId: string): Promise<void> {
+    const notificationRef = doc(this.firestore, 'notifications', notificationId);
+    await updateDoc(notificationRef, { isRead: true });
+  }
+
+  async markAllAsRead(userId: string): Promise<void> {
+    const notifications = await this.getUnreadNotifications(userId);
+    await Promise.all(notifications.map(notification => this.markAsRead(notification.id!)));
+  }
+
+  async checkTaskDeadlines(tasks: any[]): Promise<void> {
     const now = new Date();
-    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
-
-    tasks.forEach(task => {
-      const dueDate = task.dueDate ? (task.dueDate instanceof Timestamp ? task.dueDate.toDate() : new Date(task.dueDate)) : null;
-        
-      if (dueDate && dueDate < now) {
-        this.toastService.show(`${task.title}の期限が過ぎています`, 'error');
-      } else if (dueDate && dueDate > now && dueDate < threeDaysFromNow) {
-        const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const dueDateOnly = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
-        const diffTime = dueDateOnly.getTime() - nowDate.getTime();
-        const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (daysLeft === 0) {
-          this.toastService.show(`${task.title}の締め切りは本日です`, 'warning');
-        } else {
-          this.toastService.show(`${task.title}の締め切りまであと${daysLeft}日`, 'warning');
-        }
+    for (const task of tasks) {
+      if (task.dueDate && task.dueDate.toDate() < now && task.status !== '完了') {
+        await this.createNotification({
+          type: 'deadline',
+          userId: task.userId,
+          taskId: task.id,
+          message: `タスク「${task.title}」の期限が過ぎています`,
+          createdAt: Timestamp.now(),
+          isRead: false
+        });
       }
-    });
+    }
   }
 } 
