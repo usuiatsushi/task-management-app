@@ -17,26 +17,6 @@
       <span class="mention-label">メンション:</span>
       <span class="mention-user" *ngFor="let user of mentionedUsers">{{ '@' }}{{ user }}</span>
     </div>
-    <div class="preview-toggle">
-      <button mat-button type="button" (click)="togglePreview()">
-        {{ showPreview ? 'プレビューを隠す' : 'プレビューを表示' }}
-      </button>
-    </div>
-    <div class="preview-content" *ngIf="showPreview">
-      <h4>プレビュー</h4>
-      <div class="preview-comment">
-        <div class="preview-header">
-          <span class="user-name">{{ currentUser?.displayName || '匿名ユーザー' }}</span>
-          <span class="comment-date">現在</span>
-        </div>
-        <div class="preview-body">
-          <ng-container *ngFor="let segment of getFormattedContent()">
-            <span *ngIf="segment.type === 'text'" [innerHTML]="segment.content | markdown"></span>
-            <span *ngIf="segment.type === 'mention'" class="mention-preview">{{ segment.content }}</span>
-          </ng-container>
-        </div>
-      </div>
-    </div>
     <button mat-raised-button color="primary" type="submit" [disabled]="commentForm.invalid || loading">
       コメントを投稿
     </button>

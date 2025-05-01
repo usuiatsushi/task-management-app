@@ -12,23 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../services/notification.service';
-import { marked } from 'marked';
-import { DomSanitizer } from '@angular/platform-browser';
-import { Pipe, PipeTransform } from '@angular/core';
-
-@Pipe({
-  name: 'markdown',
-  standalone: true
-})
-export class MarkdownPipe implements PipeTransform {
-  constructor(private sanitizer: DomSanitizer) {}
-
-  transform(value: string): any {
-    if (!value) return '';
-    const html = marked.parse(value, { async: false }) as string;
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-}
 
 @Component({
   selector: 'app-comment-section',
@@ -44,8 +27,7 @@ export class MarkdownPipe implements PipeTransform {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatSnackBarModule,
-    MarkdownPipe
+    MatSnackBarModule
   ]
 })
 export class CommentSectionComponent implements OnInit {
@@ -62,7 +44,6 @@ export class CommentSectionComponent implements OnInit {
   showReplies: { [commentId: string]: boolean } = {};
   openAction: { [commentId: string]: 'reply' | 'replies' | 'history' | null } = {};
   isCollapsed: { [commentId: string]: boolean } = {};
-  showPreview: boolean = false;
   mentionedUsers: string[] = [];
 
   constructor(
@@ -306,10 +287,6 @@ export class CommentSectionComponent implements OnInit {
 
   toggleCollapse(commentId: string): void {
     this.isCollapsed[commentId] = !this.isCollapsed[commentId];
-  }
-
-  togglePreview(): void {
-    this.showPreview = !this.showPreview;
   }
 
   getFormattedContent(): Array<{type: 'text' | 'mention', content: string}> {
