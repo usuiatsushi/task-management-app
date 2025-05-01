@@ -98,6 +98,23 @@ export class CommentSectionComponent implements OnInit {
     const cursorPos = textarea.selectionStart;
     this.cursorPosition = cursorPos;
 
+    // 入力された文字を取得
+    const inputChar = content[cursorPos - 1];
+    
+    // @が入力された場合、直前の文字をチェック
+    if (inputChar === '@' || inputChar === '＠') {
+      const prevChar = content[cursorPos - 2];
+      if (prevChar === '@' || prevChar === '＠') {
+        // 連続した@の入力を防ぐ
+        const newContent = content.slice(0, cursorPos - 1) + content.slice(cursorPos);
+        this.commentForm.patchValue({ content: newContent });
+        setTimeout(() => {
+          textarea.setSelectionRange(cursorPos - 1, cursorPos - 1);
+        });
+        return;
+      }
+    }
+
     // 全角・半角の@を検索
     const lastAtPos = Math.max(
       content.lastIndexOf('@', cursorPos),
@@ -109,16 +126,6 @@ export class CommentSectionComponent implements OnInit {
       
       // スペースが含まれていない場合のみユーザーリストを表示
       if (!textAfterAt.includes(' ')) {
-        // 直前の文字が@でないことを確認
-        if (lastAtPos > 0) {
-          const prevChar = content[lastAtPos - 1];
-          if (prevChar === '@' || prevChar === '＠') {
-            this.showUserList = false;
-            this.mentionStart = -1;
-            return;
-          }
-        }
-        
         this.mentionStart = lastAtPos;
         this.filterUsers(textAfterAt);
         this.showUserList = true;
