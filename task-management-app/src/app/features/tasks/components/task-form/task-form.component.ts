@@ -19,6 +19,8 @@ import { TaskService } from '../../services/task.service';
 import { CategoryService } from '../../services/category.service';
 import { CalendarService } from '../../services/calendar.service';
 import { Timestamp } from '@angular/fire/firestore';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 
 @Component({
   selector: 'app-task-form',
@@ -40,7 +42,8 @@ import { Timestamp } from '@angular/fire/firestore';
     MatSnackBarModule,
     MatDividerModule,
     MatIconModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDialogModule
   ]
 })
 export class TaskFormComponent implements OnInit, AfterViewInit {
@@ -65,7 +68,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private categoryService: CategoryService,
     private cdr: ChangeDetectorRef,
     private calendarService: CalendarService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private dialog: MatDialog
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
@@ -219,14 +223,25 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
 
         const taskData = {
           ...this.taskForm.value,
-          dueDate: dueDate, // Firestore用にTimestamp変換は既存ロジックで
+          dueDate: dueDate,
           updatedAt: new Date()
         };
+
+        // カレンダー連携の確認ダイアログを表示
+        const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
+          width: '350px',
+          data: { taskTitle: taskData.title }
+        });
+
+        const result = await dialogRef.afterClosed().toPromise();
+        const shouldSyncWithCalendar = result === true;
 
         if (this.isEditMode && this.taskId) {
           const taskRef = doc(this.firestore, 'tasks', this.taskId);
           await updateDoc(taskRef, taskData);
-          await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
+          if (shouldSyncWithCalendar) {
+            await this.calendarService.updateCalendarEvent({ ...taskData, id: this.taskId });
+          }
           this.snackBar.open('タスクを更新しました', '閉じる', { 
             duration: 3000,
             panelClass: ['success-snackbar']
@@ -237,7 +252,9 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
             ...taskData,
             createdAt: new Date()
           });
-          await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
+          if (shouldSyncWithCalendar) {
+            await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
+          }
           this.snackBar.open('タスクを作成しました', '閉じる', { 
             duration: 3000,
             panelClass: ['success-snackbar']
