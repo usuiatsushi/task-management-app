@@ -12,6 +12,9 @@ export const environment = {
     clientId: "263465065376-vi713m0i7kg7piq1th85er3vue73g5uc.apps.googleusercontent.com"
   },
   googleCalendar: {
-    apiKey: 'AIzaSyDcmJ4Klm-ZU7a76nA9KkAVuO1kLZ1iloo' // ここに生成したAPIキーを設定
+    apiKey: 'YOUR_API_KEY'
+  },
+  security: {
+    crossOriginOpenerPolicy: 'same-origin-allow-popups'
   }
 }; 

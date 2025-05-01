@@ -48,9 +48,12 @@ export class AuthService {
       const provider = new GoogleAuthProvider();
       provider.addScope('https://www.googleapis.com/auth/calendar');
       await this.afAuth.signInWithPopup(provider);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Google認証に失敗しました:', error);
-      throw error;
+      if (error.code === 'auth/cancelled-popup-request') {
+        throw error;
+      }
+      throw new Error('認証に失敗しました');
     }
   }
 
