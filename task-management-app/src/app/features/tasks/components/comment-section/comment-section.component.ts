@@ -131,14 +131,14 @@ export class CommentSectionComponent implements OnInit {
     const content = this.commentForm.get('content')?.value;
     const beforeMention = content.slice(0, this.mentionStart);
     const afterMention = content.slice(this.cursorPosition);
-    const newContent = `${beforeMention}@${user.displayName}${afterMention}`;
+    const newContent = `${beforeMention}@${user.displayName} ${afterMention}`;
     
     this.commentForm.patchValue({ content: newContent });
     this.showUserList = false;
     this.mentionStart = -1;
 
-    // カーソルを適切な位置に移動
-    const newCursorPos = this.mentionStart + user.displayName.length + 1;
+    // カーソル位置の調整（@とユーザー名の後ろにスペースを追加）
+    const newCursorPos = this.mentionStart + user.displayName.length + 2; // +2は@とスペースの分
     setTimeout(() => {
       const textarea = this.commentInput.nativeElement;
       textarea.focus();

@@ -51,7 +51,7 @@ export class NotificationService {
           createdAt: Timestamp.now(),
           isRead: false
         });
+        }
       }
-    }
   }
 } 
