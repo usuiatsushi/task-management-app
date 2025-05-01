@@ -48,15 +48,19 @@ export class CalendarService {
           throw new Error('Invalid due date');
         }
 
+        // 日本時間に合わせる
+        const jstDate = new Date(dueDate.getTime() + (9 * 60 * 60 * 1000));
+        const formattedDate = jstDate.toISOString().split('T')[0];
+
         const event = {
           summary: task.title,
           description: task.description,
           start: {
-            date: dueDate.toISOString().split('T')[0],
+            date: formattedDate,
             timeZone: 'Asia/Tokyo'
           },
           end: {
-            date: dueDate.toISOString().split('T')[0],
+            date: formattedDate,
             timeZone: 'Asia/Tokyo'
           }
         };
@@ -104,15 +108,19 @@ export class CalendarService {
           throw new Error('Invalid due date');
         }
 
+        // 日本時間に合わせる
+        const jstDate = new Date(dueDate.getTime() + (9 * 60 * 60 * 1000));
+        const formattedDate = jstDate.toISOString().split('T')[0];
+
         const event = {
           summary: task.title,
           description: task.description,
           start: {
-            date: dueDate.toISOString().split('T')[0],
+            date: formattedDate,
             timeZone: 'Asia/Tokyo'
           },
           end: {
-            date: dueDate.toISOString().split('T')[0],
+            date: formattedDate,
             timeZone: 'Asia/Tokyo'
           }
         };
