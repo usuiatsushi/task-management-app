@@ -679,11 +679,24 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public downloadSampleCSV() {
+    const today = new Date();
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(today.getDate() - 2);
+    const twoDaysLater = new Date(today);
+    twoDaysLater.setDate(today.getDate() + 2);
+    const oneWeekLater = new Date(today);
+    oneWeekLater.setDate(today.getDate() + 7);
+
+    const formatDate = (date: Date) => {
+      return date.toISOString().split('T')[0];
+    };
+
     const sampleData = [
       ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'],
-      ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '技術的課題', '山田太郎', '2024-03-31'],
-      ['タスク2', 'サンプルタスク2の説明', '進行中', '中', '業務フロー', '鈴木花子', '2024-04-15'],
-      ['タスク3', 'サンプルタスク3の説明', '完了', '低', '新機能・改善提案', '佐藤一郎', '2024-04-30']
+      ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '技術的課題', '山田太郎', formatDate(twoDaysAgo)],
+      ['タスク2', 'サンプルタスク2の説明', '進行中', '中', '業務フロー', '鈴木花子', formatDate(today)],
+      ['タスク3', 'サンプルタスク3の説明', '完了', '低', '新機能・改善提案', '佐藤一郎', formatDate(twoDaysLater)],
+      ['タスク4', 'サンプルタスク4の説明', '未着手', '高', 'バグ修正', '田中次郎', formatDate(oneWeekLater)],
     ];
 
     const csvContent = sampleData.map(row => row.join(',')).join('\n');
