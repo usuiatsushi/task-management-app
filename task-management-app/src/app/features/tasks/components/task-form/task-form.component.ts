@@ -312,59 +312,6 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // カレンダー連携ボタンの処理
-  async onCalendarSync() {
-    if (!navigator.onLine) {
-      this.handleError(new Error('network-error'));
-      return;
-    }
-
-    if (this.taskForm.valid) {
-      try {
-        this.loading = true;
-        // dueDateを23:59に設定
-        const date: Date = this.taskForm.value.dueDate;
-        const dueDate = new Date(date);
-        dueDate.setHours(23, 59, 0, 0);
-
-        const taskData = {
-          ...this.taskForm.value,
-          dueDate: dueDate
-        };
-
-        await this.calendarService.addTaskToCalendar(taskData);
-        this.snackBar.open('カレンダーにタスクを追加しました', '閉じる', { 
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-      } catch (error: any) {
-        console.error('カレンダー連携に失敗しました:', error);
-        if (error.code === 'auth/cancelled-popup-request') {
-          this.snackBar.open('Google認証がキャンセルされました', '閉じる', {
-            duration: 3000,
-            panelClass: ['warning-snackbar']
-          });
-        } else {
-          this.handleError(error);
-        }
-      } finally {
-        this.loading = false;
-      }
-    } else {
-      Object.keys(this.taskForm.controls).forEach(key => {
-        const control = this.taskForm.get(key);
-        if (control) {
-          control.markAsTouched();
-        }
-      });
-
-      this.snackBar.open('入力内容に誤りがあります。エラーメッセージをご確認ください。', '閉じる', {
-        duration: 5000,
-        panelClass: ['warning-snackbar']
-      });
-    }
-  }
-
   addNewCategory(): void {
     const newCategory = this.taskForm.get('newCategoryName')?.value;
     if (newCategory && !this.categories.includes(newCategory)) {
