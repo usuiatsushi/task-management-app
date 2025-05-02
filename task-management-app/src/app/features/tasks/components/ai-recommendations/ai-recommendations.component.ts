@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { AISuggestion } from '../../models/ai-assistant.model';
 import { Task } from '../../models/task.model';
+import { Timestamp } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-ai-recommendations',
@@ -23,7 +24,9 @@ export class AiRecommendationsComponent implements OnInit {
     this.expandedSections[section] = !this.expandedSections[section];
   }
 
-  getPriorityIcon(priority: string): string {
+  getPriorityIcon(priority: string | null | undefined): string {
+    if (!priority) return 'priority_medium';
+    
     switch (priority) {
       case '高':
         return 'priority_high';
@@ -36,7 +39,9 @@ export class AiRecommendationsComponent implements OnInit {
     }
   }
 
-  getCategoryIcon(category: string): string {
+  getCategoryIcon(category: string | null | undefined): string {
+    if (!category) return 'category';
+    
     switch (category) {
       case '仕事':
         return 'work';
@@ -51,11 +56,38 @@ export class AiRecommendationsComponent implements OnInit {
     }
   }
 
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('ja-JP', {
+  formatDate(date: Date | Timestamp | null | undefined): string {
+    if (!date) return '';
+    
+    let dateObj: Date;
+    if (date instanceof Timestamp) {
+      dateObj = date.toDate();
+    } else if (date instanceof Date) {
+      dateObj = date;
+    } else {
+      return '';
+    }
+    
+    return dateObj.toLocaleDateString('ja-JP', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+  }
+
+  getTaskTitle(): string {
+    return this.task?.title || '';
+  }
+
+  getTaskCategory(): string {
+    return this.task?.category || '';
+  }
+
+  getTaskPriority(): string {
+    return this.task?.priority || '';
+  }
+
+  getTaskDueDate(): Date | Timestamp | null {
+    return this.task?.dueDate || null;
   }
 } 

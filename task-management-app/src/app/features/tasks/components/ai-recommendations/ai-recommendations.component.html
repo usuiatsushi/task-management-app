@@ -2,21 +2,21 @@
   <!-- タスク情報の表示 -->
   <div class="task-info" *ngIf="task">
     <div class="task-header">
-      <mat-icon [class]="'category-icon ' + task.category.toLowerCase()">
-        {{ getCategoryIcon(task.category) }}
+      <mat-icon [class]="'category-icon ' + getTaskCategory().toLowerCase()">
+        {{ getCategoryIcon(getTaskCategory()) }}
       </mat-icon>
-      <h2>{{ task.title }}</h2>
+      <h2>{{ getTaskTitle() }}</h2>
     </div>
     <div class="task-details">
       <div class="priority">
-        <mat-icon [class]="'priority-icon ' + task.priority.toLowerCase()">
-          {{ getPriorityIcon(task.priority) }}
+        <mat-icon [class]="'priority-icon ' + getTaskPriority().toLowerCase()">
+          {{ getPriorityIcon(getTaskPriority()) }}
         </mat-icon>
-        <span>{{ task.priority }}優先度</span>
+        <span>{{ getTaskPriority() }}優先度</span>
       </div>
-      <div class="due-date" *ngIf="task.dueDate">
+      <div class="due-date" *ngIf="getTaskDueDate()">
         <mat-icon>event</mat-icon>
-        <span>期限: {{ formatDate(task.dueDate) }}</span>
+        <span>期限: {{ formatDate(getTaskDueDate()) }}</span>
       </div>
     </div>
   </div>
@@ -34,7 +34,7 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
             <ul>
-              <li *ngFor="let recommendation of suggestions.priorityAdjustments">
+              <li *ngFor="let recommendation of suggestions?.priorityAdjustments">
                 {{ recommendation }}
               </li>
             </ul>
@@ -54,7 +54,7 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
             <ul>
-              <li *ngFor="let recommendation of suggestions.resourceAllocation">
+              <li *ngFor="let recommendation of suggestions?.resourceAllocation">
                 {{ recommendation }}
               </li>
             </ul>
@@ -74,7 +74,7 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
             <ul>
-              <li *ngFor="let recommendation of suggestions.timelineOptimization">
+              <li *ngFor="let recommendation of suggestions?.timelineOptimization">
                 {{ recommendation }}
               </li>
             </ul>
@@ -94,7 +94,7 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
             <ul>
-              <li *ngFor="let recommendation of suggestions.taskManagement">
+              <li *ngFor="let recommendation of suggestions?.taskManagement">
                 {{ recommendation }}
               </li>
             </ul>
@@ -114,7 +114,7 @@
               </mat-panel-title>
             </mat-expansion-panel-header>
             <ul>
-              <li *ngFor="let recommendation of suggestions.collaboration">
+              <li *ngFor="let recommendation of suggestions?.collaboration">
                 {{ recommendation }}
               </li>
             </ul>
@@ -125,7 +125,7 @@
   </mat-tab-group>
 
   <!-- アクションプラン -->
-  <div class="action-plan" *ngIf="suggestions.actionPlan.length > 0">
+  <div class="action-plan" *ngIf="suggestions?.actionPlan?.length">
     <h3>アクションプラン</h3>
     <mat-list>
       <mat-list-item *ngFor="let action of suggestions.actionPlan">
