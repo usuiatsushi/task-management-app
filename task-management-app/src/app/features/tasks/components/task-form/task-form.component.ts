@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit, NgZone } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewEncapsulation, AfterViewInit, NgZone, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Firestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, enableIndexedDbPersistence } from '@angular/fire/firestore';
@@ -22,6 +22,8 @@ import { Timestamp } from '@angular/fire/firestore';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 import { AiAssistantService } from '../../services/ai-assistant.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-task-form',
@@ -72,7 +74,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private calendarService: CalendarService,
     private ngZone: NgZone,
     private dialog: MatDialog,
-    private aiAssistant: AiAssistantService
+    private aiAssistantService: AiAssistantService,
+    @Inject(AuthService) private authService: AuthService
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
@@ -210,108 +213,35 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     });
   }
 
-  async onSubmit() {
-    if (!navigator.onLine) {
-      this.handleError(new Error('network-error'));
-      return;
-    }
-
+  async onSubmit(): Promise<void> {
     if (this.taskForm.valid) {
       try {
-        this.loading = true;
-        // dueDateを23:59に設定
-        const date: Date = this.taskForm.value.dueDate;
-        const dueDate = new Date(date);
-        dueDate.setHours(23, 59, 0, 0);
+        const user = await firstValueFrom(this.authService.user$);
+        if (!user) {
+          this.snackBar.open('ユーザーが認証されていません', '閉じる', { duration: 3000 });
+          return;
+        }
 
         const taskData = {
           ...this.taskForm.value,
-          dueDate: dueDate,
+          userId: user.uid,
+          createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()
         };
 
-        // カレンダー連携の確認ダイアログを表示
-        const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
-          width: '350px',
-          data: { taskTitle: taskData.title }
-        });
-
-        const result = await dialogRef.afterClosed().toPromise();
-        const shouldSyncWithCalendar = result === true;
-
-        if (this.isEditMode && this.taskId) {
-          const taskRef = doc(this.firestore, 'tasks', this.taskId);
-          const currentTask = await getDoc(taskRef);
-          const currentTaskData = currentTask.data() as Task;
-          
-          await updateDoc(taskRef, taskData);
-          
-          if (shouldSyncWithCalendar) {
-            if (currentTaskData.calendarEventId) {
-              try {
-                console.log('既存のカレンダーイベントを削除します:', {
-                  taskId: this.taskId,
-                  calendarEventId: currentTaskData.calendarEventId
-                });
-                // 既存のカレンダーイベントを削除
-                await this.calendarService.deleteCalendarEvent(currentTaskData);
-                console.log('古いカレンダーイベントを削除しました:', currentTaskData.calendarEventId);
-              } catch (error) {
-                console.error('古いカレンダーイベントの削除に失敗しました:', error);
-              }
-              // 新しいカレンダーイベントを作成
-              console.log('新しいカレンダーイベントを作成します:', {
-                taskId: this.taskId,
-                dueDate: taskData.dueDate
-              });
-              await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
-            } else {
-              // 新しいカレンダーイベントを作成
-              console.log('新しいカレンダーイベントを作成します（初回）:', {
-                taskId: this.taskId,
-                dueDate: taskData.dueDate
-              });
-              await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
-            }
-          }
-          this.snackBar.open('タスクを更新しました', '閉じる', { 
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
+        if (this.taskId) {
+          await this.taskService.updateTask(this.taskId, taskData);
+          this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
         } else {
-          const tasksRef = collection(this.firestore, 'tasks');
-          const docRef = await addDoc(tasksRef, {
-            ...taskData,
-            createdAt: Timestamp.now()
-          });
-          if (shouldSyncWithCalendar) {
-            await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
-          }
-          this.snackBar.open('タスクを作成しました', '閉じる', { 
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
+          await this.taskService.createTask(taskData);
+          this.snackBar.open('タスクを作成しました', '閉じる', { duration: 3000 });
         }
 
         this.router.navigate(['/tasks']);
       } catch (error) {
         console.error('タスクの保存に失敗しました:', error);
-        this.handleError(error);
-      } finally {
-        this.loading = false;
+        this.snackBar.open('タスクの保存に失敗しました', '閉じる', { duration: 3000 });
       }
-    } else {
-      Object.keys(this.taskForm.controls).forEach(key => {
-        const control = this.taskForm.get(key);
-        if (control) {
-          control.markAsTouched();
-        }
-      });
-
-      this.snackBar.open('入力内容に誤りがあります。エラーメッセージをご確認ください。', '閉じる', {
-        duration: 5000,
-        panelClass: ['warning-snackbar']
-      });
     }
   }
 
@@ -459,7 +389,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         description: description || '',
         category: '',
         priority: '中',
-        dueDate: new Date(),
+        dueDate: Timestamp.now(),
         completed: false,
         status: '未着手',
         assignedTo: '',
@@ -469,11 +399,11 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       };
 
       // AIアシスタントによる自動分類
-      const suggestedCategory = this.aiAssistant.categorizeTask(task);
+      const suggestedCategory = this.aiAssistantService.categorizeTask(task);
       this.taskForm.patchValue({ category: suggestedCategory });
 
       // AIアシスタントによる優先度設定
-      const suggestedPriority = this.aiAssistant.calculatePriority(task);
+      const suggestedPriority = this.aiAssistantService.calculatePriority(task);
       this.taskForm.patchValue({ priority: suggestedPriority });
     }
   }
@@ -482,7 +412,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   async getTaskSuggestions() {
     try {
       const previousTasks = await this.taskService.getTasks();
-      this.aiAssistant.suggestTasks(previousTasks).subscribe(suggestions => {
+      this.aiAssistantService.suggestTasks(previousTasks).subscribe(suggestions => {
         if (suggestions.length > 0) {
           const suggestion = suggestions[0];
           this.snackBar.open(

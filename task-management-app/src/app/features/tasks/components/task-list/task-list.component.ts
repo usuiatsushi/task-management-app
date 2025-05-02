@@ -34,6 +34,8 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../../auth/services/auth.service';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
+import { TaskFormComponent } from '../task-form/task-form.component';
+import { TaskDetailComponent } from '../task-detail/task-detail.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -102,208 +104,129 @@ enum FileType {
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
-  displayedColumns: string[] = ['select', 'title', 'category', 'status', 'priority', 'dueDate', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  tasks: Task[] = [];
+  filteredTasks: Task[] = [];
   loading = false;
+  displayedColumns: string[] = ['title', 'category', 'priority', 'dueDate', 'status', 'actions'];
+  dataSource = new MatTableDataSource<Task>(this.tasks);
   filterForm: FormGroup;
-  searchControl: FormControl;
-  selectedTasks: any[] = [];
-  editingTask: any = null;
+  selectedTasks: Task[] = [];
+  editingTask: Task | null = null;
   editingField: string | null = null;
   categories: string[] = [];
-  tasks: Task[] = [];
   private subscription: Subscription | null = null;
 
   // 選択肢の定義
   statusOptions = ['未着手', '進行中', '完了'];
   priorityOptions = ['低', '中', '高'];
-
-  // 日付フィルター
-  filterDates = (d: Date | null): boolean => {
-    return true;
-  };
-
-  // 日付フォーマット
-  dateFormat = {
-    parse: {
-      dateInput: 'yyyy/MM/dd',
-    },
-    display: {
-      dateInput: 'yyyy/MM/dd',
-      monthYearLabel: 'yyyy年MM月',
-      dateA11yLabel: 'yyyy/MM/dd',
-      monthYearA11yLabel: 'yyyy年MM月',
-    },
-  };
-
-  // TimestampをDateに変換するヘルパーメソッド
-  getDateFromTimestamp(timestamp: any): Date {
-    if (!timestamp) return new Date();
-
-    if (timestamp instanceof Timestamp) {
-      return timestamp.toDate();
-    }
-
-    if (typeof timestamp === 'object' && 'seconds' in timestamp) {
-      return new Timestamp(timestamp.seconds, timestamp.nanoseconds || 0).toDate();
-    }
-
-    if (timestamp instanceof Date) {
-      return timestamp;
-    }
-
-    return new Date(timestamp);
-  }
-
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild('categorySelect') categorySelect!: MatSelect;
-
   priorityOrder = { '高': 3, '中': 2, '低': 1 };
   statusOrder = { '未着手': 1, '進行中': 2, '完了': 3 };
 
-  // デフォルトのカテゴリ選択肢
-  defaultCategories = ['技術的課題', '業務フロー', 'バグ修正', '新機能・改善提案'];
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(
     private taskService: TaskService,
     private categoryService: CategoryService,
-    private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private router: Router,
-    private fb: FormBuilder,
-    private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
-    private authService: AuthService,
-    private calendarService: CalendarService
+    private notificationService: NotificationService,
+    private fb: FormBuilder,
+    private router: Router,
+    private dialog: MatDialog,
+    private calendarService: CalendarService,
+    private authService: AuthService
   ) {
-    this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
       category: [''],
-      status: [''],
       priority: [''],
-      search: this.searchControl
+      status: [''],
+      search: ['']
     });
   }
 
   ngOnInit(): void {
     this.loadTasks();
     this.setupFilterForm();
-    this.categoryService.categories$.subscribe(categories => {
-      this.categories = categories;
-    });
-
-    // リアルタイムアップデートの購読
-    this.subscription = this.taskService.tasks$.subscribe(
-      (tasks) => {
-        console.log('Received tasks update:', tasks.length);
-        this.tasks = tasks;
-        this.dataSource.data = tasks;
-        
-        // ソートとページネーションの設定を確認
-        if (this.sort && !this.dataSource.sort) {
-          this.dataSource.sort = this.sort;
-        }
-        if (this.paginator && !this.dataSource.paginator) {
-          this.dataSource.paginator = this.paginator;
-        }
-
-        // フィルター述語を設定
-        this.dataSource.filterPredicate = this.createFilter();
-        
-        // 現在のフィルターを適用（フィルターが設定されている場合のみ）
-        const currentFilters = this.filterForm.value;
-        if (Object.values(currentFilters).some(value => value)) {
-          this.applyFilters();
-        }
-
-        this.notificationService.checkTaskDeadlines(tasks);
-
-        this.cdr.detectChanges();
-      }
-    );
-  }
-
-  ngAfterViewInit(): void {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
-
-    // 優先度・ステータスのカスタムソート
-    this.dataSource.sortingDataAccessor = (item, property) => {
-      if (property === 'priority') {
-        return this.priorityOrder[item.priority as keyof typeof this.priorityOrder] || 0;
-      }
-      if (property === 'status') {
-        return this.statusOrder[item.status as keyof typeof this.statusOrder] || 0;
-      }
-      return item[property];
-    };
   }
 
   private setupFilterForm(): void {
     this.filterForm.valueChanges.subscribe(() => {
-      this.applyFilters();
+      this.filteredTasks = this.applyFilters(this.tasks);
+      this.dataSource.data = this.filteredTasks;
     });
   }
 
+  private applyFilters(tasks: Task[]): Task[] {
+    const filterValues = this.filterForm.value;
+    return tasks.filter(task => {
+      // カテゴリでフィルタリング
+      if (filterValues.category && task.category !== filterValues.category) {
+        return false;
+      }
+
+      // 優先度でフィルタリング
+      if (filterValues.priority && task.priority !== filterValues.priority) {
+        return false;
+      }
+
+      // ステータスでフィルタリング
+      if (filterValues.status && task.status !== filterValues.status) {
+        return false;
+      }
+
+      // 検索テキストでフィルタリング
+      const searchText = filterValues.search?.toLowerCase() || '';
+      if (searchText) {
+        const titleMatch = task.title.toLowerCase().includes(searchText);
+        const descriptionMatch = task.description?.toLowerCase().includes(searchText) || false;
+        if (!titleMatch && !descriptionMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  private createFilter(): (data: Task, filter: string) => boolean {
+    return (data: Task, filter: string) => {
+      if (!data) return false;
+      
+      const searchStr = filter.toLowerCase();
+      return (
+        data.title.toLowerCase().includes(searchStr) ||
+        (data.description?.toLowerCase().includes(searchStr) || false)
+      );
+    };
+  }
+
   async loadTasks(): Promise<void> {
-    console.log('Loading tasks...');
-    this.loading = true;
     try {
+      this.loading = true;
       const tasks = await this.taskService.getTasks();
-      console.log('Tasks loaded:', tasks);
-      
-      // タスクリストを更新
-      this.tasks = [...tasks];
-      
-      // データソースを完全に再作成
-      this.dataSource = new MatTableDataSource<Task>(this.tasks);
-      
-      // データソースの設定を再適用
-      this.dataSource.sort = this.sort;
-      this.dataSource.paginator = this.paginator;
-      this.dataSource.filterPredicate = this.createFilter();
-      
-      this.notificationService.checkTaskDeadlines(tasks);
-      this.applyFilters();
+      this.tasks = tasks;
+      this.filteredTasks = this.applyFilters(tasks);
+      this.dataSource.data = this.filteredTasks;
+      await this.notificationService.checkDeadlineReminders();
     } catch (error) {
       console.error('タスクの読み込みに失敗しました:', error);
       this.snackBar.open('タスクの読み込みに失敗しました', '閉じる', { duration: 3000 });
     } finally {
       this.loading = false;
-      console.log('Task loading completed');
     }
   }
 
-  private createFilter(): (data: any, filter: string) => boolean {
-    return (data: any) => {
-      if (!data) return false;
-      
-      const filters = this.filterForm.value;
-      const searchTerm = filters.search ? filters.search.toLowerCase() : '';
-      
-      const categoryMatch = !filters.category || data.category === filters.category;
-      const statusMatch = !filters.status || data.status === filters.status;
-      const priorityMatch = !filters.priority || data.priority === filters.priority;
-      const searchMatch = !searchTerm || 
-        (data.title && data.title.toLowerCase().includes(searchTerm)) ||
-        (data.description && data.description.toLowerCase().includes(searchTerm));
-
-      return categoryMatch && statusMatch && priorityMatch && searchMatch;
-    };
+  ngAfterViewInit(): void {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.filterPredicate = this.createFilter();
   }
 
-  // フィルタリング用のカテゴリを取得
-  getFilterCategories(): string[] {
-    const categories = new Set(this.tasks.map(task => task.category));
-    return Array.from(categories).filter(category => category !== '');
-  }
-
-  // 編集用のカテゴリを取得（デフォルト + 現在のタスクのカテゴリ）
-  getEditCategories(): string[] {
-    const taskCategories = new Set(this.tasks.map(task => task.category));
-    const allCategories = new Set([...this.defaultCategories, ...taskCategories]);
-    return Array.from(allCategories).filter(category => category !== '');
+  ngOnDestroy(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
 
   getStatusClass(status: string): string {
@@ -332,10 +255,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  applyFilters(): void {
+  applyFilters(tasks: Task[]): void {
     const filterValues = this.filterForm.value;
     console.log('Applying filters:', filterValues);
-    console.log('Current data length:', this.dataSource.data.length);
+    console.log('Current data length:', tasks.length);
     
     // フィルターをトリガー
     this.dataSource.filter = JSON.stringify(filterValues);
@@ -352,7 +275,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filterForm.reset();
   }
 
-  viewTask(task: any): void {
+  viewTask(task: Task): void {
     this.router.navigate(['/tasks', task.id]);
   }
 
@@ -360,7 +283,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/tasks/new']);
   }
 
-  async deleteTask(task: any, event: Event): Promise<void> {
+  async deleteTask(task: Task, event: Event): Promise<void> {
     event.stopPropagation();
     
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -386,7 +309,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  isSelected(task: any): boolean {
+  isSelected(task: Task): boolean {
     return this.selectedTasks.some(t => t.id === task.id);
   }
 
@@ -398,7 +321,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.selectedTasks.length > 0 && this.selectedTasks.length < this.dataSource.data.length;
   }
 
-  toggleTaskSelection(task: any): void {
+  toggleTaskSelection(task: Task): void {
     const index = this.selectedTasks.findIndex(t => t.id === task.id);
     if (index === -1) {
       this.selectedTasks.push(task);
@@ -480,7 +403,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  startEditing(task: any, field: string) {
+  startEditing(task: Task, field: string) {
     this.editingTask = task;
     this.editingField = field;
   }
@@ -490,7 +413,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editingField = null;
   }
 
-  async updateTaskField(task: any, field: string, value: any) {
+  async updateTaskField(task: Task, field: string, value: any) {
     try {
       console.log(`Updating field "${field}" for task:`, task);
       console.log('New value:', value);
@@ -510,104 +433,56 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onFieldChange(task: any, field: string, event: any) {
+  onFieldChange(task: Task, field: string, event: any) {
     const value = event.target.value;
     this.updateTaskField(task, field, value);
     this.stopEditing();
   }
 
-  onSelectChange(task: any, field: string, event: any) {
+  onSelectChange(task: Task, field: string, event: any) {
     const value = event.value;
     this.updateTaskField(task, field, value);
     this.stopEditing();
   }
 
-  async onDateChange(task: any, event: any) {
+  private convertTimestampToDate(timestamp: Timestamp | null): Date | null {
+    if (!timestamp) return null;
+    return timestamp.toDate();
+  }
+
+  private convertDateToTimestamp(date: Date | null): Timestamp | null {
+    if (!date) return null;
+    return Timestamp.fromDate(date);
+  }
+
+  async updateTaskDueDate(task: Task, newDueDate: Date) {
     try {
-      console.log('日付変更処理を開始:', task.id, task.title);
-      console.log('選択された日付:', event.value);
-      
-      // 日付がクリアされた場合はnullを設定
-      const timestamp = event.value ? {
-        seconds: Math.floor(event.value.getTime() / 1000),
-        nanoseconds: 0
-      } : null;
-      
-      console.log('変換後のタイムスタンプ:', timestamp);
+      const timestamp = this.convertDateToTimestamp(newDueDate);
+      await this.taskService.updateTask(task.id, { dueDate: timestamp });
+      this.snackBar.open('期限を更新しました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('期限の更新に失敗しました:', error);
+      this.snackBar.open('期限の更新に失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
 
-      // カレンダー連携の確認ダイアログを表示
-      const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
-        width: '350px',
-        data: { taskTitle: task.title }
-      });
+  async updateTaskCalendarEvent(task: Task) {
+    try {
+      const newTask = { ...task };
+      await this.calendarService.addTaskToCalendar(newTask);
+      this.snackBar.open('カレンダーイベントを更新しました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('カレンダーイベントの更新に失敗しました:', error);
+      this.snackBar.open('カレンダーイベントの更新に失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
 
-      const result = await dialogRef.afterClosed().toPromise();
-      const shouldSyncWithCalendar = result === true;
-      console.log('カレンダー連携の選択結果:', shouldSyncWithCalendar);
-
-      // カレンダー連携が必要な場合
-      if (shouldSyncWithCalendar) {
-        // 最新のタスク情報を取得
-        const currentTask = await this.taskService.getTask(task.id);
-        const oldCalendarEventId = currentTask.calendarEventId;
-        console.log('古いカレンダーイベントID:', oldCalendarEventId);
-        
-        // 古いカレンダーイベントを削除
-        if (oldCalendarEventId) {
-          try {
-            console.log('古いカレンダーイベントの削除を開始');
-            await this.calendarService.deleteCalendarEvent({ ...currentTask, calendarEventId: oldCalendarEventId });
-            console.log('古いカレンダーイベントの削除が完了');
-          } catch (error) {
-            console.error('古いカレンダーイベントの削除に失敗しました:', error);
-            this.snackBar.open('古いカレンダーイベントの削除に失敗しました', '閉じる', { duration: 3000 });
-            return;
-          }
-        }
-        
-        // タスクの更新（calendarEventIdを一時的に空文字列に）
-        try {
-          console.log('タスクの更新を開始');
-          await this.taskService.updateTask(task.id, { 
-            dueDate: timestamp,
-            calendarEventId: ''
-          });
-          console.log('タスクの更新が完了');
-        } catch (error) {
-          console.error('タスクの更新に失敗しました:', error);
-          this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
-          return;
-        }
-        
-        // 新しいカレンダーイベントを作成
-        try {
-          console.log('新しいカレンダーイベントの作成を開始');
-          const newTask = { ...currentTask, dueDate: timestamp, calendarEventId: '' };
-          await this.calendarService.addTaskToCalendar(newTask);
-          console.log('新しいカレンダーイベントの作成が完了');
-        } catch (error) {
-          console.error('新しいカレンダーイベントの作成に失敗しました:', error);
-          this.snackBar.open('新しいカレンダーイベントの作成に失敗しました', '閉じる', { duration: 3000 });
-          return;
-        }
-      } else {
-        // カレンダー連携なしでタスクのみ更新
-        try {
-          console.log('カレンダー連携なしでタスクを更新');
-          await this.taskService.updateTask(task.id, { dueDate: timestamp });
-          console.log('タスクの更新が完了');
-        } catch (error) {
-          console.error('タスクの更新に失敗しました:', error);
-          this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
-          return;
-        }
+  onDateChange(task: Task, event: any) {
+    try {
+      const newDueDate = event.value;
+      if (newDueDate) {
+        this.updateTaskDueDate(task, newDueDate);
       }
-      
-      // 更新後にタスクリストを再読み込み
-      console.log('タスクリストの再読み込みを開始');
-      await this.loadTasks();
-      console.log('タスクリストの再読み込みが完了');
-      this.stopEditing();
     } catch (error) {
       console.error('日付の更新に失敗しました:', error);
       this.snackBar.open('日付の更新に失敗しました', '閉じる', { duration: 3000 });
@@ -617,12 +492,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   async logout() {
     await this.authService.logout();
     this.router.navigate(['/auth/login']);
-  }
-
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
   }
 
   public exportTasksToCSV(): void {
@@ -1078,4 +947,33 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
     }
   }
+
+  async openTaskForm(task?: Task): Promise<void> {
+    const dialogRef = this.dialog.open(TaskFormComponent, {
+      width: '500px',
+      data: { task }
+    });
+
+    const result = await dialogRef.afterClosed().toPromise();
+    if (result) {
+      await this.loadTasks();
+    }
+  }
+
+  async openTaskDetail(task: Task): Promise<void> {
+    const dialogRef = this.dialog.open(TaskDetailComponent, {
+      width: '800px',
+      data: { task }
+    });
+
+    const result = await dialogRef.afterClosed().toPromise();
+    if (result) {
+      await this.loadTasks();
+    }
+  }
+
+  private getDateFromTimestamp(timestamp: Timestamp | null): Date | null {
+    return timestamp ? timestamp.toDate() : null;
+  }
+} 
 } 

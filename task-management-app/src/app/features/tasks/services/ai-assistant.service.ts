@@ -221,19 +221,7 @@ export class AiAssistantService {
 
       // 期限による緊急性の判定
       const today = new Date();
-      let taskDueDate: Date;
-      
-      if (!task.dueDate) {
-        taskDueDate = today;
-      } else if (task.dueDate instanceof Timestamp) {
-        taskDueDate = task.dueDate.toDate();
-      } else if (task.dueDate instanceof Date) {
-        taskDueDate = task.dueDate;
-      } else if (typeof task.dueDate === 'string') {
-        taskDueDate = new Date(task.dueDate);
-      } else {
-        taskDueDate = new Date(task.dueDate.seconds * 1000);
-      }
+      const taskDueDate = this.getTaskDueDate(task) || today;
 
       const daysUntilDue = Math.ceil((taskDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       const isUrgentByDate = daysUntilDue <= 3;
@@ -329,5 +317,33 @@ export class AiAssistantService {
 
   private analyzeTaskPatterns(tasks: Task[]): Task[] {
     return tasks;
+  }
+
+  private convertTimestampToDate(timestamp: Timestamp | null): Date | null {
+    if (!timestamp) return null;
+    return timestamp.toDate();
+  }
+
+  private convertDateToTimestamp(date: Date | null): Timestamp | null {
+    if (!date) return null;
+    return Timestamp.fromDate(date);
+  }
+
+  private getTaskDueDate(task: Task): Date | null {
+    if (!task.dueDate) return null;
+    return this.convertTimestampToDate(task.dueDate);
+  }
+
+  private calculateTaskPriority(task: Task): '低' | '中' | '高' {
+    const dueDate = this.getTaskDueDate(task);
+    if (!dueDate) return '中';
+
+    const now = new Date();
+    const timeDiff = dueDate.getTime() - now.getTime();
+    const daysUntilDue = timeDiff / (1000 * 60 * 60 * 24);
+
+    if (daysUntilDue <= 1) return '高';
+    if (daysUntilDue <= 3) return '中';
+    return '低';
   }
 } 

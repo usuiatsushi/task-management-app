@@ -30,54 +30,50 @@ export class CalendarService {
     });
   }
 
+  private convertTimestampToDate(timestamp: Timestamp | null): Date | null {
+    if (!timestamp) return null;
+    return timestamp.toDate();
+  }
+
+  private convertDateToTimestamp(date: Date | null): Timestamp | null {
+    if (!date) return null;
+    return Timestamp.fromDate(date);
+  }
+
+  private getTaskDueDate(task: Task): Date | null {
+    if (!task.dueDate) return null;
+    return this.convertTimestampToDate(task.dueDate);
+  }
+
   async addTaskToCalendar(task: Task): Promise<void> {
+    const dueDate = this.getTaskDueDate(task);
+    if (!dueDate) return;
+
+    // カレンダーイベントの作成処理
+    const event = {
+      summary: task.title,
+      description: task.description,
+      start: {
+        dateTime: dueDate.toISOString(),
+        timeZone: 'Asia/Tokyo'
+      },
+      end: {
+        dateTime: dueDate.toISOString(),
+        timeZone: 'Asia/Tokyo'
+      }
+    };
+
     try {
-      if (task.dueDate) {
-        let dueDate: Date;
-        if (task.dueDate instanceof Timestamp) {
-          dueDate = task.dueDate.toDate();
-        } else if (typeof task.dueDate === 'object' && 'seconds' in task.dueDate) {
-          dueDate = new Date(task.dueDate.seconds * 1000);
-        } else if (typeof task.dueDate === 'string') {
-          dueDate = new Date(task.dueDate);
-        } else {
-          dueDate = new Date(task.dueDate);
-        }
-
-        if (isNaN(dueDate.getTime())) {
-          throw new Error('Invalid due date');
-        }
-
-        // 日本時間に合わせる
-        const jstDate = new Date(dueDate.getTime() + (9 * 60 * 60 * 1000));
-        const formattedDate = jstDate.toISOString().split('T')[0];
-
-        const event = {
-          summary: task.title,
-          description: task.description,
-          start: {
-            date: formattedDate,
-            timeZone: 'Asia/Tokyo'
-          },
-          end: {
-            date: formattedDate,
-            timeZone: 'Asia/Tokyo'
-          }
-        };
-
-        const headers = await this.getAuthHeaders();
-        const response: any = await this.http.post(
-          `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events`,
-          event,
-          { headers }
-        ).toPromise();
-        
-        if (response && response.id) {
-          const taskRef = doc(this.firestore, 'tasks', task.id);
-          await updateDoc(taskRef, { calendarEventId: response.id });
-          console.log('カレンダーイベントIDを保存しました:', response.id);
-        }
-        
+      const response = await this.http.post(
+        `${this.CALENDAR_API_URL}/calendars/${this.CALENDAR_ID}/events`,
+        event,
+        { headers: await this.getAuthHeaders() }
+      ).toPromise();
+      
+      if (response && 'id' in response) {
+        const taskRef = doc(this.firestore, 'tasks', task.id);
+        await updateDoc(taskRef, { calendarEventId: response.id });
+        console.log('カレンダーイベントIDを保存しました:', response.id);
         this.snackBar.open('カレンダーにタスクを追加しました', '閉じる', { duration: 3000 });
       }
     } catch (error: any) {
@@ -93,16 +89,8 @@ export class CalendarService {
   async updateCalendarEvent(task: Task): Promise<void> {
     try {
       if (task.dueDate && task.calendarEventId) {
-        let dueDate: Date;
-        if (task.dueDate instanceof Timestamp) {
-          dueDate = task.dueDate.toDate();
-        } else if (typeof task.dueDate === 'object' && 'seconds' in task.dueDate) {
-          dueDate = new Date(task.dueDate.seconds * 1000);
-        } else if (typeof task.dueDate === 'string') {
-          dueDate = new Date(task.dueDate);
-        } else {
-          dueDate = new Date(task.dueDate);
-        }
+        const dueDate = this.getTaskDueDate(task);
+        if (!dueDate) return;
 
         if (isNaN(dueDate.getTime())) {
           throw new Error('Invalid due date');
