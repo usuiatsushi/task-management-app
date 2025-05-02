@@ -68,8 +68,15 @@
           <ng-container matColumnDef="actions">
             <th mat-header-cell *matHeaderCellDef>アクション</th>
             <td mat-cell *matCellDef="let error">
-              <button mat-icon-button (click)="showErrorDetails(error.errorCode)">
+              <button mat-icon-button color="primary" 
+                      (click)="showErrorDetails(error.errorCode)"
+                      matTooltip="エラー詳細を表示">
                 <mat-icon>info</mat-icon>
+              </button>
+              <button mat-icon-button color="accent"
+                      (click)="openFeedbackDialog(error)"
+                      matTooltip="フィードバックを送信">
+                <mat-icon>feedback</mat-icon>
               </button>
             </td>
           </ng-container>

@@ -12,7 +12,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ErrorFeedbackComponent } from '../error-feedback/error-feedback.component';
+import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-details-dialog.component';
 
 @Component({
   selector: 'app-error-dashboard',
@@ -29,7 +31,8 @@ import { ErrorFeedbackComponent } from '../error-feedback/error-feedback.compone
     MatIconModule,
     MatButtonModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatTooltipModule
   ]
 })
 export class ErrorDashboardComponent implements OnInit {
@@ -111,16 +114,10 @@ export class ErrorDashboardComponent implements OnInit {
   }
 
   async showErrorDetails(errorCode: string): Promise<void> {
-    try {
-      const errorLogs = await this.errorAnalysisService.getErrorDetails(errorCode);
-      // TODO: エラー詳細ダイアログの実装
-      console.log('エラー詳細:', errorLogs);
-    } catch (error) {
-      this.snackBar.open('エラー詳細の取得に失敗しました', '閉じる', {
-        duration: 5000,
-        panelClass: ['error-snackbar']
-      });
-    }
+    this.dialog.open(ErrorDetailsDialogComponent, {
+      width: '800px',
+      data: { errorCode }
+    });
   }
 
   // エラー発生率の計算
