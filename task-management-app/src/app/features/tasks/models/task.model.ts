@@ -22,4 +22,5 @@ export interface Task {
   calendarEventId?: string;
   progress?: number;
   subTasks?: SubTask[];
+  completed: boolean;
 } 

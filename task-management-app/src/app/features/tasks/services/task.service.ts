@@ -72,7 +72,8 @@ export class TaskService implements OnDestroy {
                 assignedTo: data['assignedTo'] || '',
                 createdAt: data['createdAt'],
                 updatedAt: data['updatedAt'],
-                dueDate: data['dueDate']
+                dueDate: data['dueDate'],
+                completed: data['completed'] || false
               };
               return task;
             });
@@ -202,7 +203,8 @@ export class TaskService implements OnDestroy {
             assignedTo: data['assignedTo'] || '',
             createdAt: data['createdAt'] instanceof Timestamp ? data['createdAt'] : Timestamp.fromDate(now),
             updatedAt: data['updatedAt'] instanceof Timestamp ? data['updatedAt'] : Timestamp.fromDate(now),
-            dueDate: dueDate ? Timestamp.fromDate(dueDate) : null
+            dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
+            completed: data['completed'] || false
           };
 
           console.log('Processed task data:', {
@@ -227,7 +229,8 @@ export class TaskService implements OnDestroy {
             assignedTo: errorData['assignedTo'] || '',
             createdAt: Timestamp.fromDate(new Date()),
             updatedAt: Timestamp.fromDate(new Date()),
-            dueDate: null
+            dueDate: null,
+            completed: false
           } as Task;
         }
       }));

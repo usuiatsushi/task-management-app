@@ -21,6 +21,7 @@ import { CalendarService } from '../../services/calendar.service';
 import { Timestamp } from '@angular/fire/firestore';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
+import { AiAssistantService } from '../../services/ai-assistant.service';
 
 @Component({
   selector: 'app-task-form',
@@ -44,7 +45,8 @@ import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sy
     MatIconModule,
     MatTooltipModule,
     MatDialogModule
-  ]
+  ],
+  providers: [AiAssistantService]
 })
 export class TaskFormComponent implements OnInit, AfterViewInit {
   taskForm: FormGroup;
@@ -69,7 +71,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
     private calendarService: CalendarService,
     private ngZone: NgZone,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private aiAssistant: AiAssistantService
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
@@ -224,7 +227,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         const taskData = {
           ...this.taskForm.value,
           dueDate: dueDate,
-          updatedAt: new Date()
+          updatedAt: Timestamp.now()
         };
 
         // カレンダー連携の確認ダイアログを表示
@@ -279,7 +282,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           const tasksRef = collection(this.firestore, 'tasks');
           const docRef = await addDoc(tasksRef, {
             ...taskData,
-            createdAt: new Date()
+            createdAt: Timestamp.now()
           });
           if (shouldSyncWithCalendar) {
             await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
@@ -441,6 +444,63 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       // Firestore用にTimestamp変換
       const dueTimestamp = Timestamp.fromDate(dueDate);
       // ...タスク保存処理
+    }
+  }
+
+  // タイトルと説明が変更されたときに自動分類と優先度設定を行う
+  onTitleOrDescriptionChange() {
+    const title = this.taskForm.get('title')?.value;
+    const description = this.taskForm.get('description')?.value;
+
+    if (title || description) {
+      const task: Task = {
+        id: '',
+        title: title || '',
+        description: description || '',
+        category: '',
+        priority: '中',
+        dueDate: new Date(),
+        completed: false,
+        status: '未着手',
+        assignedTo: '',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        userId: ''
+      };
+
+      // AIアシスタントによる自動分類
+      const suggestedCategory = this.aiAssistant.categorizeTask(task);
+      this.taskForm.patchValue({ category: suggestedCategory });
+
+      // AIアシスタントによる優先度設定
+      const suggestedPriority = this.aiAssistant.setPriority(task);
+      this.taskForm.patchValue({ priority: suggestedPriority });
+    }
+  }
+
+  // 過去のタスクに基づいてサジェストを取得
+  async getTaskSuggestions() {
+    try {
+      const previousTasks = await this.taskService.getTasks();
+      this.aiAssistant.suggestTasks(previousTasks).subscribe(suggestions => {
+        if (suggestions.length > 0) {
+          const suggestion = suggestions[0];
+          this.snackBar.open(
+            `提案: "${suggestion.title}" を追加しますか？`,
+            '追加',
+            { duration: 5000 }
+          ).onAction().subscribe(() => {
+            this.taskForm.patchValue({
+              title: suggestion.title,
+              description: suggestion.description,
+              category: suggestion.category,
+              priority: suggestion.priority
+            });
+          });
+        }
+      });
+    } catch (error) {
+      console.error('タスクのサジェスト取得に失敗しました:', error);
     }
   }
 } 

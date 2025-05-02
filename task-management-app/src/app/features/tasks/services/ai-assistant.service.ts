@@ -2,11 +2,24 @@ import { Injectable } from '@angular/core';
 import { Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 import { AISuggestion, EisenhowerMatrix, TaskAnalysis } from '../models/ai-assistant.model';
 import { Task } from '../models/task.model';
+import { Observable, of } from 'rxjs';
+import { Timestamp } from '@angular/fire/firestore';
 
-@Injectable({
-  providedIn: 'root'
-})
-export class AIAssistantService {
+@Injectable()
+export class AiAssistantService {
+  private readonly categoryKeywords = {
+    '仕事': ['仕事', '業務', '会議', '報告', 'プレゼン'],
+    'プライベート': ['趣味', '旅行', '買い物', '家族', '友人'],
+    '健康': ['運動', 'ジム', '食事', '睡眠', '健康診断'],
+    '学習': ['勉強', '読書', '講座', '資格', 'スキル']
+  };
+
+  private readonly priorityKeywords = {
+    '高': ['緊急', '重要', '必須', '期限切れ', '優先'],
+    '中': ['計画', '戦略', '改善', '成長', '投資'],
+    '低': ['依頼', '対応', '確認', '連絡', '報告']
+  };
+
   constructor(private firestore: Firestore) {}
 
   async analyzeTask(task: Task): Promise<AISuggestion> {
@@ -167,5 +180,103 @@ export class AIAssistantService {
     // タイムライン最適化の推奨生成のロジック
     // TODO: より高度な分析を実装
     return [];
+  }
+
+  // タスクのカテゴリを自動分類
+  categorizeTask(task: Task): string {
+    const title = task.title.toLowerCase();
+    const description = task.description?.toLowerCase() || '';
+
+    for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
+      if (keywords.some(keyword => 
+        title.includes(keyword) || description.includes(keyword)
+      )) {
+        return category;
+      }
+    }
+
+    return 'その他';
+  }
+
+  // Eisenhower Matrixに基づいて優先度を設定
+  setPriority(task: Task): '高' | '中' | '低' {
+    const title = task.title.toLowerCase();
+    const description = task.description?.toLowerCase() || '';
+
+    for (const [priority, keywords] of Object.entries(this.priorityKeywords)) {
+      if (keywords.some(keyword => 
+        title.includes(keyword) || description.includes(keyword)
+      )) {
+        return priority as '高' | '中' | '低';
+      }
+    }
+
+    return '中';
+  }
+
+  // 過去のタスク履歴に基づいてサジェストを提供
+  suggestTasks(previousTasks: Task[]): Observable<Task[]> {
+    const suggestions: Task[] = [];
+    
+    // 単純なサジェストロジック（例：頻出タスクのパターンを検出）
+    const taskPatterns = this.analyzeTaskPatterns(previousTasks);
+    
+    // パターンに基づいてサジェストを生成
+    taskPatterns.forEach(pattern => {
+      suggestions.push({
+        id: '',
+        title: pattern.title,
+        description: pattern.description,
+        category: pattern.category,
+        priority: pattern.priority,
+        dueDate: new Date(),
+        completed: false,
+        status: '未着手',
+        assignedTo: '',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        userId: ''
+      });
+    });
+
+    return of(suggestions);
+  }
+
+  private analyzeTaskPatterns(tasks: Task[]): Array<{
+    title: string;
+    description: string;
+    category: string;
+    priority: '高' | '中' | '低';
+  }> {
+    const patterns: Array<{
+      title: string;
+      description: string;
+      category: string;
+      priority: '高' | '中' | '低';
+    }> = [];
+    
+    // 単純な頻度分析
+    const categoryCount = new Map<string, number>();
+    const priorityCount = new Map<string, number>();
+    
+    tasks.forEach(task => {
+      categoryCount.set(task.category, (categoryCount.get(task.category) || 0) + 1);
+      priorityCount.set(task.priority, (priorityCount.get(task.priority) || 0) + 1);
+    });
+
+    // 最も頻出するカテゴリと優先度の組み合わせを返す
+    const mostCommonCategory = [...categoryCount.entries()]
+      .sort((a, b) => b[1] - a[1])[0][0];
+    const mostCommonPriority = [...priorityCount.entries()]
+      .sort((a, b) => b[1] - a[1])[0][0] as '高' | '中' | '低';
+
+    patterns.push({
+      title: '定期的なタスク',
+      description: '定期的に発生するタスクを追加',
+      category: mostCommonCategory,
+      priority: mostCommonPriority
+    });
+
+    return patterns;
   }
 } 

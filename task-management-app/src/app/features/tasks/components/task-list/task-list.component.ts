@@ -713,7 +713,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           dueDate: row[headers.indexOf('期限')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('期限')])) : null,
           userId: 'user1',
           createdAt: Timestamp.fromDate(new Date()),
-          updatedAt: Timestamp.fromDate(new Date())
+          updatedAt: Timestamp.fromDate(new Date()),
+          completed: row[headers.indexOf('完了')] === '完了' || false
         };
         return taskData;
       }).filter(task => task.title.trim() !== ''); // タイトルが空のタスクを除外
@@ -892,7 +893,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
           userId: '',
           createdAt: Timestamp.fromDate(new Date()),
-          updatedAt: Timestamp.fromDate(new Date())
+          updatedAt: Timestamp.fromDate(new Date()),
+          completed: row[headers.indexOf('完了')] === '完了' || false
         };
         return taskData;
       });
@@ -980,7 +982,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           createdAt: Timestamp.fromDate(new Date()),
           updatedAt: Timestamp.fromDate(new Date()),
           userId: '', // 後で設定
-          dueDate: row[dueDateIndex]?.trim() ? Timestamp.fromDate(new Date(row[dueDateIndex])) : null
+          dueDate: row[dueDateIndex]?.trim() ? Timestamp.fromDate(new Date(row[dueDateIndex])) : null,
+          completed: row[headers.indexOf('完了')] === '完了' || false
         } as const;
 
         return taskData;
@@ -1055,7 +1058,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
             dueDate: values[headers.indexOf('期限')] ? Timestamp.fromDate(new Date(values[headers.indexOf('期限')])) : null,
             createdAt: Timestamp.fromDate(new Date()),
             updatedAt: Timestamp.fromDate(new Date()),
-            userId: 'user1'
+            userId: 'user1',
+            completed: values[headers.indexOf('完了')] === '完了' || false
           };
 
           tasks.push(task);

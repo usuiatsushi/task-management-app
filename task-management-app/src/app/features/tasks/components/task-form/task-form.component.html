@@ -1,45 +1,46 @@
 <div class="task-form-container">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>{{ isEditMode ? 'タスク編集' : '新規タスク作成' }}</mat-card-title>
+      <mat-card-title>{{ isEditMode ? 'タスクの編集' : '新規タスクの作成' }}</mat-card-title>
     </mat-card-header>
 
     <mat-card-content>
       <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>タイトル</mat-label>
-          <input matInput formControlName="title" placeholder="タスクのタイトルを入力">
-          <mat-error>{{ getErrorMessage('title') }}</mat-error>
-        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>タイトル</mat-label>
+            <input matInput formControlName="title" 
+                   (input)="onTitleOrDescriptionChange()"
+                   placeholder="タスクのタイトルを入力">
+            <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
+              {{ getErrorMessage('title') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>説明</mat-label>
-          <textarea matInput
-                    formControlName="description"
-                    placeholder="タスクの説明を入力"
-                    cdkTextareaAutosize
-                    [cdkAutosizeMinRows]="3"
-                    [cdkAutosizeMaxRows]="10"></textarea>
-          <mat-error>{{ getErrorMessage('description') }}</mat-error>
-        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>説明</mat-label>
+            <textarea matInput formControlName="description" 
+                      (input)="onTitleOrDescriptionChange()"
+                      placeholder="タスクの詳細を入力"></textarea>
+            <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
+              {{ getErrorMessage('description') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
 
         <div class="category-section">
           <mat-form-field appearance="outline">
             <mat-label>カテゴリ</mat-label>
-            <mat-select formControlName="category" [compareWith]="compareWith">
-              <mat-select-trigger>
-                {{taskForm.get('category')?.value}}
-              </mat-select-trigger>
+            <mat-select formControlName="category">
               <mat-option *ngFor="let category of categories" [value]="category">
-                <div class="category-option">
-                  <span>{{category}}</span>
-                  <button type="button" mat-icon-button (click)="$event.stopPropagation(); deleteCategory(category);">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
+                {{ category }}
               </mat-option>
             </mat-select>
-            <mat-error>{{ getErrorMessage('category') }}</mat-error>
+            <mat-error *ngIf="taskForm.get('category')?.hasError('required')">
+              {{ getErrorMessage('category') }}
+            </mat-error>
           </mat-form-field>
 
           <div class="new-category-form">
@@ -63,15 +64,19 @@
           <mat-error>{{ getErrorMessage('status') }}</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>優先度</mat-label>
-          <mat-select formControlName="priority">
-            <mat-option value="低">低</mat-option>
-            <mat-option value="中">中</mat-option>
-            <mat-option value="高">高</mat-option>
-          </mat-select>
-          <mat-error>{{ getErrorMessage('priority') }}</mat-error>
-        </mat-form-field>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>優先度</mat-label>
+            <mat-select formControlName="priority">
+              <mat-option value="高">高</mat-option>
+              <mat-option value="中">中</mat-option>
+              <mat-option value="低">低</mat-option>
+            </mat-select>
+            <mat-error *ngIf="taskForm.get('priority')?.hasError('required')">
+              {{ getErrorMessage('priority') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
 
         <mat-form-field appearance="outline" class="form-field">
           <mat-label>期限日</mat-label>
@@ -91,6 +96,10 @@
             {{ isEditMode ? '更新' : '作成' }}
           </button>
           <button mat-button (click)="onCancel()" [disabled]="loading">キャンセル</button>
+          <button mat-button type="button" (click)="getTaskSuggestions()" [disabled]="loading">
+            <mat-icon>lightbulb</mat-icon>
+            タスクの提案
+          </button>
         </div>
       </form>
     </mat-card-content>
