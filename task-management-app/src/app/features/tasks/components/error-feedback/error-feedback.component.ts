@@ -35,13 +35,13 @@ export interface ErrorFeedbackData {
 })
 export class ErrorFeedbackComponent {
   feedbackForm: FormGroup;
-  screenshot: string | null = null;
+  screenshot: string | undefined = undefined;
   isSubmitting = false;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ErrorFeedbackComponent>,
-    @Inject(ErrorFeedbackService) private feedbackService: ErrorFeedbackService,
+    private feedbackService: ErrorFeedbackService,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: ErrorFeedbackData
   ) {
