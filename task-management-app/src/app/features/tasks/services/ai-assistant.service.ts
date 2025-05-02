@@ -284,8 +284,8 @@ export class AiAssistantService {
       ) || [];
 
       const result: AISuggestion = {
-        category,
-        priority,
+      category,
+      priority,
         suggestedDueDate,
         relatedTasks: [
           ...taskDependencies.map(id => 
@@ -430,11 +430,11 @@ export class AiAssistantService {
       else if (!important && isUrgent) quadrant = '緊急だが重要でない';
       else quadrant = '重要でも緊急でもない';
 
-      return {
+    return {
         urgent: isUrgent,
-        important,
-        quadrant
-      };
+      important,
+      quadrant
+    };
     } catch (error) {
       this.errorHandler.handleError(error);
       throw new TaskAnalysisError(ERROR_MESSAGES.TASK_ANALYSIS.MATRIX_ANALYSIS_FAILED, error);
@@ -454,7 +454,7 @@ export class AiAssistantService {
         where('userId', '==', userId)
       ) as Query<Task>;
       
-      const querySnapshot = await getDocs(q);
+    const querySnapshot = await getDocs(q);
       const tasks = querySnapshot.docs.map(doc => doc.data());
 
       // 完了したタスクの平均完了時間を計算
@@ -511,14 +511,14 @@ export class AiAssistantService {
         tasks,
         tasks[0]
       );
-
-      return {
-        historicalData: {
+    
+    return {
+      historicalData: {
           averageCompletionTime,
           commonCategories,
           frequentCollaborators
-        },
-        currentStatus: {
+      },
+      currentStatus: {
           workload: Math.min(100, (activeTasks.length / 20) * 100), // 20タスクを最大負荷として計算
           overdueTasks: overdueTasks.length,
           upcomingDeadlines: upcomingDeadlines.length
