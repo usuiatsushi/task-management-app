@@ -15,9 +15,9 @@ export class AiAssistantService {
   };
 
   private readonly priorityKeywords = {
-    '高': ['緊急', '重要', '必須', '期限切れ', '優先'],
-    '中': ['計画', '戦略', '改善', '成長', '投資'],
-    '低': ['依頼', '対応', '確認', '連絡', '報告']
+    '高': ['緊急', '重要', '必須', '期限切れ', '重大なバグ'],
+    '中': ['計画', '戦略', '改善', '成長', '投資', '定例'],
+    '低': ['確認', '連絡', '報告', '依頼', '対応', '資料']
   };
 
   constructor(private firestore: Firestore) {}
@@ -202,15 +202,18 @@ export class AiAssistantService {
   setPriority(task: Task): '高' | '中' | '低' {
     const title = task.title.toLowerCase();
     const description = task.description?.toLowerCase() || '';
+    const text = `${title} ${description}`;
 
-    for (const [priority, keywords] of Object.entries(this.priorityKeywords)) {
-      if (keywords.some(keyword => 
-        title.includes(keyword) || description.includes(keyword)
-      )) {
-        return priority as '高' | '中' | '低';
+    // 優先度の判定（高→中→低の順で判定）
+    const priorities = ['高', '中', '低'] as const;
+    for (const priority of priorities) {
+      const keywords = this.priorityKeywords[priority];
+      if (keywords.some(keyword => text.includes(keyword))) {
+        return priority;
       }
     }
 
+    // キーワードに一致しない場合はデフォルトで'中'を返す
     return '中';
   }
 
