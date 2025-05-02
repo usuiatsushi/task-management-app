@@ -405,7 +405,9 @@ export class AiAssistantService {
         activeTasks.length,
         overdueTasks.length,
         upcomingDeadlines.length,
-        averageCompletionTime
+        averageCompletionTime,
+        tasks,
+        tasks[0]
       );
 
       return {
@@ -431,16 +433,22 @@ export class AiAssistantService {
     activeTaskCount: number,
     overdueTaskCount: number,
     upcomingDeadlineCount: number,
-    averageCompletionTime: number
+    averageCompletionTime: number,
+    taskHistory: Task[],
+    currentTask: Task
   ): {
     priorityAdjustments: string[];
     resourceAllocation: string[];
     timelineOptimization: string[];
+    taskManagement: string[];
+    collaboration: string[];
   } {
     const recommendations = {
       priorityAdjustments: [] as string[],
       resourceAllocation: [] as string[],
-      timelineOptimization: [] as string[]
+      timelineOptimization: [] as string[],
+      taskManagement: [] as string[],
+      collaboration: [] as string[]
     };
 
     // 優先度調整の推奨
@@ -448,11 +456,50 @@ export class AiAssistantService {
       recommendations.priorityAdjustments.push(
         `${overdueTaskCount}件の期限切れタスクがあります。優先度の見直しを検討してください。`
       );
+      
+      // 期限切れタスクの分析
+      const overdueTasks = taskHistory.filter(task => {
+        const dueDate = this.getTaskDueDate(task);
+        return dueDate && dueDate < new Date() && !task.completed;
+      });
+      
+      const overdueCategories = overdueTasks.reduce((acc, task) => {
+        acc[task.category] = (acc[task.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const mostOverdueCategory = Object.entries(overdueCategories)
+        .sort(([, a], [, b]) => b - a)[0];
+      
+      if (mostOverdueCategory) {
+        recommendations.priorityAdjustments.push(
+          `${mostOverdueCategory[0]}カテゴリのタスクが${mostOverdueCategory[1]}件期限切れです。特に注意が必要です。`
+        );
+      }
     }
+
     if (upcomingDeadlineCount > 5) {
       recommendations.priorityAdjustments.push(
         '近い期限のタスクが多数あります。優先順位の再評価を推奨します。'
       );
+      
+      // 近い期限のタスクの分析
+      const upcomingTasks = taskHistory.filter(task => {
+        const dueDate = this.getTaskDueDate(task);
+        return dueDate && !task.completed && 
+          (dueDate.getTime() - new Date().getTime()) <= 7 * 24 * 60 * 60 * 1000;
+      });
+      
+      const upcomingPriorities = upcomingTasks.reduce((acc, task) => {
+        acc[task.priority] = (acc[task.priority] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      if (upcomingPriorities['高'] > 3) {
+        recommendations.priorityAdjustments.push(
+          '高優先度のタスクが多数あります。リソースの再配分を検討してください。'
+        );
+      }
     }
 
     // リソース配分の推奨
@@ -460,11 +507,54 @@ export class AiAssistantService {
       recommendations.resourceAllocation.push(
         '現在の作業負荷が高くなっています。タスクの委譲や再配分を検討してください。'
       );
+      
+      // カテゴリごとの負荷分析
+      const categoryLoad = taskHistory.reduce((acc, task) => {
+        if (!task.completed) {
+          acc[task.category] = (acc[task.category] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const maxLoadCategory = Object.entries(categoryLoad)
+        .sort(([, a], [, b]) => b - a)[0];
+      
+      if (maxLoadCategory && maxLoadCategory[1] > 5) {
+        recommendations.resourceAllocation.push(
+          `${maxLoadCategory[0]}カテゴリのタスクが${maxLoadCategory[1]}件あり、負荷が集中しています。`
+        );
+      }
     }
+
     if (averageCompletionTime > 7) {
       recommendations.resourceAllocation.push(
         'タスクの完了に時間がかかっています。リソースの追加配分を検討してください。'
       );
+      
+      // 完了時間の長いタスクの分析
+      const longTasks = taskHistory.filter(task => {
+        if (task.completed && task.createdAt && task.updatedAt) {
+          const startDate = task.createdAt.toDate();
+          const endDate = task.updatedAt.toDate();
+          const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+          return days > 7;
+        }
+        return false;
+      });
+      
+      const longTaskCategories = longTasks.reduce((acc, task) => {
+        acc[task.category] = (acc[task.category] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const mostLongCategory = Object.entries(longTaskCategories)
+        .sort(([, a], [, b]) => b - a)[0];
+      
+      if (mostLongCategory) {
+        recommendations.resourceAllocation.push(
+          `${mostLongCategory[0]}カテゴリのタスクは完了までに時間がかかる傾向があります。`
+        );
+      }
     }
 
     // タイムライン最適化の推奨
@@ -472,11 +562,68 @@ export class AiAssistantService {
       recommendations.timelineOptimization.push(
         '近い期限のタスクがあります。スケジュールの調整を推奨します。'
       );
+      
+      // 期限の分布分析
+      const deadlineDistribution = taskHistory.reduce((acc, task) => {
+        if (!task.completed && task.dueDate) {
+          const dueDate = this.getTaskDueDate(task);
+          if (dueDate) {
+            const daysUntilDue = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            if (daysUntilDue <= 3) acc.immediate++;
+            else if (daysUntilDue <= 7) acc.near++;
+            else if (daysUntilDue <= 14) acc.mid++;
+            else acc.far++;
+          }
+        }
+        return acc;
+      }, { immediate: 0, near: 0, mid: 0, far: 0 });
+      
+      if (deadlineDistribution.immediate > 3) {
+        recommendations.timelineOptimization.push(
+          '3日以内の期限のタスクが多数あります。緊急のスケジュール調整が必要です。'
+        );
+      }
     }
-    if (averageCompletionTime > 5) {
-      recommendations.timelineOptimization.push(
-        'タスクの完了に時間がかかっています。タイムラインの見直しを推奨します。'
+
+    // タスク管理の推奨
+    const categoryPatterns = this.analyzeCategoryPatterns(taskHistory);
+    if (categoryPatterns.length > 0) {
+      recommendations.taskManagement.push(
+        '定期的なタスクパターンが見つかりました。テンプレート化を検討してください。'
       );
+      
+      categoryPatterns.forEach(pattern => {
+        recommendations.taskManagement.push(
+          `${pattern.category}カテゴリのタスクは「${pattern.title}」のようなパターンが見られます。`
+        );
+      });
+    }
+
+    // 共同作業の推奨
+    const collaboratorTasks = taskHistory.filter(task => task.assignedTo);
+    if (collaboratorTasks.length > 0) {
+      const collaboratorStats = collaboratorTasks.reduce((acc, task) => {
+        if (task.assignedTo) {
+          acc[task.assignedTo] = (acc[task.assignedTo] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+      
+      const frequentCollaborators = Object.entries(collaboratorStats)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 3);
+      
+      if (frequentCollaborators.length > 0) {
+        recommendations.collaboration.push(
+          '頻繁に共同作業を行うメンバーがいます。チームワークの強化を検討してください。'
+        );
+        
+        frequentCollaborators.forEach(([collaborator, count]) => {
+          recommendations.collaboration.push(
+            `${collaborator}さんとは${count}件のタスクで共同作業を行っています。`
+          );
+        });
+      }
     }
 
     return recommendations;
