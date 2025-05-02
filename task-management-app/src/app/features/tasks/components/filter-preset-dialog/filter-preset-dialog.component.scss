@@ -1,3 +1,16 @@
+.search-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  mat-form-field {
+    flex: 1;
+  }
+}
+
 .preset-form {
   margin-bottom: 24px;
   padding: 16px;
@@ -6,23 +19,45 @@
 
   form {
     display: flex;
+    flex-direction: column;
     gap: 16px;
-    align-items: flex-end;
 
     mat-form-field {
-      flex: 1;
+      width: 100%;
     }
+
+    .tag-input {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  }
+}
+
+.bulk-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  span {
+    color: #666;
   }
 }
 
 .preset-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 16px;
   width: 100%;
   padding: 8px 0;
 
   .preset-info {
+    flex: 1;
+
     h4 {
       margin: 0;
       font-size: 16px;
@@ -32,6 +67,24 @@
       margin: 4px 0 0;
       font-size: 12px;
       color: #666;
+
+      &.date {
+        margin-top: 8px;
+      }
+    }
+
+    .category {
+      display: inline-block;
+      padding: 2px 8px;
+      background-color: #e3f2fd;
+      border-radius: 12px;
+      color: #1976d2;
+      margin-right: 8px;
+    }
+
+    .tags {
+      display: inline-flex;
+      gap: 4px;
     }
   }
 
@@ -44,4 +97,10 @@
 mat-list {
   max-height: 400px;
   overflow-y: auto;
+}
+
+mat-chip {
+  font-size: 12px;
+  height: 24px;
+  line-height: 24px;
 } 

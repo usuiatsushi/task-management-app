@@ -1,12 +1,65 @@
 <h2 mat-dialog-title>フィルタープリセット</h2>
 
 <mat-dialog-content>
+  <div class="search-bar">
+    <mat-form-field>
+      <mat-label>検索</mat-label>
+      <input matInput [(ngModel)]="searchTerm" placeholder="プリセット名またはタグで検索">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>カテゴリ</mat-label>
+      <mat-select [(ngModel)]="selectedCategory">
+        <mat-option [value]="''">すべて</mat-option>
+        <mat-option *ngFor="let category of categories" [value]="category">
+          {{category}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-icon-button (click)="toggleBulkMode()" [matTooltip]="isBulkMode ? '一括モードを終了' : '一括モードを開始'">
+      <mat-icon>{{isBulkMode ? 'check_box' : 'check_box_outline_blank'}}</mat-icon>
+    </button>
+  </div>
+
   <div class="preset-form">
     <form [formGroup]="presetForm" (ngSubmit)="savePreset()">
       <mat-form-field>
         <mat-label>プリセット名</mat-label>
         <input matInput formControlName="name" required>
       </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>カテゴリ</mat-label>
+        <mat-select formControlName="category">
+          <mat-option *ngFor="let category of categories" [value]="category">
+            {{category}}
+          </mat-option>
+          <mat-option [value]="''">新規カテゴリ</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="!presetForm.get('category')?.value">
+        <mat-label>新規カテゴリ名</mat-label>
+        <input matInput formControlName="category" required>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>タグ</mat-label>
+        <mat-chip-grid #chipGrid>
+          <mat-chip-row *ngFor="let tag of presetForm.get('tags')?.value" (removed)="removeTag(tag)">
+            {{tag}}
+            <button matChipRemove>
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-row>
+        </mat-chip-grid>
+        <input placeholder="タグを追加..."
+               [matChipInputFor]="chipGrid"
+               (matChipInputTokenEnd)="addTag($event)">
+      </mat-form-field>
+
       <button mat-raised-button color="primary" type="submit" [disabled]="!presetForm.valid">
         <mat-icon>save</mat-icon>
         現在の設定を保存
@@ -14,15 +67,37 @@
     </form>
   </div>
 
+  <div class="bulk-actions" *ngIf="isBulkMode && selectedPresets.length > 0">
+    <span>{{selectedPresets.length}}件選択中</span>
+    <button mat-raised-button color="warn" (click)="deleteSelectedPresets()">
+      <mat-icon>delete</mat-icon>
+      選択したプリセットを削除
+    </button>
+  </div>
+
   <mat-list>
     <h3 mat-subheader>保存済みプリセット</h3>
-    <mat-list-item *ngFor="let preset of presets">
+    <mat-list-item *ngFor="let preset of filteredPresets">
       <div class="preset-item">
+        <mat-checkbox *ngIf="isBulkMode"
+                     [checked]="selectedPresets.includes(preset.id!)"
+                     (change)="togglePresetSelection(preset.id!)">
+        </mat-checkbox>
+
         <div class="preset-info">
           <h4>{{preset.name}}</h4>
-          <p>作成日: {{preset.createdAt | date:'yyyy/MM/dd'}}</p>
+          <p>
+            <span class="category">{{preset.category}}</span>
+            <span class="tags">
+              <mat-chip *ngFor="let tag of preset.tags" color="primary" selected>
+                {{tag}}
+              </mat-chip>
+            </span>
+          </p>
+          <p class="date">作成日: {{preset.createdAt | date:'yyyy/MM/dd'}}</p>
         </div>
-        <div class="preset-actions">
+
+        <div class="preset-actions" *ngIf="!isBulkMode">
           <button mat-icon-button (click)="applyPreset(preset)" matTooltip="適用">
             <mat-icon>check</mat-icon>
           </button>
