@@ -155,57 +155,49 @@ export class AiAssistantService {
       const cached = this.getFromCache<AISuggestion>(cacheKey);
       if (cached) return cached;
 
-      // カテゴリと優先度の分析
+      // 既存の分析
       const category = this.categorizeTask(task);
       const priority = this.calculatePriority(task);
+      const suggestedDueDate = this.calculateSuggestedDueDate(priority);
 
-      // 期限の提案
-      const today = new Date();
-      let suggestedDueDate = new Date(today);
+      // 関連タスクの分析を強化
+      const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
+      const q = query(
+        tasksRef,
+        where('userId', '==', task.userId),
+        where('completed', '==', false)
+      ) as Query<Task>;
       
-      // 優先度に基づく期限の提案
-      switch (priority) {
-        case '高':
-          suggestedDueDate.setDate(today.getDate() + 3);
-          break;
-        case '中':
-          suggestedDueDate.setDate(today.getDate() + 7);
-          break;
-        case '低':
-          suggestedDueDate.setDate(today.getDate() + 14);
-          break;
-      }
-
-      // 関連タスクの検索
-      const relatedTasks: string[] = [];
-      try {
-        const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
-        const q = query(
-          tasksRef,
-          where('category', '==', category),
-          where('completed', '==', false)
-        ) as Query<Task>;
-        
-        const querySnapshot = await getDocs(q);
-        querySnapshot.forEach(doc => {
-          const relatedTask = doc.data();
-          if (relatedTask.id !== task.id) {
-            relatedTasks.push(`${relatedTask.title} (${relatedTask.status})`);
-          }
-        });
-      } catch (error) {
-        throw new FirestoreError(ERROR_MESSAGES.FIRESTORE.QUERY_FAILED, error);
-      }
-
-      // アクションプランの生成
-      const actionPlan = this.generateActionPlan(category);
+      const querySnapshot = await getDocs(q);
+      const allTasks = querySnapshot.docs.map(doc => doc.data());
+      
+      // 依存関係の分析
+      const dependencies = this.analyzeTaskDependencies([task, ...allTasks]);
+      const taskDependencies = dependencies.get(task.id) || [];
+      
+      // 類似タスクの検出
+      const similarTasks = this.findSimilarTasks(task, allTasks);
+      
+      // タスクグループの生成
+      const taskGroups = this.groupRelatedTasks([task, ...allTasks]);
+      const taskGroup = taskGroups.find(group => 
+        group.some(t => t.id === task.id)
+      ) || [];
 
       const result = {
         category,
         priority,
         suggestedDueDate,
-        relatedTasks,
-        actionPlan
+        relatedTasks: [
+          ...taskDependencies.map(id => 
+            allTasks.find(t => t.id === id)?.title || ''
+          ),
+          ...similarTasks.map(t => t.title),
+          ...taskGroup
+            .filter(t => t.id !== task.id)
+            .map(t => t.title)
+        ],
+        actionPlan: this.generateActionPlan(category)
       };
 
       this.setCache(cacheKey, result);
@@ -686,5 +678,143 @@ export class AiAssistantService {
     if (daysUntilDue <= 1) return '高';
     if (daysUntilDue <= 3) return '中';
     return '低';
+  }
+
+  private analyzeTaskDependencies(tasks: Task[]): Map<string, string[]> {
+    const dependencies = new Map<string, string[]>();
+    
+    tasks.forEach(task => {
+      const taskDependencies: string[] = [];
+      
+      // タイトルと説明から依存関係を抽出
+      const text = `${task.title} ${task.description}`.toLowerCase();
+      
+      // 依存関係を示すキーワード
+      const dependencyKeywords = [
+        '依存', '前提', '前準備', '準備', '前段階',
+        'after', 'before', 'depends on', 'prerequisite'
+      ];
+      
+      // 他のタスクとの関連性をチェック
+      tasks.forEach(otherTask => {
+        if (otherTask.id !== task.id) {
+          const otherText = `${otherTask.title} ${otherTask.description}`.toLowerCase();
+          
+          // キーワードベースの依存関係検出
+          if (dependencyKeywords.some(keyword => 
+            text.includes(keyword) && text.includes(otherTask.title.toLowerCase())
+          )) {
+            taskDependencies.push(otherTask.id);
+          }
+          
+          // カテゴリと優先度の類似性による関連性検出
+          if (task.category === otherTask.category && 
+              task.priority === otherTask.priority) {
+            taskDependencies.push(otherTask.id);
+          }
+        }
+      });
+      
+      if (taskDependencies.length > 0) {
+        dependencies.set(task.id, taskDependencies);
+      }
+    });
+    
+    return dependencies;
+  }
+
+  private findSimilarTasks(task: Task, tasks: Task[]): Task[] {
+    const similarTasks: Task[] = [];
+    const taskText = `${task.title} ${task.description}`.toLowerCase();
+    
+    // 類似度のしきい値
+    const SIMILARITY_THRESHOLD = 0.6;
+    
+    tasks.forEach(otherTask => {
+      if (otherTask.id !== task.id) {
+        const otherText = `${otherTask.title} ${otherTask.description}`.toLowerCase();
+        
+        // テキストの類似度を計算
+        const similarity = this.calculateTextSimilarity(taskText, otherText);
+        
+        if (similarity >= SIMILARITY_THRESHOLD) {
+          similarTasks.push(otherTask);
+        }
+      }
+    });
+    
+    return similarTasks;
+  }
+
+  private calculateTextSimilarity(text1: string, text2: string): number {
+    // 単語の集合に変換
+    const words1 = new Set(text1.split(/\s+/));
+    const words2 = new Set(text2.split(/\s+/));
+    
+    // 共通の単語数を計算
+    let commonWords = 0;
+    words1.forEach(word => {
+      if (words2.has(word)) {
+        commonWords++;
+      }
+    });
+    
+    // 類似度を計算（Jaccard係数）
+    const unionSize = new Set([...words1, ...words2]).size;
+    return unionSize > 0 ? commonWords / unionSize : 0;
+  }
+
+  private groupRelatedTasks(tasks: Task[]): Task[][] {
+    const groups: Task[][] = [];
+    const visited = new Set<string>();
+    
+    tasks.forEach(task => {
+      if (!visited.has(task.id)) {
+        const group: Task[] = [];
+        const queue: Task[] = [task];
+        
+        while (queue.length > 0) {
+          const currentTask = queue.shift()!;
+          if (!visited.has(currentTask.id)) {
+            visited.add(currentTask.id);
+            group.push(currentTask);
+            
+            // 類似タスクを探してグループに追加
+            const similarTasks = this.findSimilarTasks(currentTask, tasks);
+            similarTasks.forEach(similarTask => {
+              if (!visited.has(similarTask.id)) {
+                queue.push(similarTask);
+              }
+            });
+          }
+        }
+        
+        if (group.length > 1) {
+          groups.push(group);
+        }
+      }
+    });
+    
+    return groups;
+  }
+
+  private calculateSuggestedDueDate(priority: '低' | '中' | '高'): Date {
+    const today = new Date();
+    const suggestedDueDate = new Date(today);
+    
+    // 優先度に基づく期限の提案
+    switch (priority) {
+      case '高':
+        suggestedDueDate.setDate(today.getDate() + 3);
+        break;
+      case '中':
+        suggestedDueDate.setDate(today.getDate() + 7);
+        break;
+      case '低':
+        suggestedDueDate.setDate(today.getDate() + 14);
+        break;
+    }
+    
+    return suggestedDueDate;
   }
 } 
