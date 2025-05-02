@@ -213,7 +213,7 @@ describe('AiAssistantService', () => {
           userId: ''
         };
 
-        const priority = service.setPriority(task);
+        const priority = service.calculatePriority(task);
         expect(priority).toBe(test.expectedPriority);
       });
     });

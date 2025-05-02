@@ -107,7 +107,7 @@ export class AiAssistantService {
     return '技術的課題';
   }
 
-  private calculatePriority(task: Task): '低' | '中' | '高' {
+  calculatePriority(task: Task): '低' | '中' | '高' {
     // 優先度計算のロジック
     // TODO: より高度な分析を実装
     return '中';

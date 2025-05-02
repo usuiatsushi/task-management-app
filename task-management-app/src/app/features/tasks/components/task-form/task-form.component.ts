@@ -473,7 +473,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       this.taskForm.patchValue({ category: suggestedCategory });
 
       // AIアシスタントによる優先度設定
-      const suggestedPriority = this.aiAssistant.setPriority(task);
+      const suggestedPriority = this.aiAssistant.calculatePriority(task);
       this.taskForm.patchValue({ priority: suggestedPriority });
     }
   }
