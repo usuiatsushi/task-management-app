@@ -26,11 +26,19 @@ class TestModule {}
 
 describe('AiAssistantService', () => {
   let service: AiAssistantService;
-  let mockFirestore: { collection: jasmine.Spy };
+  let mockFirestore: {
+    collection: jasmine.Spy;
+    query: jasmine.Spy;
+    where: jasmine.Spy;
+    getDocs: jasmine.Spy;
+  };
 
   beforeEach(async () => {
     mockFirestore = {
-      collection: jasmine.createSpy('collection')
+      collection: jasmine.createSpy('collection'),
+      query: jasmine.createSpy('query'),
+      where: jasmine.createSpy('where'),
+      getDocs: jasmine.createSpy('getDocs')
     };
     const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter', 'where']);
     const mockQuery = jasmine.createSpyObj('Query', ['where', 'getDocs']);
@@ -278,10 +286,9 @@ describe('AiAssistantService', () => {
       mockCollection.withConverter.and.returnValue(mockQuery);
 
       mockFirestore.collection.and.returnValue(mockCollection);
-
-      spyOn(firestore, 'query').and.returnValue(mockQuery);
-      spyOn(firestore, 'where').and.returnValue({} as any);
-      spyOn(firestore, 'getDocs').and.returnValue(Promise.resolve(mockQuerySnapshot as any));
+      mockFirestore.query = jasmine.createSpy('query').and.returnValue(mockQuery);
+      mockFirestore.where = jasmine.createSpy('where').and.returnValue({} as any);
+      mockFirestore.getDocs = jasmine.createSpy('getDocs').and.returnValue(Promise.resolve(mockQuerySnapshot as any));
     });
 
     it('タスクの分析結果が正しい形式で返される', async () => {
