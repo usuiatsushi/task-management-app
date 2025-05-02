@@ -1,7 +1,7 @@
 export interface AISuggestion {
   // 基本情報
   category: string;
-  priority: '高' | '中' | '低';
+  priority: '低' | '中' | '高';
   suggestedDueDate: Date;
   relatedTasks: string[];
   confidence: number;
@@ -14,6 +14,25 @@ export interface AISuggestion {
   taskManagement: string[];
   collaboration: string[];
   actionPlan: string[];
+
+  // 分析情報
+  eisenhowerMatrix?: {
+    urgent: boolean;
+    important: boolean;
+    quadrant: '重要かつ緊急' | '重要だが緊急でない' | '緊急だが重要でない' | '重要でも緊急でもない';
+  };
+  analysis?: {
+    historicalData: {
+      averageCompletionTime: number;
+      commonCategories: string[];
+      frequentCollaborators: string[];
+    };
+    currentStatus: {
+      workload: number;
+      overdueTasks: number;
+      upcomingDeadlines: number;
+    };
+  };
 }
 
 export interface UserPreferences {
