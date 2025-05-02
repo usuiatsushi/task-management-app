@@ -56,16 +56,88 @@ export class AiAssistantService {
 
   // タスクの分析と提案を生成
   async analyzeTask(task: Task): Promise<AISuggestion> {
+    // カテゴリと優先度の分析
     const category = this.categorizeTask(task);
     const priority = this.calculatePriority(task);
-    const dueDate = new Date();
+
+    // 期限の提案
+    const today = new Date();
+    let suggestedDueDate = new Date(today);
+    
+    // 優先度に基づく期限の提案
+    switch (priority) {
+      case '高':
+        suggestedDueDate.setDate(today.getDate() + 3); // 3日後
+        break;
+      case '中':
+        suggestedDueDate.setDate(today.getDate() + 7); // 1週間後
+        break;
+      case '低':
+        suggestedDueDate.setDate(today.getDate() + 14); // 2週間後
+        break;
+    }
+
+    // 関連タスクの検索
     const relatedTasks: string[] = [];
+    try {
+      const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
+      const q = query(
+        tasksRef,
+        where('category', '==', category),
+        where('completed', '==', false)
+      ) as Query<Task>;
+      
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(doc => {
+        const relatedTask = doc.data();
+        if (relatedTask.id !== task.id) {
+          relatedTasks.push(`${relatedTask.title} (${relatedTask.status})`);
+        }
+      });
+    } catch (error) {
+      console.error('関連タスクの検索中にエラーが発生しました:', error);
+    }
+
+    // アクションプランの生成
     const actionPlan: string[] = [];
+    
+    // カテゴリに基づくアクションプランの生成
+    switch (category) {
+      case '仕事':
+        actionPlan.push('1. 必要な資料・情報の収集');
+        actionPlan.push('2. 関係者との打ち合わせ');
+        actionPlan.push('3. タスクの実行計画の作成');
+        actionPlan.push('4. 進捗報告の準備');
+        break;
+      case '学習':
+        actionPlan.push('1. 学習目標の設定');
+        actionPlan.push('2. 学習リソースの準備');
+        actionPlan.push('3. 学習スケジュールの作成');
+        actionPlan.push('4. 復習計画の立案');
+        break;
+      case '健康':
+        actionPlan.push('1. 目標値・指標の設定');
+        actionPlan.push('2. 実施スケジュールの作成');
+        actionPlan.push('3. 進捗記録の方法決定');
+        actionPlan.push('4. 定期的な見直し計画');
+        break;
+      case 'プライベート':
+        actionPlan.push('1. 必要な準備の洗い出し');
+        actionPlan.push('2. スケジュール調整');
+        actionPlan.push('3. 必要な予約・手配');
+        actionPlan.push('4. 関係者への連絡');
+        break;
+      default:
+        actionPlan.push('1. タスクの詳細な内容確認');
+        actionPlan.push('2. 必要なリソースの確認');
+        actionPlan.push('3. スケジュールの作成');
+        actionPlan.push('4. 実行計画の立案');
+    }
 
     return {
       category,
       priority,
-      suggestedDueDate: dueDate,
+      suggestedDueDate,
       relatedTasks,
       actionPlan
     };
@@ -73,12 +145,51 @@ export class AiAssistantService {
 
   // アイゼンハワーマトリックスによる分析
   async analyzeTaskMatrix(task: Task): Promise<EisenhowerMatrix> {
-    const urgent = false;
-    const important = false;
-    const quadrant = '重要だが緊急でない';
+    const title = task.title.toLowerCase();
+    const description = task.description?.toLowerCase() || '';
+
+    // 緊急性の判定
+    const urgentKeywords = ['緊急', '至急', '今すぐ', '期限切れ', '今日中', '明日まで'];
+    const urgent = urgentKeywords.some(keyword => 
+      title.includes(keyword) || description.includes(keyword)
+    );
+
+    // 重要性の判定
+    const importantKeywords = ['重要', '必須', '重大', '戦略', 'クリティカル', '優先'];
+    const important = importantKeywords.some(keyword => 
+      title.includes(keyword) || description.includes(keyword)
+    ) || task.priority === '高';
+
+    // 期限による緊急性の判定
+    const today = new Date();
+    let taskDueDate: Date;
+    
+    if (!task.dueDate) {
+      taskDueDate = today;
+    } else if (task.dueDate instanceof Timestamp) {
+      taskDueDate = task.dueDate.toDate();
+    } else if (task.dueDate instanceof Date) {
+      taskDueDate = task.dueDate;
+    } else if (typeof task.dueDate === 'string') {
+      taskDueDate = new Date(task.dueDate);
+    } else {
+      taskDueDate = new Date(task.dueDate.seconds * 1000);
+    }
+
+    const daysUntilDue = Math.ceil((taskDueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const isUrgentByDate = daysUntilDue <= 3; // 3日以内は緊急とみなす
+
+    const isUrgent = urgent || isUrgentByDate;
+
+    // 象限の決定
+    let quadrant: '重要かつ緊急' | '重要だが緊急でない' | '緊急だが重要でない' | '重要でも緊急でもない';
+    if (important && isUrgent) quadrant = '重要かつ緊急';
+    else if (important && !isUrgent) quadrant = '重要だが緊急でない';
+    else if (!important && isUrgent) quadrant = '緊急だが重要でない';
+    else quadrant = '重要でも緊急でもない';
 
     return {
-      urgent,
+      urgent: isUrgent,
       important,
       quadrant
     };

@@ -243,24 +243,58 @@ describe('AiAssistantService', () => {
       userId: 'user1'
     };
 
-    it('タスクの分析結果が正しい形式で返される', async () => {
-      const mockDocs = {
-        docs: [],
-        forEach: jasmine.createSpy('forEach')
+    const mockRelatedTasks: Task[] = [
+      {
+        id: '2',
+        title: '新機能の設計レビュー',
+        description: '要件定義に基づく設計のレビューを実施',
+        category: '仕事',
+        priority: '中',
+        status: '未着手',
+        dueDate: Timestamp.now(),
+        completed: false,
+        assignedTo: 'user1',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        userId: 'user1'
+      }
+    ];
+
+    beforeEach(() => {
+      const mockDocs = mockRelatedTasks.map(task => ({
+        data: () => task,
+        id: task.id
+      }));
+
+      const mockQuerySnapshot = {
+        docs: mockDocs,
+        forEach: (callback: (doc: any) => void) => mockDocs.forEach(callback)
       };
+
       const mockQuery = jasmine.createSpyObj('Query', ['where']);
+      mockQuery.where.and.returnValue(mockQuery);
+
       const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter']);
-      mockFirestore.collection.and.returnValue(mockCollection);
       mockCollection.withConverter.and.returnValue(mockQuery);
 
+      mockFirestore.collection.and.returnValue(mockCollection);
+
+      spyOn(firestore, 'query').and.returnValue(mockQuery);
+      spyOn(firestore, 'where').and.returnValue({} as any);
+      spyOn(firestore, 'getDocs').and.returnValue(Promise.resolve(mockQuerySnapshot as any));
+    });
+
+    it('タスクの分析結果が正しい形式で返される', async () => {
       const analysis = await service.analyzeTask(testTask);
       
       expect(analysis).toBeTruthy();
-      expect(analysis.category).toBeTruthy();
+      expect(analysis.category).toBe('仕事');
       expect(['低', '中', '高']).toContain(analysis.priority);
       expect(analysis.suggestedDueDate).toBeInstanceOf(Date);
       expect(Array.isArray(analysis.relatedTasks)).toBeTrue();
+      expect(analysis.relatedTasks.length).toBeGreaterThan(0);
       expect(Array.isArray(analysis.actionPlan)).toBeTrue();
+      expect(analysis.actionPlan.length).toBeGreaterThan(0);
     });
 
     it('アイゼンハワーマトリックス分析が正しい形式で返される', async () => {
