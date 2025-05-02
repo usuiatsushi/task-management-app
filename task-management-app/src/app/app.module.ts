@@ -3,7 +3,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
-import { RouterModule } from '@angular/router';
 
 // Angular Material
 import { MatButtonModule } from '@angular/material/button';
@@ -38,6 +37,7 @@ import { AppComponent } from './app.component';
 import { TaskListComponent } from './features/tasks/components/task-list/task-list.component';
 import { TaskFormComponent } from './features/tasks/components/task-form/task-form.component';
 import { TaskDetailComponent } from './features/tasks/components/task-detail/task-detail.component';
+import { AnalyticsModule } from './features/analytics/analytics.module';
 
 @NgModule({
   declarations: [],
@@ -47,7 +47,6 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
     ReactiveFormsModule,
     BrowserAnimationsModule,
     HttpClientModule,
-    RouterModule,
     MatButtonModule,
     MatCardModule,
     MatInputModule,
@@ -63,6 +62,8 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
     MatSnackBarModule,
     MatProgressBarModule,
     MatCheckboxModule,
+    // Components
+    AppComponent,
     TaskListComponent,
     TaskFormComponent,
     TaskDetailComponent,
@@ -73,12 +74,11 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
       maxAge: 25,
       logOnly: environment.production
     }),
-
     // AngularFire
     AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule
+    AngularFirestoreModule,
+    AnalyticsModule
   ],
-  providers: [],
-  exports: []
+  providers: []
 })
 export class AppModule { } 

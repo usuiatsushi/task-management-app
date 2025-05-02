@@ -1,0 +1,154 @@
+<div class="performance-dashboard" *ngIf="!isLoading">
+  <!-- ヘッダー -->
+  <div class="dashboard-header">
+    <h1>パフォーマンスダッシュボード</h1>
+    <div class="date-range">
+      <mat-form-field>
+        <mat-label>開始日</mat-label>
+        <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" (dateChange)="onDateRangeChange()">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>終了日</mat-label>
+        <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" (dateChange)="onDateRangeChange()">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- パフォーマンスメトリクス -->
+  <div class="metrics-section">
+    <h2>パフォーマンスメトリクス</h2>
+    <div class="metrics-grid">
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>平均ページロード時間</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatTime(averagePageLoadTime) }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>First Contentful Paint</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatTime(averageFCP) }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="metric-card">
+        <mat-card-header>
+          <mat-card-title>平均メモリ使用量</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="metric-value">{{ formatMemory(averageMemoryUsage) }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- エラーログ -->
+  <div class="errors-section">
+    <h2>エラーログ</h2>
+    <div class="errors-grid">
+      <mat-card class="error-card">
+        <mat-card-header>
+          <mat-card-title>エラー数</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="error-count error">{{ errorCount }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="error-card">
+        <mat-card-header>
+          <mat-card-title>警告数</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="error-count warning">{{ warningCount }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-accordion class="error-list">
+      <mat-expansion-panel *ngFor="let log of errorLogs">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <mat-icon [class]="log.severity">{{ log.severity === 'error' ? 'error' : 'warning' }}</mat-icon>
+            {{ log.message }}
+          </mat-panel-title>
+          <mat-panel-description>
+            {{ log.timestamp | date:'yyyy/MM/dd HH:mm:ss' }}
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+        <div class="error-details">
+          <p *ngIf="log.source">ソース: {{ log.source }}</p>
+          <p *ngIf="log.lineNumber">行番号: {{ log.lineNumber }}</p>
+          <p *ngIf="log.columnNumber">列番号: {{ log.columnNumber }}</p>
+          <pre *ngIf="log.error">{{ log.error }}</pre>
+        </div>
+      </mat-expansion-panel>
+    </mat-accordion>
+  </div>
+
+  <!-- ユーザー行動 -->
+  <div class="behavior-section">
+    <h2>ユーザー行動</h2>
+    <div class="behavior-grid">
+      <mat-card class="behavior-card">
+        <mat-card-header>
+          <mat-card-title>クリックイベント</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="behavior-count">{{ clickEvents }}</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="behavior-card">
+        <mat-card-header>
+          <mat-card-title>スクロールイベント</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="behavior-count">{{ scrollEvents }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <mat-table [dataSource]="userBehaviors" class="behavior-table">
+      <ng-container matColumnDef="timestamp">
+        <mat-header-cell *matHeaderCellDef>タイムスタンプ</mat-header-cell>
+        <mat-cell *matCellDef="let behavior">{{ behavior.timestamp | date:'yyyy/MM/dd HH:mm:ss' }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="eventType">
+        <mat-header-cell *matHeaderCellDef>イベントタイプ</mat-header-cell>
+        <mat-cell *matCellDef="let behavior">{{ behavior.eventType }}</mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="target">
+        <mat-header-cell *matHeaderCellDef>ターゲット</mat-header-cell>
+        <mat-cell *matCellDef="let behavior">
+          {{ behavior.targetElement }} {{ behavior.targetId ? '#' + behavior.targetId : '' }}
+        </mat-cell>
+      </ng-container>
+
+      <ng-container matColumnDef="pageUrl">
+        <mat-header-cell *matHeaderCellDef>ページURL</mat-header-cell>
+        <mat-cell *matCellDef="let behavior">{{ behavior.pageUrl }}</mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="['timestamp', 'eventType', 'target', 'pageUrl']"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: ['timestamp', 'eventType', 'target', 'pageUrl'];"></mat-row>
+    </mat-table>
+  </div>
+</div>
+
+<!-- ローディング表示 -->
+<div class="loading-overlay" *ngIf="isLoading">
+  <mat-spinner diameter="50"></mat-spinner>
+  <p>データを読み込み中...</p>
+</div> 

@@ -1,5 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, NavigationStart, RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { RouterModule, RouterOutlet } from '@angular/router';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
 import { ToastService } from './shared/services/toast.service';
 import { environment } from '../environments/environment';
@@ -7,22 +11,41 @@ import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ToastContainerComponent],
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  imports: [
+    CommonModule,
+    RouterModule,
+    RouterOutlet,
+    MatToolbarModule,
+    MatButtonModule,
+    MatIconModule,
+    ToastContainerComponent
+  ],
+  template: `
+    <mat-toolbar color="primary">
+      <span>タスク管理アプリ</span>
+      <span class="spacer"></span>
+      <button mat-icon-button routerLink="/analytics">
+        <mat-icon>analytics</mat-icon>
+      </button>
+    </mat-toolbar>
+    <main>
+      <router-outlet></router-outlet>
+    </main>
+    <app-toast-container></app-toast-container>
+  `,
+  styles: [`
+    .spacer {
+      flex: 1 1 auto;
+    }
+    main {
+      padding: 20px;
+    }
+  `]
 })
 export class AppComponent implements OnInit {
   title = 'task-management-app';
 
-  constructor(private toastService: ToastService, private router: Router) {
-    this.router.events.subscribe(event => {
-      if (event instanceof NavigationStart) {
-        this.toastService.clearAll();
-      }
-    });
-  }
-
-  ngOnInit() {
+  constructor(private toastService: ToastService) {
     // セキュリティ設定を適用
     if (environment.security) {
       // Cross-Origin-Opener-Policy
@@ -37,5 +60,9 @@ export class AppComponent implements OnInit {
       coepMeta.content = environment.security.crossOriginEmbedderPolicy;
       document.head.appendChild(coepMeta);
     }
+  }
+
+  ngOnInit() {
+    // セキュリティ設定の適用は完了
   }
 }
