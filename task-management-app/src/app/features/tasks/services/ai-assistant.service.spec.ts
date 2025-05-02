@@ -1,107 +1,50 @@
 import { TestBed } from '@angular/core/testing';
 import { AiAssistantService } from './ai-assistant.service';
 import { Task } from '../models/task.model';
-import { Timestamp, Firestore, QuerySnapshot, QueryDocumentSnapshot, FirestoreDataConverter, DocumentData, QueryDocumentSnapshot as FirestoreQueryDocumentSnapshot } from '@angular/fire/firestore';
-import * as firestore from '@angular/fire/firestore';
-import { AngularFireModule } from '@angular/fire/compat';
+import { 
+  Timestamp, 
+  Firestore, 
+  QuerySnapshot, 
+  QueryDocumentSnapshot, 
+  FirestoreDataConverter, 
+  DocumentData,
+  CollectionReference
+} from '@angular/fire/firestore';
 import { environment } from '../../../../environments/environment';
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+
+@NgModule({
+  imports: [
+    CommonModule
+  ],
+  providers: [AiAssistantService]
+})
+class TestModule {}
 
 describe('AiAssistantService', () => {
   let service: AiAssistantService;
-  let mockFirestore: any;
+  let mockFirestore: { collection: jasmine.Spy };
 
   beforeEach(async () => {
-    const taskConverter: FirestoreDataConverter<Task, DocumentData> = {
-      toFirestore: (task: Task): DocumentData => ({
-        title: task.title,
-        description: task.description,
-        category: task.category,
-        priority: task.priority,
-        status: task.status,
-        dueDate: task.dueDate,
-        completed: task.completed,
-        assignedTo: task.assignedTo,
-        createdAt: task.createdAt,
-        updatedAt: task.updatedAt,
-        userId: task.userId
-      }),
-      fromFirestore: (snapshot, options) => {
-        const data = snapshot.data(options);
-        return {
-          id: snapshot.id,
-          title: data['title'],
-          description: data['description'],
-          category: data['category'],
-          priority: data['priority'],
-          status: data['status'],
-          dueDate: data['dueDate'],
-          completed: data['completed'],
-          assignedTo: data['assignedTo'],
-          createdAt: data['createdAt'],
-          updatedAt: data['updatedAt'],
-          userId: data['userId']
-        } as Task;
-      }
+    mockFirestore = {
+      collection: jasmine.createSpy('collection')
     };
+    const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter', 'where']);
+    const mockQuery = jasmine.createSpyObj('Query', ['where', 'getDocs']);
+    const mockDocs = jasmine.createSpyObj('QuerySnapshot', ['docs', 'forEach']);
 
-    const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter', 'doc', 'where']);
+    mockFirestore.collection.and.returnValue(mockCollection);
     mockCollection.withConverter.and.returnValue(mockCollection);
-
-    const mockQuery = jasmine.createSpyObj('Query', ['where']);
-    
-    const mockTask: Task = {
-      id: '1',
-      title: 'テストタスク1',
-      description: 'テスト説明1',
-      category: '仕事',
-      priority: '中',
-      status: '未着手',
-      dueDate: Timestamp.now(),
-      completed: false,
-      assignedTo: 'user1',
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      userId: 'user1'
-    };
-
-    const mockDocSnapshot = {
-      data: () => mockTask,
-      metadata: {
-        fromCache: false,
-        hasPendingWrites: false,
-        isEqual: () => true
-      },
-      exists: () => true,
-      get: () => null,
-      id: '1',
-      ref: null as any
-    } as unknown as QueryDocumentSnapshot<Task>;
-
-    const mockQuerySnapshot = {
-      docs: [mockDocSnapshot],
-      metadata: {
-        fromCache: false,
-        hasPendingWrites: false,
-        isEqual: () => true
-      },
-      query: mockQuery,
-      size: 1,
-      empty: false,
-      forEach: (callback: (result: FirestoreQueryDocumentSnapshot<Task>) => void) => [mockDocSnapshot].forEach(callback),
-      docChanges: () => []
-    } as unknown as QuerySnapshot<Task>;
-
-    const mockFirestore = {
-      collection: jasmine.createSpy('collection').and.returnValue(mockCollection),
-      query: jasmine.createSpy('query').and.returnValue(mockQuery),
-      where: jasmine.createSpy('where').and.returnValue(mockQuery),
-      getDocs: jasmine.createSpy('getDocs').and.returnValue(Promise.resolve(mockQuerySnapshot))
-    };
+    mockCollection.where.and.returnValue(mockQuery);
+    mockQuery.where.and.returnValue(mockQuery);
+    mockDocs.forEach.and.returnValue(undefined);
+    mockDocs.docs = [];
 
     await TestBed.configureTestingModule({
-      imports: [
-        AngularFireModule.initializeApp(environment.firebase)
-      ],
+      imports: [CommonModule],
       providers: [
         AiAssistantService,
         { provide: Firestore, useValue: mockFirestore }
@@ -301,6 +244,15 @@ describe('AiAssistantService', () => {
     };
 
     it('タスクの分析結果が正しい形式で返される', async () => {
+      const mockDocs = {
+        docs: [],
+        forEach: jasmine.createSpy('forEach')
+      };
+      const mockQuery = jasmine.createSpyObj('Query', ['where']);
+      const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter']);
+      mockFirestore.collection.and.returnValue(mockCollection);
+      mockCollection.withConverter.and.returnValue(mockQuery);
+
       const analysis = await service.analyzeTask(testTask);
       
       expect(analysis).toBeTruthy();
@@ -326,6 +278,15 @@ describe('AiAssistantService', () => {
     });
 
     it('タスク履歴の分析が正しい形式で返される', async () => {
+      const mockDocs = {
+        docs: [],
+        forEach: jasmine.createSpy('forEach')
+      };
+      const mockQuery = jasmine.createSpyObj('Query', ['where']);
+      const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter']);
+      mockFirestore.collection.and.returnValue(mockCollection);
+      mockCollection.withConverter.and.returnValue(mockQuery);
+
       const analysis = await service.analyzeTaskHistory('user1');
       
       expect(analysis).toBeTruthy();

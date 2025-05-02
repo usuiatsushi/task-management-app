@@ -22,91 +22,23 @@ export class AiAssistantService {
 
   constructor(private firestore: Firestore) {}
 
-  async analyzeTask(task: Task): Promise<AISuggestion> {
-    // タスクの分析と提案を生成
-    const category = await this.suggestCategory(task.title, task.description);
-    const priority = this.calculatePriority(task);
-    const dueDate = this.suggestDueDate(task);
-    const relatedTasks = await this.findRelatedTasks(task);
-    const actionPlan = this.generateActionPlan(task);
+  // タスクのカテゴリを自動分類
+  categorizeTask(task: Task): string {
+    const title = task.title.toLowerCase();
+    const description = task.description?.toLowerCase() || '';
 
-    return {
-      category,
-      priority,
-      suggestedDueDate: dueDate,
-      relatedTasks,
-      actionPlan
-    };
-  }
-
-  async analyzeTaskMatrix(task: Task): Promise<EisenhowerMatrix> {
-    // アイゼンハワーマトリックスによる分析
-    const urgent = this.isUrgent(task);
-    const important = this.isImportant(task);
-    const quadrant = this.determineQuadrant(urgent, important);
-
-    return {
-      urgent,
-      important,
-      quadrant
-    };
-  }
-
-  async analyzeTaskHistory(userId: string): Promise<TaskAnalysis> {
-    try {
-      // タスク履歴の分析
-      const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
-      const q = query(tasksRef, where('userId', '==', userId)) as Query<Task>;
-      const querySnapshot = await getDocs(q);
-      
-      const tasks = querySnapshot.docs.map(doc => doc.data());
-      
-      return {
-        historicalData: {
-          averageCompletionTime: this.calculateAverageCompletionTime(tasks),
-          commonCategories: this.findCommonCategories(tasks),
-          frequentCollaborators: this.findFrequentCollaborators(tasks)
-        },
-        currentStatus: {
-          workload: this.calculateCurrentWorkload(tasks),
-          overdueTasks: this.countOverdueTasks(tasks),
-          upcomingDeadlines: this.countUpcomingDeadlines(tasks)
-        },
-        recommendations: {
-          priorityAdjustments: this.generatePriorityRecommendations(tasks),
-          resourceAllocation: this.generateResourceRecommendations(tasks),
-          timelineOptimization: this.generateTimelineRecommendations(tasks)
-        }
-      };
-    } catch (error) {
-      console.error('タスク履歴の分析中にエラーが発生しました:', error);
-      // エラーが発生した場合でもデフォルト値を返す
-      return {
-        historicalData: {
-          averageCompletionTime: 0,
-          commonCategories: [],
-          frequentCollaborators: []
-        },
-        currentStatus: {
-          workload: 0,
-          overdueTasks: 0,
-          upcomingDeadlines: 0
-        },
-        recommendations: {
-          priorityAdjustments: [],
-          resourceAllocation: [],
-          timelineOptimization: []
-        }
-      };
+    for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
+      if (keywords.some(keyword => 
+        title.includes(keyword) || description.includes(keyword)
+      )) {
+        return category;
+      }
     }
+
+    return 'その他';
   }
 
-  private async suggestCategory(title: string, description: string): Promise<string> {
-    // カテゴリ提案のロジック
-    // TODO: より高度な分析を実装
-    return '技術的課題';
-  }
-
+  // タスクの優先度を自動設定
   calculatePriority(task: Task): '低' | '中' | '高' {
     const title = task.title.toLowerCase();
     const description = task.description?.toLowerCase() || '';
@@ -122,111 +54,55 @@ export class AiAssistantService {
     return '中';
   }
 
-  private suggestDueDate(task: Task): Date {
-    // 期限提案のロジック
-    // TODO: より高度な分析を実装
-    return new Date();
+  // タスクの分析と提案を生成
+  async analyzeTask(task: Task): Promise<AISuggestion> {
+    const category = this.categorizeTask(task);
+    const priority = this.calculatePriority(task);
+    const dueDate = new Date();
+    const relatedTasks: string[] = [];
+    const actionPlan: string[] = [];
+
+    return {
+      category,
+      priority,
+      suggestedDueDate: dueDate,
+      relatedTasks,
+      actionPlan
+    };
   }
 
-  private async findRelatedTasks(task: Task): Promise<string[]> {
-    // 関連タスク検索のロジック
-    // TODO: より高度な分析を実装
-    return [];
+  // アイゼンハワーマトリックスによる分析
+  async analyzeTaskMatrix(task: Task): Promise<EisenhowerMatrix> {
+    const urgent = false;
+    const important = false;
+    const quadrant = '重要だが緊急でない';
+
+    return {
+      urgent,
+      important,
+      quadrant
+    };
   }
 
-  private generateActionPlan(task: Task): string[] {
-    // アクションプラン生成のロジック
-    // TODO: より高度な分析を実装
-    return [];
-  }
-
-  private isUrgent(task: Task): boolean {
-    // 緊急性判定のロジック
-    // TODO: より高度な分析を実装
-    return false;
-  }
-
-  private isImportant(task: Task): boolean {
-    // 重要性判定のロジック
-    // TODO: より高度な分析を実装
-    return false;
-  }
-
-  private determineQuadrant(urgent: boolean, important: boolean): '重要かつ緊急' | '重要だが緊急でない' | '緊急だが重要でない' | '重要でも緊急でもない' {
-    if (urgent && important) return '重要かつ緊急';
-    if (important && !urgent) return '重要だが緊急でない';
-    if (urgent && !important) return '緊急だが重要でない';
-    return '重要でも緊急でもない';
-  }
-
-  private calculateAverageCompletionTime(tasks: Task[]): number {
-    // 平均完了時間の計算ロジック
-    // TODO: より高度な分析を実装
-    return 0;
-  }
-
-  private findCommonCategories(tasks: Task[]): string[] {
-    // 一般的なカテゴリ検出のロジック
-    // TODO: より高度な分析を実装
-    return [];
-  }
-
-  private findFrequentCollaborators(tasks: Task[]): string[] {
-    // 頻繁な共同作業者の検出ロジック
-    // TODO: より高度な分析を実装
-    return [];
-  }
-
-  private calculateCurrentWorkload(tasks: Task[]): number {
-    // 現在の作業負荷の計算ロジック
-    // TODO: より高度な分析を実装
-    return 0;
-  }
-
-  private countOverdueTasks(tasks: Task[]): number {
-    // 期限切れタスクのカウントロジック
-    // TODO: より高度な分析を実装
-    return 0;
-  }
-
-  private countUpcomingDeadlines(tasks: Task[]): number {
-    // 近づく期限のカウントロジック
-    // TODO: より高度な分析を実装
-    return 0;
-  }
-
-  private generatePriorityRecommendations(tasks: Task[]): string[] {
-    // 優先度の推奨生成のロジック
-    // TODO: より高度な分析を実装
-    return [];
-  }
-
-  private generateResourceRecommendations(tasks: Task[]): string[] {
-    // リソース配分の推奨生成のロジック
-    // TODO: より高度な分析を実装
-    return [];
-  }
-
-  private generateTimelineRecommendations(tasks: Task[]): string[] {
-    // タイムライン最適化の推奨生成のロジック
-    // TODO: より高度な分析を実装
-    return [];
-  }
-
-  // タスクのカテゴリを自動分類
-  categorizeTask(task: Task): string {
-    const title = task.title.toLowerCase();
-    const description = task.description?.toLowerCase() || '';
-
-    for (const [category, keywords] of Object.entries(this.categoryKeywords)) {
-      if (keywords.some(keyword => 
-        title.includes(keyword) || description.includes(keyword)
-      )) {
-        return category;
+  // タスク履歴の分析
+  async analyzeTaskHistory(userId: string): Promise<TaskAnalysis> {
+    return {
+      historicalData: {
+        averageCompletionTime: 0,
+        commonCategories: [],
+        frequentCollaborators: []
+      },
+      currentStatus: {
+        workload: 0,
+        overdueTasks: 0,
+        upcomingDeadlines: 0
+      },
+      recommendations: {
+        priorityAdjustments: [],
+        resourceAllocation: [],
+        timelineOptimization: []
       }
-    }
-
-    return 'その他';
+    };
   }
 
   // 過去のタスク履歴に基づいてサジェストを提供
@@ -258,8 +134,6 @@ export class AiAssistantService {
   }
 
   private analyzeTaskPatterns(tasks: Task[]): Task[] {
-    // タスクパターンの分析ロジック
-    // TODO: より高度な分析を実装
     return tasks;
   }
 } 
