@@ -110,11 +110,11 @@
   </div>
 
   <div class="bulk-actions">
-    <button mat-button (click)="exportPresets()">
+    <button mat-button (click)="exportPresets()" color="primary">
       <mat-icon>file_download</mat-icon>
       エクスポート
     </button>
-    <button mat-button>
+    <button mat-button color="primary">
       <mat-icon>file_upload</mat-icon>
       インポート
       <input type="file" accept=".json" (change)="importPresets($event)" style="display: none">
