@@ -4,6 +4,7 @@ import { ErrorHandler } from '@angular/core';
 import { PerformanceMetrics } from '../models/performance-metrics.model';
 import { UserBehavior } from '../models/user-behavior.model';
 import { ErrorLog } from '../models/error-log.model';
+import { Auth } from '@angular/fire/auth';
 
 @Injectable({
   providedIn: 'root'
@@ -11,11 +12,12 @@ import { ErrorLog } from '../models/error-log.model';
 export class PerformanceMonitoringService {
   private readonly COLLECTION_METRICS = 'performance_metrics';
   private readonly COLLECTION_ERRORS = 'error_logs';
-  private readonly COLLECTION_BEHAVIOR = 'user_behavior';
+  private readonly COLLECTION_BEHAVIOR = 'user_behaviors';
 
   constructor(
     private firestore: Firestore,
-    private errorHandler: ErrorHandler
+    private errorHandler: ErrorHandler,
+    private auth: Auth
   ) {
     this.initializePerformanceMonitoring();
   }
@@ -133,8 +135,14 @@ export class PerformanceMonitoringService {
 
   private async saveMetrics(metrics: PerformanceMetrics): Promise<void> {
     try {
+      const user = this.auth.currentUser;
+      if (!user) return;
+
       const metricsRef = collection(this.firestore, this.COLLECTION_METRICS);
-      await addDoc(metricsRef, metrics);
+      await addDoc(metricsRef, {
+        ...metrics,
+        userId: user.uid
+      });
     } catch (error) {
       console.error('Failed to save performance metrics:', error);
     }
@@ -142,8 +150,14 @@ export class PerformanceMonitoringService {
 
   private async logError(error: ErrorLog): Promise<void> {
     try {
+      const user = this.auth.currentUser;
+      if (!user) return;
+
       const errorsRef = collection(this.firestore, this.COLLECTION_ERRORS);
-      await addDoc(errorsRef, error);
+      await addDoc(errorsRef, {
+        ...error,
+        userId: user.uid
+      });
     } catch (error) {
       console.error('Failed to log error:', error);
     }
@@ -151,8 +165,14 @@ export class PerformanceMonitoringService {
 
   private async saveUserBehavior(behavior: UserBehavior): Promise<void> {
     try {
+      const user = this.auth.currentUser;
+      if (!user) return;
+
       const behaviorRef = collection(this.firestore, this.COLLECTION_BEHAVIOR);
-      await addDoc(behaviorRef, behavior);
+      await addDoc(behaviorRef, {
+        ...behavior,
+        userId: user.uid
+      });
     } catch (error) {
       console.error('Failed to save user behavior:', error);
     }
@@ -161,9 +181,13 @@ export class PerformanceMonitoringService {
   // パフォーマンスメトリクスの取得
   async getPerformanceMetrics(startDate: Date, endDate: Date): Promise<PerformanceMetrics[]> {
     try {
+      const user = this.auth.currentUser;
+      if (!user) return [];
+
       const metricsRef = collection(this.firestore, this.COLLECTION_METRICS);
       const q = query(
         metricsRef,
+        where('userId', '==', user.uid),
         where('timestamp', '>=', startDate),
         where('timestamp', '<=', endDate)
       );
@@ -178,9 +202,13 @@ export class PerformanceMonitoringService {
   // エラーログの取得
   async getErrorLogs(startDate: Date, endDate: Date): Promise<ErrorLog[]> {
     try {
+      const user = this.auth.currentUser;
+      if (!user) return [];
+
       const errorsRef = collection(this.firestore, this.COLLECTION_ERRORS);
       const q = query(
         errorsRef,
+        where('userId', '==', user.uid),
         where('timestamp', '>=', startDate),
         where('timestamp', '<=', endDate)
       );
@@ -195,9 +223,13 @@ export class PerformanceMonitoringService {
   // ユーザー行動の取得
   async getUserBehavior(startDate: Date, endDate: Date): Promise<UserBehavior[]> {
     try {
+      const user = this.auth.currentUser;
+      if (!user) return [];
+
       const behaviorRef = collection(this.firestore, this.COLLECTION_BEHAVIOR);
       const q = query(
         behaviorRef,
+        where('userId', '==', user.uid),
         where('timestamp', '>=', startDate),
         where('timestamp', '<=', endDate)
       );

@@ -17,6 +17,10 @@ const routes: Routes = [
   {
     path: 'tasks',
     loadChildren: () => import('../app/features/tasks/tasks.routes').then(m => m.TASK_ROUTES)
+  },
+  {
+    path: 'analytics',
+    loadChildren: () => import('../app/features/analytics/analytics.routes').then(m => m.ANALYTICS_ROUTES)
   }
 ];
 

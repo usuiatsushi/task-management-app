@@ -1,4 +1,4 @@
-<div class="performance-dashboard" *ngIf="!isLoading">
+<div class="performance-dashboard" *ngIf="!loading">
   <!-- ヘッダー -->
   <div class="dashboard-header">
     <h1>パフォーマンスダッシュボード</h1>
@@ -148,7 +148,7 @@
 </div>
 
 <!-- ローディング表示 -->
-<div class="loading-overlay" *ngIf="isLoading">
+<div class="loading-overlay" *ngIf="loading">
   <mat-spinner diameter="50"></mat-spinner>
   <p>データを読み込み中...</p>
 </div> 

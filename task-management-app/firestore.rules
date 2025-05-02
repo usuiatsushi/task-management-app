@@ -40,5 +40,33 @@ service cloud.firestore {
       allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
       allow delete: if false;
     }
+
+    // パフォーマンスメトリクスのルール
+    match /performance_metrics/{metricId} {
+      allow list, get: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // エラーログのルール
+    match /error_logs/{logId} {
+      allow list, get: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // ユーザー行動のルール
+    match /user_behaviors/{behaviorId} {
+      allow list, get: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    // AI推奨事項のルール
+    match /ai_suggestions/{suggestionId} {
+      allow list, get: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
   }
 } 
