@@ -217,7 +217,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.applyFilters();
         }
 
-        this.notificationService.checkTaskDeadlines(tasks);
+        this.notificationService.checkDeadlineReminders();
 
         this.cdr.detectChanges();
       }
@@ -264,7 +264,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.dataSource.paginator = this.paginator;
       this.dataSource.filterPredicate = this.createFilter();
       
-      this.notificationService.checkTaskDeadlines(tasks);
+      this.notificationService.checkDeadlineReminders();
       this.applyFilters();
     } catch (error) {
       console.error('タスクの読み込みに失敗しました:', error);
