@@ -16,7 +16,9 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType, ChartEvent, ActiveElement } from 'chart.js';
 import { ErrorAnalysisService, ErrorAnalysis } from '../../services/error-analysis.service';
+import { FilterPresetService, FilterPreset } from '../../services/filter-preset.service';
 import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-details-dialog.component';
+import { FilterPresetDialogComponent } from '../filter-preset-dialog/filter-preset-dialog.component';
 
 @Component({
   selector: 'app-error-analysis',
@@ -163,6 +165,7 @@ export class ErrorAnalysisComponent implements OnInit {
 
   constructor(
     private errorAnalysisService: ErrorAnalysisService,
+    private filterPresetService: FilterPresetService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private fb: FormBuilder
@@ -182,11 +185,36 @@ export class ErrorAnalysisComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     await this.loadErrorAnalysis();
     this.setupFilterListeners();
+    this.checkUrlParams();
+  }
+
+  private checkUrlParams(): void {
+    const preset = this.filterPresetService.parseShareUrl();
+    if (preset.errorType || preset.minErrorCount || preset.userFilter) {
+      this.filterForm.patchValue(preset);
+    }
   }
 
   private setupFilterListeners(): void {
     this.filterForm.valueChanges.subscribe(() => {
       this.applyFilters();
+    });
+  }
+
+  openFilterPresetDialog(): void {
+    const dialogRef = this.dialog.open(FilterPresetDialogComponent, {
+      width: '500px',
+      data: { currentFilters: this.filterForm.value }
+    });
+
+    dialogRef.afterClosed().subscribe((preset: FilterPreset | undefined) => {
+      if (preset) {
+        this.filterForm.patchValue({
+          errorType: preset.errorType,
+          minErrorCount: preset.minErrorCount,
+          userFilter: preset.userFilter
+        });
+      }
     });
   }
 

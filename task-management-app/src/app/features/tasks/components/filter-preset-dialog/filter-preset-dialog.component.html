@@ -1,0 +1,43 @@
+<h2 mat-dialog-title>フィルタープリセット</h2>
+
+<mat-dialog-content>
+  <div class="preset-form">
+    <form [formGroup]="presetForm" (ngSubmit)="savePreset()">
+      <mat-form-field>
+        <mat-label>プリセット名</mat-label>
+        <input matInput formControlName="name" required>
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit" [disabled]="!presetForm.valid">
+        <mat-icon>save</mat-icon>
+        現在の設定を保存
+      </button>
+    </form>
+  </div>
+
+  <mat-list>
+    <h3 mat-subheader>保存済みプリセット</h3>
+    <mat-list-item *ngFor="let preset of presets">
+      <div class="preset-item">
+        <div class="preset-info">
+          <h4>{{preset.name}}</h4>
+          <p>作成日: {{preset.createdAt | date:'yyyy/MM/dd'}}</p>
+        </div>
+        <div class="preset-actions">
+          <button mat-icon-button (click)="applyPreset(preset)" matTooltip="適用">
+            <mat-icon>check</mat-icon>
+          </button>
+          <button mat-icon-button (click)="sharePreset(preset)" matTooltip="共有">
+            <mat-icon>share</mat-icon>
+          </button>
+          <button mat-icon-button (click)="deletePreset(preset.id!)" matTooltip="削除">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </mat-list-item>
+  </mat-list>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>閉じる</button>
+</mat-dialog-actions> 
