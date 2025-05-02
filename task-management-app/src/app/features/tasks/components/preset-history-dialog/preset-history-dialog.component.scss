@@ -1,0 +1,44 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.history-entry {
+  width: 100%;
+  padding: 1rem 0;
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+
+    .version {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .date {
+      color: var(--text-secondary);
+    }
+
+    .user {
+      color: var(--text-secondary);
+    }
+  }
+
+  .changes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}
+
+mat-list {
+  padding: 0;
+}
+
+mat-list-item {
+  border-bottom: 1px solid var(--divider-color);
+} 

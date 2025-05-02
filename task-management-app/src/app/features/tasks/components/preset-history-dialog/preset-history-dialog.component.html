@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>プリセットの変更履歴</h2>
+
+<mat-dialog-content>
+  <div class="loading" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <mat-list *ngIf="!loading">
+    <mat-list-item *ngFor="let entry of history">
+      <div class="history-entry">
+        <div class="header">
+          <span class="version">v{{entry.version}}</span>
+          <span class="date">{{entry.timestamp | date:'yyyy/MM/dd HH:mm'}}</span>
+          <span class="user">{{entry.userId}}</span>
+        </div>
+        <div class="changes">
+          <mat-chip *ngFor="let change of entry.changes" color="primary" selected>
+            {{formatChange(change)}}
+          </mat-chip>
+        </div>
+      </div>
+    </mat-list-item>
+  </mat-list>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>閉じる</button>
+</mat-dialog-actions> 

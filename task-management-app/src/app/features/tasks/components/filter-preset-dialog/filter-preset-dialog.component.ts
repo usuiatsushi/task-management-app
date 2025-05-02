@@ -13,6 +13,8 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, FormsModule } from '@angul
 import { FilterPresetService, FilterPreset } from '../../services/filter-preset.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog } from '@angular/material/dialog';
+import { PresetHistoryDialogComponent } from '../preset-history-dialog/preset-history-dialog.component';
 
 @Component({
   selector: 'app-filter-preset-dialog',
@@ -38,6 +40,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 })
 export class FilterPresetDialogComponent {
   presetForm: FormGroup;
+  filterForm: FormGroup;
   presets: FilterPreset[] = [];
   categories: string[] = [];
   searchTerm = '';
@@ -51,12 +54,19 @@ export class FilterPresetDialogComponent {
     private filterPresetService: FilterPresetService,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    @Inject(MAT_DIALOG_DATA) public data: { currentFilters: any }
+    @Inject(MAT_DIALOG_DATA) public data: { currentFilters: any },
+    private dialog: MatDialog
   ) {
     this.presetForm = this.fb.group({
       name: [''],
       category: [''],
       tags: [[]]
+    });
+
+    this.filterForm = this.fb.group({
+      errorType: [''],
+      minErrorCount: [0],
+      userFilter: ['']
     });
 
     this.filterPresetService.presets$.subscribe(presets => {
@@ -134,8 +144,45 @@ export class FilterPresetDialogComponent {
     }
   }
 
-  applyPreset(preset: FilterPreset): void {
-    this.dialogRef.close(preset);
+  async applyPreset(preset: FilterPreset): Promise<void> {
+    this.filterForm.patchValue({
+      errorType: preset.errorType,
+      minErrorCount: preset.minErrorCount,
+      userFilter: preset.userFilter
+    });
+    await this.filterPresetService.recordUsage(preset.id!);
+    this.dialogRef.close();
+  }
+
+  showHistory(preset: FilterPreset): void {
+    this.dialog.open(PresetHistoryDialogComponent, {
+      width: '600px',
+      data: { presetId: preset.id! }
+    });
+  }
+
+  exportPresets(): void {
+    const json = this.filterPresetService.exportPresets();
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'filter-presets.json';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  async importPresets(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+
+    try {
+      const file = input.files[0];
+      const json = await file.text();
+      await this.filterPresetService.importPresets(json);
+    } catch (error) {
+      console.error('プリセットのインポートに失敗しました:', error);
+    }
   }
 
   sharePreset(preset: FilterPreset): void {

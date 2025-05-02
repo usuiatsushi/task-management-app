@@ -67,6 +67,40 @@
     </form>
   </div>
 
+  <div class="preset-list">
+    <div class="preset-item" *ngFor="let preset of filteredPresets">
+      <div class="preset-info">
+        <h3>{{preset.name}}</h3>
+        <div class="metadata">
+          <span class="category">{{preset.category}}</span>
+          <span class="version">v{{preset.version}}</span>
+          <span class="usage" *ngIf="preset.usageCount > 0">
+            使用回数: {{preset.usageCount}}
+          </span>
+          <span class="last-used" *ngIf="preset.lastUsed">
+            最終使用: {{preset.lastUsed | date:'yyyy/MM/dd'}}
+          </span>
+        </div>
+        <div class="tags">
+          <mat-chip *ngFor="let tag of preset.tags" color="primary" selected>
+            {{tag}}
+          </mat-chip>
+        </div>
+      </div>
+      <div class="actions">
+        <button mat-icon-button (click)="showHistory(preset)" matTooltip="履歴を表示">
+          <mat-icon>history</mat-icon>
+        </button>
+        <button mat-icon-button (click)="applyPreset(preset)" matTooltip="適用">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button (click)="deletePreset(preset.id!)" matTooltip="削除">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="bulk-actions" *ngIf="isBulkMode && selectedPresets.length > 0">
     <span>{{selectedPresets.length}}件選択中</span>
     <button mat-raised-button color="warn" (click)="deleteSelectedPresets()">
@@ -75,42 +109,17 @@
     </button>
   </div>
 
-  <mat-list>
-    <h3 mat-subheader>保存済みプリセット</h3>
-    <mat-list-item *ngFor="let preset of filteredPresets">
-      <div class="preset-item">
-        <mat-checkbox *ngIf="isBulkMode"
-                     [checked]="selectedPresets.includes(preset.id!)"
-                     (change)="togglePresetSelection(preset.id!)">
-        </mat-checkbox>
-
-        <div class="preset-info">
-          <h4>{{preset.name}}</h4>
-          <p>
-            <span class="category">{{preset.category}}</span>
-            <span class="tags">
-              <mat-chip *ngFor="let tag of preset.tags" color="primary" selected>
-                {{tag}}
-              </mat-chip>
-            </span>
-          </p>
-          <p class="date">作成日: {{preset.createdAt | date:'yyyy/MM/dd'}}</p>
-        </div>
-
-        <div class="preset-actions" *ngIf="!isBulkMode">
-          <button mat-icon-button (click)="applyPreset(preset)" matTooltip="適用">
-            <mat-icon>check</mat-icon>
-          </button>
-          <button mat-icon-button (click)="sharePreset(preset)" matTooltip="共有">
-            <mat-icon>share</mat-icon>
-          </button>
-          <button mat-icon-button (click)="deletePreset(preset.id!)" matTooltip="削除">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </div>
-      </div>
-    </mat-list-item>
-  </mat-list>
+  <div class="bulk-actions">
+    <button mat-button (click)="exportPresets()">
+      <mat-icon>file_download</mat-icon>
+      エクスポート
+    </button>
+    <button mat-button>
+      <mat-icon>file_upload</mat-icon>
+      インポート
+      <input type="file" accept=".json" (change)="importPresets($event)" style="display: none">
+    </button>
+  </div>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
