@@ -1,0 +1,137 @@
+<div class="ai-recommendations" *ngIf="suggestions">
+  <!-- タスク情報の表示 -->
+  <div class="task-info" *ngIf="task">
+    <div class="task-header">
+      <mat-icon [class]="'category-icon ' + task.category.toLowerCase()">
+        {{ getCategoryIcon(task.category) }}
+      </mat-icon>
+      <h2>{{ task.title }}</h2>
+    </div>
+    <div class="task-details">
+      <div class="priority">
+        <mat-icon [class]="'priority-icon ' + task.priority.toLowerCase()">
+          {{ getPriorityIcon(task.priority) }}
+        </mat-icon>
+        <span>{{ task.priority }}優先度</span>
+      </div>
+      <div class="due-date" *ngIf="task.dueDate">
+        <mat-icon>event</mat-icon>
+        <span>期限: {{ formatDate(task.dueDate) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- タブナビゲーション -->
+  <mat-tab-group [(selectedIndex)]="activeTab" class="recommendation-tabs">
+    <mat-tab label="優先度調整">
+      <div class="tab-content">
+        <mat-accordion>
+          <mat-expansion-panel [expanded]="expandedSections['priority']">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>priority_high</mat-icon>
+                優先度調整の推奨
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <ul>
+              <li *ngFor="let recommendation of suggestions.priorityAdjustments">
+                {{ recommendation }}
+              </li>
+            </ul>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="リソース配分">
+      <div class="tab-content">
+        <mat-accordion>
+          <mat-expansion-panel [expanded]="expandedSections['resource']">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>group_work</mat-icon>
+                リソース配分の推奨
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <ul>
+              <li *ngFor="let recommendation of suggestions.resourceAllocation">
+                {{ recommendation }}
+              </li>
+            </ul>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="タイムライン">
+      <div class="tab-content">
+        <mat-accordion>
+          <mat-expansion-panel [expanded]="expandedSections['timeline']">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>schedule</mat-icon>
+                タイムライン最適化の推奨
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <ul>
+              <li *ngFor="let recommendation of suggestions.timelineOptimization">
+                {{ recommendation }}
+              </li>
+            </ul>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="タスク管理">
+      <div class="tab-content">
+        <mat-accordion>
+          <mat-expansion-panel [expanded]="expandedSections['management']">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>task</mat-icon>
+                タスク管理の推奨
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <ul>
+              <li *ngFor="let recommendation of suggestions.taskManagement">
+                {{ recommendation }}
+              </li>
+            </ul>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="共同作業">
+      <div class="tab-content">
+        <mat-accordion>
+          <mat-expansion-panel [expanded]="expandedSections['collaboration']">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>people</mat-icon>
+                共同作業の推奨
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+            <ul>
+              <li *ngFor="let recommendation of suggestions.collaboration">
+                {{ recommendation }}
+              </li>
+            </ul>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+
+  <!-- アクションプラン -->
+  <div class="action-plan" *ngIf="suggestions.actionPlan.length > 0">
+    <h3>アクションプラン</h3>
+    <mat-list>
+      <mat-list-item *ngFor="let action of suggestions.actionPlan">
+        <mat-icon matListItemIcon>check_circle</mat-icon>
+        <div matListItemTitle>{{ action }}</div>
+      </mat-list-item>
+    </mat-list>
+  </div>
+</div> 

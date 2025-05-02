@@ -1,0 +1,153 @@
+.ai-recommendations {
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .task-info {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+
+      .category-icon {
+        margin-right: 12px;
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+
+        &.仕事 {
+          color: #2196f3;
+        }
+        &.学習 {
+          color: #4caf50;
+        }
+        &.健康 {
+          color: #f44336;
+        }
+        &.プライベート {
+          color: #9c27b0;
+        }
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 500;
+      }
+    }
+
+    .task-details {
+      display: flex;
+      gap: 16px;
+
+      .priority, .due-date {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+
+          &.priority-icon {
+            &.高 {
+              color: #f44336;
+            }
+            &.中 {
+              color: #ff9800;
+            }
+            &.低 {
+              color: #4caf50;
+            }
+          }
+        }
+
+        span {
+          font-size: 14px;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  .recommendation-tabs {
+    margin-bottom: 24px;
+
+    ::ng-deep .mat-tab-label {
+      min-width: 120px;
+      padding: 0 16px;
+    }
+
+    .tab-content {
+      padding: 16px;
+
+      mat-accordion {
+        ::ng-deep .mat-expansion-panel {
+          margin-bottom: 8px;
+          border-radius: 4px;
+        }
+
+        ::ng-deep .mat-expansion-panel-header {
+          padding: 0 16px;
+          height: 48px;
+
+          mat-panel-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            mat-icon {
+              margin-right: 8px;
+              color: #666;
+            }
+          }
+        }
+
+        ul {
+          margin: 0;
+          padding-left: 24px;
+
+          li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+            color: #333;
+          }
+        }
+      }
+    }
+  }
+
+  .action-plan {
+    h3 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    mat-list {
+      padding: 0;
+
+      mat-list-item {
+        height: auto;
+        padding: 8px 0;
+
+        mat-icon {
+          color: #4caf50;
+        }
+
+        div[matListItemTitle] {
+          white-space: normal;
+          line-height: 1.5;
+        }
+      }
+    }
+  }
+} 
