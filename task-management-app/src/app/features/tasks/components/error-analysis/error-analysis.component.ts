@@ -3,9 +3,14 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration, ChartData, ChartType } from 'chart.js';
+import { ChartConfiguration, ChartData, ChartType, ChartEvent, ActiveElement } from 'chart.js';
 import { ErrorAnalysisService, ErrorAnalysis } from '../../services/error-analysis.service';
+import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-details-dialog.component';
 
 @Component({
   selector: 'app-error-analysis',
@@ -17,6 +22,10 @@ import { ErrorAnalysisService, ErrorAnalysis } from '../../services/error-analys
     MatCardModule,
     MatTabsModule,
     MatProgressSpinnerModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatSnackBarModule,
     BaseChartDirective
   ]
 })
@@ -138,7 +147,11 @@ export class ErrorAnalysisComponent implements OnInit {
     }
   };
 
-  constructor(private errorAnalysisService: ErrorAnalysisService) {}
+  constructor(
+    private errorAnalysisService: ErrorAnalysisService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.loadErrorAnalysis();
@@ -179,5 +192,81 @@ export class ErrorAnalysisComponent implements OnInit {
 
     // グラフを更新
     this.chart?.update();
+  }
+
+  // グラフのクリックイベントハンドラ
+  onChartClick(event: ChartEvent, elements: ActiveElement[], chartType: string): void {
+    if (elements.length === 0) return;
+
+    const element = elements[0];
+    const index = element.index;
+
+    switch (chartType) {
+      case 'errorType':
+        const errorType = this.errorTypeChartData.labels?.[index];
+        if (errorType) {
+          this.showErrorDetails(errorType as string);
+        }
+        break;
+      case 'hourly':
+        const hour = this.hourlyErrorChartData.labels?.[index];
+        if (hour) {
+          this.snackBar.open(`時間帯 ${hour} のエラー数: ${this.errorAnalysis?.hourlyErrors[index]}件`, '閉じる', {
+            duration: 3000
+          });
+        }
+        break;
+      case 'userImpact':
+        const userId = this.userImpactChartData.labels?.[index];
+        if (userId) {
+          this.snackBar.open(`ユーザー ${userId} のエラー数: ${this.errorAnalysis?.userImpact[index].errorCount}件`, '閉じる', {
+            duration: 3000
+          });
+        }
+        break;
+    }
+  }
+
+  // エラー詳細を表示
+  private showErrorDetails(errorCode: string): void {
+    this.dialog.open(ErrorDetailsDialogComponent, {
+      width: '800px',
+      data: { errorCode }
+    });
+  }
+
+  // 分析データをCSVとしてエクスポート
+  exportToCSV(): void {
+    if (!this.errorAnalysis) return;
+
+    const csvContent = this.generateCSVContent();
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `error-analysis-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  private generateCSVContent(): string {
+    if (!this.errorAnalysis) return '';
+
+    const headers = ['項目', '値'];
+    const rows = [
+      ['総エラー数', this.errorAnalysis.totalErrors.toString()],
+      ...Object.entries(this.errorAnalysis.errorTypes).map(([type, count]) => [type, count.toString()]),
+      ...this.errorAnalysis.userImpact.map(impact => [`ユーザー ${impact.userId}`, impact.errorCount.toString()]),
+      ...this.errorAnalysis.hourlyErrors.map((count, hour) => [`時間帯 ${hour}:00`, count.toString()])
+    ];
+
+    return [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n');
   }
 } 
