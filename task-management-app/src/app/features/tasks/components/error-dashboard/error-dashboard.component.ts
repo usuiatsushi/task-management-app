@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ErrorAnalysisService, ErrorAnalysis } from '../../services/error-analysis.service';
 import { ErrorLog } from '../../services/error-logging.service';
+import { ErrorReportService } from '../../services/error-report.service';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -32,7 +33,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 })
 export class ErrorDashboardComponent implements OnInit {
   errorAnalysis: ErrorAnalysis | null = null;
-  loading = true;
+  loading = false;
   error: string | null = null;
   Object = Object;
 
@@ -42,6 +43,7 @@ export class ErrorDashboardComponent implements OnInit {
 
   constructor(
     private errorAnalysisService: ErrorAnalysisService,
+    private errorReportService: ErrorReportService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -64,6 +66,47 @@ export class ErrorDashboardComponent implements OnInit {
     } finally {
       this.loading = false;
     }
+  }
+
+  async generateReport(): Promise<void> {
+    if (!this.errorAnalysis) return;
+
+    try {
+      this.loading = true;
+      const report = this.errorReportService.generateReport(
+        this.errorAnalysis.recentErrors,
+        this.errorAnalysis
+      );
+
+      // CSV形式でエクスポート
+      const csvContent = this.errorReportService.exportToCSV(report);
+      this.downloadCSV(csvContent, `error_report_${new Date().toISOString().split('T')[0]}.csv`);
+
+      this.snackBar.open('エラーレポートを生成しました', '閉じる', {
+        duration: 3000
+      });
+    } catch (error) {
+      this.snackBar.open('レポートの生成に失敗しました', '閉じる', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private downloadCSV(content: string, filename: string): void {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   async showErrorDetails(errorCode: string): Promise<void> {

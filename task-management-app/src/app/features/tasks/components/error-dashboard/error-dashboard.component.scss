@@ -1,1 +1,66 @@
- 
+.error-dashboard {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f44336;
+    padding: 16px;
+    background-color: #ffebee;
+    border-radius: 4px;
+  }
+
+  .dashboard-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .summary-card {
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+
+      .summary-label {
+        font-weight: 500;
+      }
+
+      .summary-value {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+    }
+  }
+
+  .common-errors-card,
+  .recent-errors-card,
+  .user-impact-card {
+    mat-table {
+      width: 100%;
+    }
+
+    .error-rate {
+      color: #666;
+      font-size: 0.9em;
+      margin-left: 8px;
+    }
+  }
+} 

@@ -9,6 +9,10 @@
         <mat-icon>refresh</mat-icon>
         更新
       </button>
+      <button mat-button (click)="generateReport()" [disabled]="loading">
+        <mat-icon>description</mat-icon>
+        レポート生成
+      </button>
     </mat-card-actions>
   </mat-card>
 
