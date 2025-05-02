@@ -3,6 +3,8 @@ import { AiAssistantService } from './ai-assistant.service';
 import { Task } from '../models/task.model';
 import { Timestamp, Firestore, QuerySnapshot, QueryDocumentSnapshot, FirestoreDataConverter, DocumentData, QueryDocumentSnapshot as FirestoreQueryDocumentSnapshot } from '@angular/fire/firestore';
 import * as firestore from '@angular/fire/firestore';
+import { AngularFireModule } from '@angular/fire/compat';
+import { environment } from '../../../../environments/environment';
 
 describe('AiAssistantService', () => {
   let service: AiAssistantService;
@@ -89,24 +91,17 @@ describe('AiAssistantService', () => {
       docChanges: () => []
     } as unknown as QuerySnapshot<Task>;
 
-    mockFirestore = {
-      collection: jasmine.createSpy('collection').and.returnValue(mockCollection)
+    const mockFirestore = {
+      collection: jasmine.createSpy('collection').and.returnValue(mockCollection),
+      query: jasmine.createSpy('query').and.returnValue(mockQuery),
+      where: jasmine.createSpy('where').and.returnValue(mockQuery),
+      getDocs: jasmine.createSpy('getDocs').and.returnValue(Promise.resolve(mockQuerySnapshot))
     };
 
-    // Firestoreの関数をモック
-    spyOn(firestore, 'collection').and.callFake(() => {
-      const col = mockCollection;
-      col.withConverter.and.returnValue({
-        ...col,
-        converter: taskConverter
-      });
-      return col;
-    });
-    spyOn(firestore, 'query').and.callFake(() => mockQuery);
-    spyOn(firestore, 'where').and.callFake(() => mockQuery);
-    spyOn(firestore, 'getDocs').and.callFake(() => Promise.resolve(mockQuerySnapshot));
-
     await TestBed.configureTestingModule({
+      imports: [
+        AngularFireModule.initializeApp(environment.firebase)
+      ],
       providers: [
         AiAssistantService,
         { provide: Firestore, useValue: mockFirestore }

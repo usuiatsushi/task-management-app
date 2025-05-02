@@ -108,8 +108,17 @@ export class AiAssistantService {
   }
 
   calculatePriority(task: Task): '低' | '中' | '高' {
-    // 優先度計算のロジック
-    // TODO: より高度な分析を実装
+    const title = task.title.toLowerCase();
+    const description = task.description?.toLowerCase() || '';
+
+    for (const [priority, keywords] of Object.entries(this.priorityKeywords)) {
+      if (keywords.some(keyword => 
+        title.includes(keyword) || description.includes(keyword)
+      )) {
+        return priority as '低' | '中' | '高';
+      }
+    }
+
     return '中';
   }
 
