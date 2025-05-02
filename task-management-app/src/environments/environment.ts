@@ -17,5 +17,7 @@ export const environment = {
   security: {
     crossOriginOpenerPolicy: 'same-origin-allow-popups',
     crossOriginEmbedderPolicy: 'require-corp'
-  }
+  },
+  aiApiEndpoint: 'https://api.your-ai-service.com/v1',
+  aiApiKey: 'your-api-key-here'
 }; 

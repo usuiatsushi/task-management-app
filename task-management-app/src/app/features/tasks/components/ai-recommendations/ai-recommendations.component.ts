@@ -3,6 +3,7 @@ import { AISuggestion } from '../../models/ai-assistant.model';
 import { Task } from '../../models/task.model';
 import { Timestamp } from '@angular/fire/firestore';
 import { DatePipe } from '@angular/common';
+import { AiAssistantService } from '../../../../core/services/ai-assistant.service';
 
 @Component({
   selector: 'app-ai-recommendations',
@@ -13,7 +14,9 @@ import { DatePipe } from '@angular/common';
 })
 export class AiRecommendationsComponent implements OnInit {
   @Input() task: Task | null = null;
-  @Input() suggestions: AISuggestion | null = null;
+  suggestions: AISuggestion | null = null;
+  isLoading = false;
+  error: string | null = null;
 
   private _activeTab = 0;
   get activeTab(): number {
@@ -28,12 +31,44 @@ export class AiRecommendationsComponent implements OnInit {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private aiAssistant: AiAssistantService
   ) {}
 
   ngOnInit(): void {
-    // 初期表示時に優先度調整タブを展開
-    this.expandedSections['priority'] = true;
+    if (this.task) {
+      this.loadSuggestions();
+    }
+  }
+
+  private async loadSuggestions(): Promise<void> {
+    if (!this.task?.id) return;
+
+    this.isLoading = true;
+    this.error = null;
+    this.cdr.markForCheck();
+
+    try {
+      // 既存の推奨事項を取得
+      this.suggestions = await this.aiAssistant.getSuggestions(this.task.id);
+      
+      // 推奨事項が古い場合や存在しない場合は新しく分析
+      if (!this.suggestions || this.isSuggestionOutdated(this.suggestions)) {
+        this.suggestions = await this.aiAssistant.analyzeTask(this.task);
+      }
+    } catch (error) {
+      console.error('推奨事項の取得に失敗しました:', error);
+      this.error = '推奨事項の取得に失敗しました。後でもう一度お試しください。';
+    } finally {
+      this.isLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private isSuggestionOutdated(suggestion: AISuggestion): boolean {
+    const oneDay = 24 * 60 * 60 * 1000;
+    const lastUpdated = new Date(suggestion.lastUpdated);
+    return Date.now() - lastUpdated.getTime() > oneDay;
   }
 
   toggleSection(section: string): void {
