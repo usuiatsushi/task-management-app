@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp } from '@angular/fire/firestore';
 
 @Pipe({
   name: 'timestamp',
@@ -7,6 +7,7 @@ import { Timestamp } from 'firebase/firestore';
 })
 export class TimestampPipe implements PipeTransform {
   transform(value: Timestamp | null): Date | null {
-    return value?.toDate() || null;
+    if (!value) return null;
+    return value.toDate();
   }
 } 

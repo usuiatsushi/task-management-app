@@ -16,6 +16,7 @@ import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { interval } from 'rxjs';
 import { CommentSectionComponent } from '../comment-section/comment-section.component';
+import { TimestampPipe } from '../../pipes/timestamp.pipe';
 
 @Component({
   selector: 'app-task-detail',
@@ -31,7 +32,8 @@ import { CommentSectionComponent } from '../comment-section/comment-section.comp
     MatSliderModule,
     FormsModule,
     ReactiveFormsModule,
-    CommentSectionComponent
+    CommentSectionComponent,
+    TimestampPipe
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
@@ -82,11 +84,11 @@ export class TaskDetailComponent implements OnInit {
     }
   }
 
-  private convertToDate(date: any): Date {
-    if (date instanceof Date) return date;
-    if (date?.toDate) return date.toDate();
-    if (date?.seconds) return new Date(date.seconds * 1000);
-    return new Date();
+  private convertToDate(date: any): Timestamp {
+    if (date instanceof Timestamp) return date;
+    if (date?.toDate) return Timestamp.fromDate(date.toDate());
+    if (date?.seconds) return Timestamp.fromMillis(date.seconds * 1000);
+    return Timestamp.fromDate(new Date());
   }
 
   async deleteTask() {
