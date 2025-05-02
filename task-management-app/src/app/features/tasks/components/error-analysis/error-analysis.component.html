@@ -1,1 +1,17 @@
- 
+<!-- エラー分析チャート -->
+<div class="charts-container" *ngIf="!loading && !error">
+  <div class="chart">
+    <canvas baseChart
+      [data]="errorTrendChartData"
+      [options]="errorTrendChartOptions"
+      type="line">
+    </canvas>
+  </div>
+  <div class="chart">
+    <canvas baseChart
+      [data]="errorTypeChartData"
+      [options]="errorTypeChartOptions"
+      type="pie">
+    </canvas>
+  </div>
+</div> 
