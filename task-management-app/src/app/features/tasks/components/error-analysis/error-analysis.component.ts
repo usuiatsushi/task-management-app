@@ -86,6 +86,58 @@ export class ErrorAnalysisComponent implements OnInit {
     }
   };
 
+  // 時間帯別エラー発生グラフ
+  hourlyErrorChartData: ChartConfiguration['data'] = {
+    datasets: [
+      {
+        data: [],
+        label: '時間帯別エラー数',
+        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }
+    ],
+    labels: Array.from({length: 24}, (_, i) => `${i}:00`)
+  };
+
+  hourlyErrorChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  };
+
+  // ユーザー影響度グラフ
+  userImpactChartData: ChartConfiguration['data'] = {
+    datasets: [
+      {
+        data: [],
+        label: 'ユーザー別エラー数',
+        backgroundColor: 'rgba(255, 159, 64, 0.5)',
+        borderColor: 'rgba(255, 159, 64, 1)',
+        borderWidth: 1
+      }
+    ],
+    labels: []
+  };
+
+  userImpactChartOptions: ChartConfiguration['options'] = {
+    responsive: true,
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  };
+
   constructor(private errorAnalysisService: ErrorAnalysisService) {}
 
   async ngOnInit(): Promise<void> {
@@ -117,6 +169,14 @@ export class ErrorAnalysisComponent implements OnInit {
     const errorTypes = Object.entries(this.errorAnalysis.errorTypes);
     this.errorTypeChartData.labels = errorTypes.map(([type]) => type);
     this.errorTypeChartData.datasets[0].data = errorTypes.map(([, count]) => count);
+
+    // 時間帯別エラー発生データを更新
+    this.hourlyErrorChartData.datasets[0].data = this.errorAnalysis.hourlyErrors;
+
+    // ユーザー影響度データを更新
+    const userImpacts = Object.entries(this.errorAnalysis.userImpact);
+    this.userImpactChartData.labels = userImpacts.map(([userId]) => userId);
+    this.userImpactChartData.datasets[0].data = userImpacts.map(([, count]) => count);
 
     // グラフを更新
     this.chart?.update();

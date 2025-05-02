@@ -1,6 +1,7 @@
 <!-- エラー分析チャート -->
 <div class="charts-container" *ngIf="!loading && !error">
   <div class="chart">
+    <h3>エラー発生率の推移</h3>
     <canvas baseChart
       [data]="errorTrendChartData"
       [options]="errorTrendChartOptions"
@@ -8,10 +9,27 @@
     </canvas>
   </div>
   <div class="chart">
+    <h3>エラータイプ分布</h3>
     <canvas baseChart
       [data]="errorTypeChartData"
       [options]="errorTypeChartOptions"
       type="pie">
+    </canvas>
+  </div>
+  <div class="chart">
+    <h3>時間帯別エラー発生数</h3>
+    <canvas baseChart
+      [data]="hourlyErrorChartData"
+      [options]="hourlyErrorChartOptions"
+      type="bar">
+    </canvas>
+  </div>
+  <div class="chart">
+    <h3>ユーザー別エラー発生数</h3>
+    <canvas baseChart
+      [data]="userImpactChartData"
+      [options]="userImpactChartOptions"
+      type="bar">
     </canvas>
   </div>
 </div> 

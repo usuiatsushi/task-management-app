@@ -82,4 +82,29 @@
       padding: 16px;
     }
   }
+}
+
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.chart {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h3 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.2em;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: 300px !important;
+  }
 } 
