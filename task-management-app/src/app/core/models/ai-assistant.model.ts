@@ -1,12 +1,19 @@
 export interface AISuggestion {
+  // 基本情報
+  category: string;
+  priority: '高' | '中' | '低';
+  suggestedDueDate: Date;
+  relatedTasks: string[];
+  confidence: number;
+  lastUpdated: Date;
+
+  // 推奨事項
   priorityAdjustments: string[];
   resourceAllocation: string[];
   timelineOptimization: string[];
   taskManagement: string[];
   collaboration: string[];
   actionPlan: string[];
-  confidence: number;
-  lastUpdated: Date;
 }
 
 export interface UserPreferences {

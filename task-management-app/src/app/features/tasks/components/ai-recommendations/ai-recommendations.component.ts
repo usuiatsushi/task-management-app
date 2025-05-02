@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { AISuggestion } from '../../models/ai-assistant.model';
-import { Task } from '../../models/task.model';
+import { AISuggestion } from '../../../../core/models/ai-assistant.model';
+import { Task } from '../../../../core/models/task.model';
 import { Timestamp } from '@angular/fire/firestore';
 import { DatePipe } from '@angular/common';
 import { AiAssistantService } from '../../../../core/services/ai-assistant.service';
