@@ -26,19 +26,8 @@
   </div>
 
   <div class="dashboard-content" *ngIf="!loading && !error && errorAnalysis">
-    <!-- 概要カード -->
-    <mat-card class="summary-card">
-      <mat-card-content>
-        <div class="summary-item">
-          <div class="summary-label">総エラー数</div>
-          <div class="summary-value">{{ errorAnalysis.totalErrors }}</div>
-        </div>
-        <div class="summary-item">
-          <div class="summary-label">エラータイプ数</div>
-          <div class="summary-value">{{ Object.keys(errorAnalysis.errorTypes).length }}</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+    <!-- エラー分析コンポーネント -->
+    <app-error-analysis></app-error-analysis>
 
     <!-- 最も頻繁なエラー -->
     <mat-card class="common-errors-card">

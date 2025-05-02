@@ -15,6 +15,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ErrorFeedbackComponent } from '../error-feedback/error-feedback.component';
 import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-details-dialog.component';
+import { ErrorAnalysisComponent } from '../error-analysis/error-analysis.component';
 
 @Component({
   selector: 'app-error-dashboard',
@@ -32,7 +33,8 @@ import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-detai
     MatButtonModule,
     MatDialogModule,
     MatSnackBarModule,
-    MatTooltipModule
+    MatTooltipModule,
+    ErrorAnalysisComponent
   ]
 })
 export class ErrorDashboardComponent implements OnInit {
