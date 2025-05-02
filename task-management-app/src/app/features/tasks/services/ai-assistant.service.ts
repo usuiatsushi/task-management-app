@@ -197,7 +197,7 @@ export class AiAssistantService {
             .filter(t => t.id !== task.id)
             .map(t => t.title)
         ],
-        actionPlan: this.generateActionPlan(category)
+        actionPlan: this.generateActionPlan(category, task)
       };
 
       this.setCache(cacheKey, result);
@@ -209,9 +209,13 @@ export class AiAssistantService {
   }
 
   // アクションプランの生成
-  private generateActionPlan(category: string): string[] {
+  private generateActionPlan(category: string, task: Task): string[] {
     const actionPlan: string[] = [];
+    const now = new Date();
+    const dueDate = this.getTaskDueDate(task);
+    const daysUntilDue = dueDate ? Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
     
+    // 基本アクションプラン
     switch (category) {
       case '仕事':
         actionPlan.push('1. 必要な資料・情報の収集');
@@ -242,6 +246,47 @@ export class AiAssistantService {
         actionPlan.push('2. 必要なリソースの確認');
         actionPlan.push('3. スケジュールの作成');
         actionPlan.push('4. 実行計画の立案');
+    }
+
+    // 期限に基づく追加アクション
+    if (daysUntilDue > 0) {
+      if (daysUntilDue <= 3) {
+        actionPlan.push('5. 緊急対応の準備');
+        actionPlan.push('6. 関係者への緊急連絡');
+      } else if (daysUntilDue <= 7) {
+        actionPlan.push('5. 中間進捗の確認');
+        actionPlan.push('6. 必要に応じた計画の調整');
+      } else {
+        actionPlan.push('5. 定期的な進捗確認のスケジュール設定');
+        actionPlan.push('6. リスク要因の洗い出しと対策');
+      }
+    }
+
+    // 優先度に基づく追加アクション
+    if (task.priority === '高') {
+        actionPlan.push('7. 優先度の高いタスクとして、他のタスクとの調整');
+        actionPlan.push('8. 必要に応じたリソースの確保');
+    } else if (task.priority === '中') {
+        actionPlan.push('7. 他のタスクとのバランス調整');
+        actionPlan.push('8. リソース配分の最適化');
+    } else {
+        actionPlan.push('7. 他のタスクの進捗を考慮した実行計画の調整');
+        actionPlan.push('8. 必要に応じた優先度の見直し');
+    }
+
+    // タスクの説明から具体的なアクションを抽出
+    const description = task.description?.toLowerCase() || '';
+    if (description.includes('会議')) {
+        actionPlan.push('9. 会議の議題と目的の明確化');
+        actionPlan.push('10. 必要な資料の準備と配布');
+    }
+    if (description.includes('報告')) {
+        actionPlan.push('9. 報告内容の構成の決定');
+        actionPlan.push('10. 必要なデータの収集と分析');
+    }
+    if (description.includes('開発')) {
+        actionPlan.push('9. 開発環境の準備');
+        actionPlan.push('10. テスト計画の作成');
     }
 
     return actionPlan;
@@ -663,8 +708,16 @@ export class AiAssistantService {
   }
 
   private getTaskDueDate(task: Task): Date | null {
-    if (!task.dueDate) return null;
-    return this.convertTimestampToDate(task.dueDate);
+    if (task.dueDate) {
+      if (task.dueDate instanceof Date) {
+        return task.dueDate;
+      } else if (typeof task.dueDate === 'string') {
+        return new Date(task.dueDate);
+      } else if (task.dueDate.toDate) {
+        return task.dueDate.toDate();
+      }
+    }
+    return null;
   }
 
   private calculateTaskPriority(task: Task): '低' | '中' | '高' {
