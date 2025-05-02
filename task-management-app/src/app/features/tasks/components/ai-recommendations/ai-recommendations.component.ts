@@ -2,36 +2,34 @@ import { Component, Input, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } 
 import { AISuggestion } from '../../models/ai-assistant.model';
 import { Task } from '../../models/task.model';
 import { Timestamp } from '@angular/fire/firestore';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-ai-recommendations',
   templateUrl: './ai-recommendations.component.html',
   styleUrls: ['./ai-recommendations.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [DatePipe]
 })
 export class AiRecommendationsComponent implements OnInit {
-  @Input() set task(value: Task | null) {
-    this._task = value;
+  @Input() task: Task | null = null;
+  @Input() suggestions: AISuggestion | null = null;
+
+  private _activeTab = 0;
+  get activeTab(): number {
+    return this._activeTab;
+  }
+  set activeTab(value: number) {
+    this._activeTab = value;
     this.cdr.markForCheck();
   }
-  get task(): Task | null {
-    return this._task;
-  }
-  private _task: Task | null = null;
 
-  @Input() set suggestions(value: AISuggestion | null) {
-    this._suggestions = value;
-    this.cdr.markForCheck();
-  }
-  get suggestions(): AISuggestion | null {
-    return this._suggestions;
-  }
-  private _suggestions: AISuggestion | null = null;
-
-  activeTab: 'priority' | 'resource' | 'timeline' | 'management' | 'collaboration' = 'priority';
   expandedSections: { [key: string]: boolean } = {};
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private datePipe: DatePipe
+  ) {}
 
   ngOnInit(): void {
     // 初期表示時に優先度調整タブを展開
@@ -41,6 +39,52 @@ export class AiRecommendationsComponent implements OnInit {
   toggleSection(section: string): void {
     this.expandedSections[section] = !this.expandedSections[section];
     this.cdr.markForCheck();
+  }
+
+  onTabChange(event: any): void {
+    this.activeTab = event.index;
+  }
+
+  // キーボードナビゲーション用のメソッド
+  onKeyDown(event: KeyboardEvent, element: HTMLElement): void {
+    switch (event.key) {
+      case 'ArrowRight':
+        this.navigateNextTab();
+        break;
+      case 'ArrowLeft':
+        this.navigatePreviousTab();
+        break;
+      case 'Home':
+        this.navigateToFirstTab();
+        break;
+      case 'End':
+        this.navigateToLastTab();
+        break;
+      case 'Enter':
+      case ' ':
+        element.click();
+        break;
+    }
+  }
+
+  private navigateNextTab(): void {
+    if (this.activeTab < 4) {
+      this.activeTab++;
+    }
+  }
+
+  private navigatePreviousTab(): void {
+    if (this.activeTab > 0) {
+      this.activeTab--;
+    }
+  }
+
+  private navigateToFirstTab(): void {
+    this.activeTab = 0;
+  }
+
+  private navigateToLastTab(): void {
+    this.activeTab = 4;
   }
 
   // メモ化されたヘルパーメソッド

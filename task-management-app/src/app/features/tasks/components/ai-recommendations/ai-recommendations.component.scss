@@ -1,133 +1,144 @@
 .ai-recommendations {
-  padding: 20px;
+  padding: 1.5rem;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
 
+  // フォーカス時のスタイル
+  *:focus {
+    outline: 2px solid #2196f3;
+    outline-offset: 2px;
+  }
+
+  // タスク情報
   .task-info {
-    margin-bottom: 24px;
-    padding: 16px;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
     background-color: #f5f5f5;
-    border-radius: 4px;
+    border-radius: 6px;
 
     .task-header {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 0.5rem;
 
-      .category-icon {
-        margin-right: 12px;
+      mat-icon {
+        margin-right: 0.5rem;
         font-size: 24px;
         width: 24px;
         height: 24px;
-
-        &.仕事 {
-          color: #2196f3;
-        }
-        &.学習 {
-          color: #4caf50;
-        }
-        &.健康 {
-          color: #f44336;
-        }
-        &.プライベート {
-          color: #9c27b0;
-        }
       }
 
-      h2 {
+      .task-title {
         margin: 0;
-        font-size: 20px;
+        font-size: 1.25rem;
         font-weight: 500;
+        color: #333;
       }
     }
 
     .task-details {
       display: flex;
-      gap: 16px;
+      gap: 1rem;
 
       .priority, .due-date {
         display: flex;
         align-items: center;
-        gap: 8px;
+        padding: 0.5rem;
+        background-color: #fff;
+        border-radius: 4px;
+        min-width: 120px;
 
         mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-
-          &.priority-icon {
-            &.高 {
-              color: #f44336;
-            }
-            &.中 {
-              color: #ff9800;
-            }
-            &.低 {
-              color: #4caf50;
-            }
-          }
+          margin-right: 0.5rem;
+          font-size: 20px;
+          width: 20px;
+          height: 20px;
         }
 
         span {
-          font-size: 14px;
+          font-size: 0.875rem;
           color: #666;
         }
       }
     }
   }
 
-  .recommendation-tabs {
-    margin-bottom: 24px;
+  // タブグループ
+  .recommendations-tabs {
+    margin-bottom: 1.5rem;
 
-    ::ng-deep .mat-tab-label {
-      min-width: 120px;
-      padding: 0 16px;
-    }
+    ::ng-deep {
+      .mat-tab-label {
+        height: 48px;
+        padding: 0 24px;
+        min-width: 120px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #666;
 
-    .tab-content {
-      padding: 16px;
-
-      mat-accordion {
-        ::ng-deep .mat-expansion-panel {
-          margin-bottom: 8px;
-          border-radius: 4px;
+        &:focus {
+          background-color: rgba(33, 150, 243, 0.1);
         }
 
-        ::ng-deep .mat-expansion-panel-header {
-          padding: 0 16px;
-          height: 48px;
-
-          mat-panel-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-
-            mat-icon {
-              margin-right: 8px;
-              color: #666;
-            }
-          }
+        &.mat-tab-label-active {
+          color: #2196f3;
         }
+      }
 
-        ul {
-          margin: 0;
-          padding-left: 24px;
-
-          li {
-            margin-bottom: 8px;
-            line-height: 1.5;
-            color: #333;
-          }
-        }
+      .mat-tab-body-content {
+        padding: 1rem 0;
       }
     }
   }
 
+  // 拡張パネル
+  mat-expansion-panel {
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+
+    ::ng-deep {
+      .mat-expansion-panel-header {
+        padding: 0.75rem 1rem;
+        height: auto;
+        min-height: 48px;
+
+        &:hover {
+          background-color: rgba(33, 150, 243, 0.04);
+        }
+
+        .mat-expansion-panel-header-title {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #333;
+
+          mat-icon {
+            margin-right: 0.5rem;
+            color: #666;
+          }
+        }
+      }
+
+      .mat-expansion-panel-body {
+        padding: 1rem;
+        background-color: #f9f9f9;
+        border-radius: 0 0 4px 4px;
+      }
+    }
+  }
+
+  // アクションプラン
   .action-plan {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+
     h3 {
-      margin: 0 0 16px;
-      font-size: 18px;
+      margin: 0 0 1rem 0;
+      font-size: 1.125rem;
       font-weight: 500;
       color: #333;
     }
@@ -137,15 +148,105 @@
 
       mat-list-item {
         height: auto;
-        padding: 8px 0;
+        padding: 0.5rem 0;
 
-        mat-icon {
-          color: #4caf50;
+        ::ng-deep {
+          .mat-list-item-content {
+            padding: 0;
+          }
+
+          .mat-list-icon {
+            color: #2196f3;
+            margin-right: 0.5rem;
+          }
         }
 
-        div[matListItemTitle] {
-          white-space: normal;
-          line-height: 1.5;
+        span {
+          font-size: 0.875rem;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  // カテゴリアイコンの色
+  .category-icon {
+    &.仕事 {
+      color: #2196f3;
+    }
+    &.学習 {
+      color: #4caf50;
+    }
+    &.健康 {
+      color: #f44336;
+    }
+    &.プライベート {
+      color: #9c27b0;
+    }
+  }
+
+  // 優先度アイコンの色
+  .priority-icon {
+    &.高 {
+      color: #f44336;
+    }
+    &.中 {
+      color: #ff9800;
+    }
+    &.低 {
+      color: #4caf50;
+    }
+  }
+
+  // ダークモード対応
+  @media (prefers-color-scheme: dark) {
+    background-color: #1e1e1e;
+    color: #fff;
+
+    .task-info {
+      background-color: #2d2d2d;
+
+      .task-title {
+        color: #fff;
+      }
+
+      .task-details {
+        .priority, .due-date {
+          background-color: #333;
+          color: #fff;
+
+          span {
+            color: #ccc;
+          }
+        }
+      }
+    }
+
+    mat-expansion-panel {
+      background-color: #2d2d2d;
+      color: #fff;
+
+      ::ng-deep {
+        .mat-expansion-panel-header {
+          color: #fff;
+        }
+
+        .mat-expansion-panel-body {
+          background-color: #333;
+        }
+      }
+    }
+
+    .action-plan {
+      background-color: #2d2d2d;
+
+      h3 {
+        color: #fff;
+      }
+
+      mat-list-item {
+        span {
+          color: #ccc;
         }
       }
     }
