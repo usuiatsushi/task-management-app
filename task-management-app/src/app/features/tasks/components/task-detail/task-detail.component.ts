@@ -188,14 +188,7 @@ export class TaskDetailComponent implements OnInit {
 
   checkDeadlineReminder() {
     if (!this.task?.dueDate) return;
-    let due: Date;
-    if (this.task.dueDate instanceof Date) {
-      due = this.task.dueDate;
-    } else if ((this.task.dueDate as any).toDate) {
-      due = (this.task.dueDate as any).toDate();
-    } else {
-      due = new Date(this.task.dueDate);
-    }
+    const due = this.task.dueDate.toDate();
     const now = new Date();
     // 日付部分だけで差分日数を計算
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());

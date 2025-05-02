@@ -5,6 +5,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterModule } from '@angular/router';
+import { TimestampPipe } from '../../pipes/timestamp.pipe';
 import { TaskRelationshipService, TaskRelationship } from '../../services/task-relationship.service';
 import { TaskService } from '../../services/task.service';
 import { Task } from '../../models/task.model';
@@ -20,7 +21,8 @@ import { Task } from '../../models/task.model';
     MatIconModule,
     MatProgressSpinnerModule,
     MatButtonModule,
-    RouterModule
+    RouterModule,
+    TimestampPipe
   ]
 })
 export class TaskRelationshipComponent implements OnInit {

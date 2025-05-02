@@ -88,7 +88,7 @@ export class TaskRelationshipService {
 
     // 期限の近さ
     if (task1.dueDate && task2.dueDate) {
-      const dateDiff = Math.abs(task1.dueDate.getTime() - task2.dueDate.getTime());
+      const dateDiff = Math.abs(task1.dueDate.toDate().getTime() - task2.dueDate.toDate().getTime());
       const daysDiff = dateDiff / (1000 * 60 * 60 * 24);
       if (daysDiff <= 7) {
         score += (1 - daysDiff / 7) * 0.2;

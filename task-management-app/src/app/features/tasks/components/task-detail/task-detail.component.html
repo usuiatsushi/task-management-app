@@ -13,7 +13,7 @@
     <div class="task-meta">
       <span class="status" [ngClass]="task.status">{{ task.status }}</span>
       <span class="priority" [ngClass]="task.priority">{{ task.priority }}</span>
-      <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+      <span class="due-date">期限: {{ task.dueDate | timestamp | date:'yyyy/MM/dd' }}</span>
     </div>
 
     <div class="progress-section">
@@ -65,12 +65,12 @@
 
       <div class="task-section">
         <h2>作成日時</h2>
-        <p>{{ task.createdAt | date:'yyyy/MM/dd HH:mm' }}</p>
+        <p>{{ task.createdAt | timestamp | date:'yyyy/MM/dd HH:mm' }}</p>
       </div>
 
       <div class="task-section">
         <h2>更新日時</h2>
-        <p>{{ task.updatedAt | date:'yyyy/MM/dd HH:mm' }}</p>
+        <p>{{ task.updatedAt | timestamp | date:'yyyy/MM/dd HH:mm' }}</p>
       </div>
 
       <div class="subtasks-section">

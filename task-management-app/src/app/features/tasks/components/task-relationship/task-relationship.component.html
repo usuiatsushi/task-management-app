@@ -21,7 +21,7 @@
           <p class="category">{{relatedTasks[relationship.targetTaskId].category}}</p>
           <p class="status">{{relatedTasks[relationship.targetTaskId].status}}</p>
           <p class="due-date" *ngIf="relatedTasks[relationship.targetTaskId].dueDate">
-            期限: {{relatedTasks[relationship.targetTaskId].dueDate | date:'yyyy/MM/dd'}}
+            期限: {{relatedTasks[relationship.targetTaskId].dueDate | timestamp | date:'yyyy/MM/dd'}}
           </p>
         </div>
       </mat-card-content>
