@@ -1,58 +1,110 @@
 import { TestBed } from '@angular/core/testing';
 import { AiAssistantService } from './ai-assistant.service';
 import { Task } from '../models/task.model';
-import { Timestamp, Firestore } from '@angular/fire/firestore';
-import { of } from 'rxjs';
-import { initializeApp } from '@angular/fire/app';
-import { getFirestore } from '@angular/fire/firestore';
-import { NgModule } from '@angular/core';
-
-// テスト用のモジュールを作成
-@NgModule({
-  providers: [AiAssistantService]
-})
-class TestModule {}
-
-const mockFirebaseConfig = {
-  projectId: 'test-project',
-  appId: 'test-app-id',
-  apiKey: 'test-api-key',
-  authDomain: 'test-project.firebaseapp.com',
-  storageBucket: 'test-project.appspot.com',
-  messagingSenderId: 'test-messaging-sender-id'
-};
+import { Timestamp, Firestore, QuerySnapshot, QueryDocumentSnapshot, FirestoreDataConverter, DocumentData, QueryDocumentSnapshot as FirestoreQueryDocumentSnapshot } from '@angular/fire/firestore';
+import * as firestore from '@angular/fire/firestore';
 
 describe('AiAssistantService', () => {
   let service: AiAssistantService;
+  let mockFirestore: any;
 
   beforeEach(async () => {
-    const mockTasks = [
-      {
-        id: '1',
-        title: 'テストタスク1',
-        description: 'テスト説明1',
-        category: '仕事',
-        priority: '中',
-        status: '未着手',
-        dueDate: Timestamp.now(),
-        completed: false,
-        assignedTo: 'user1',
-        createdAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-        userId: 'user1'
+    const taskConverter: FirestoreDataConverter<Task, DocumentData> = {
+      toFirestore: (task: Task): DocumentData => ({
+        title: task.title,
+        description: task.description,
+        category: task.category,
+        priority: task.priority,
+        status: task.status,
+        dueDate: task.dueDate,
+        completed: task.completed,
+        assignedTo: task.assignedTo,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt,
+        userId: task.userId
+      }),
+      fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return {
+          id: snapshot.id,
+          title: data['title'],
+          description: data['description'],
+          category: data['category'],
+          priority: data['priority'],
+          status: data['status'],
+          dueDate: data['dueDate'],
+          completed: data['completed'],
+          assignedTo: data['assignedTo'],
+          createdAt: data['createdAt'],
+          updatedAt: data['updatedAt'],
+          userId: data['userId']
+        } as Task;
       }
-    ];
-
-    const mockFirestore = {
-      collection: jasmine.createSpy('collection').and.returnValue({
-        withConverter: () => ({
-          doc: () => ({
-            get: () => Promise.resolve({ data: () => mockTasks[0] }),
-            set: () => Promise.resolve()
-          })
-        })
-      })
     };
+
+    const mockCollection = jasmine.createSpyObj('CollectionReference', ['withConverter', 'doc', 'where']);
+    mockCollection.withConverter.and.returnValue(mockCollection);
+
+    const mockQuery = jasmine.createSpyObj('Query', ['where']);
+    
+    const mockTask: Task = {
+      id: '1',
+      title: 'テストタスク1',
+      description: 'テスト説明1',
+      category: '仕事',
+      priority: '中',
+      status: '未着手',
+      dueDate: Timestamp.now(),
+      completed: false,
+      assignedTo: 'user1',
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      userId: 'user1'
+    };
+
+    const mockDocSnapshot = {
+      data: () => mockTask,
+      metadata: {
+        fromCache: false,
+        hasPendingWrites: false,
+        isEqual: () => true
+      },
+      exists: () => true,
+      get: () => null,
+      id: '1',
+      ref: null as any
+    } as unknown as QueryDocumentSnapshot<Task>;
+
+    const mockQuerySnapshot = {
+      docs: [mockDocSnapshot],
+      metadata: {
+        fromCache: false,
+        hasPendingWrites: false,
+        isEqual: () => true
+      },
+      query: mockQuery,
+      size: 1,
+      empty: false,
+      forEach: (callback: (result: FirestoreQueryDocumentSnapshot<Task>) => void) => [mockDocSnapshot].forEach(callback),
+      docChanges: () => []
+    } as unknown as QuerySnapshot<Task>;
+
+    mockFirestore = {
+      collection: jasmine.createSpy('collection').and.returnValue(mockCollection)
+    };
+
+    // Firestoreの関数をモック
+    spyOn(firestore, 'collection').and.callFake(() => {
+      const col = mockCollection;
+      col.withConverter.and.returnValue({
+        ...col,
+        converter: taskConverter
+      });
+      return col;
+    });
+    spyOn(firestore, 'query').and.callFake(() => mockQuery);
+    spyOn(firestore, 'where').and.callFake(() => mockQuery);
+    spyOn(firestore, 'getDocs').and.callFake(() => Promise.resolve(mockQuerySnapshot));
 
     await TestBed.configureTestingModule({
       providers: [
@@ -279,27 +331,35 @@ describe('AiAssistantService', () => {
     });
 
     it('タスク履歴の分析が正しい形式で返される', async () => {
-      try {
-        const analysis = await service.analyzeTaskHistory(testTask.userId);
-        
-        expect(analysis).toBeTruthy();
-        expect(analysis.historicalData).toBeTruthy();
-        expect(typeof analysis.historicalData.averageCompletionTime).toBe('number');
-        expect(Array.isArray(analysis.historicalData.commonCategories)).toBeTrue();
-        expect(Array.isArray(analysis.historicalData.frequentCollaborators)).toBeTrue();
-        
-        expect(analysis.currentStatus).toBeTruthy();
-        expect(typeof analysis.currentStatus.workload).toBe('number');
-        expect(typeof analysis.currentStatus.overdueTasks).toBe('number');
-        expect(typeof analysis.currentStatus.upcomingDeadlines).toBe('number');
-        
-        expect(analysis.recommendations).toBeTruthy();
-        expect(Array.isArray(analysis.recommendations.priorityAdjustments)).toBeTrue();
-        expect(Array.isArray(analysis.recommendations.resourceAllocation)).toBeTrue();
-        expect(Array.isArray(analysis.recommendations.timelineOptimization)).toBeTrue();
-      } catch (error) {
-        fail('タスク履歴の分析中にエラーが発生しました: ' + error);
-      }
+      const analysis = await service.analyzeTaskHistory('user1');
+      
+      expect(analysis).toBeTruthy();
+      expect(analysis.historicalData).toBeTruthy();
+      expect(typeof analysis.historicalData.averageCompletionTime).toBe('number');
+      expect(Array.isArray(analysis.historicalData.commonCategories)).toBeTrue();
+      expect(Array.isArray(analysis.historicalData.frequentCollaborators)).toBeTrue();
+      
+      expect(analysis.currentStatus).toBeTruthy();
+      expect(typeof analysis.currentStatus.workload).toBe('number');
+      expect(typeof analysis.currentStatus.overdueTasks).toBe('number');
+      expect(typeof analysis.currentStatus.upcomingDeadlines).toBe('number');
+      
+      expect(analysis.recommendations).toBeTruthy();
+      expect(Array.isArray(analysis.recommendations.priorityAdjustments)).toBeTrue();
+      expect(Array.isArray(analysis.recommendations.resourceAllocation)).toBeTrue();
+      expect(Array.isArray(analysis.recommendations.timelineOptimization)).toBeTrue();
+    });
+  });
+
+  describe('タスク履歴分析のテスト', () => {
+    it('タスク履歴の分析が正しく行われるべき', async () => {
+      const userId = 'test-user';
+      const analysis = await service.analyzeTaskHistory(userId);
+      
+      expect(analysis).toBeTruthy();
+      expect(analysis.historicalData).toBeTruthy();
+      expect(analysis.currentStatus).toBeTruthy();
+      expect(analysis.recommendations).toBeTruthy();
     });
   });
 }); 

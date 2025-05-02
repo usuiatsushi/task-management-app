@@ -4,7 +4,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AIAssistantService } from '../../services/ai-assistant.service';
+import { AiAssistantService } from '../../services/ai-assistant.service';
 import { Task } from '../../models/task.model';
 import { AISuggestion, EisenhowerMatrix, TaskAnalysis } from '../../models/ai-assistant.model';
 
@@ -19,7 +19,8 @@ import { AISuggestion, EisenhowerMatrix, TaskAnalysis } from '../../models/ai-as
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule
-  ]
+  ],
+  providers: [AiAssistantService]
 })
 export class AIAssistantComponent implements OnInit {
   loading = false;
@@ -28,7 +29,7 @@ export class AIAssistantComponent implements OnInit {
   analysis: TaskAnalysis | null = null;
   currentTask: Task | null = null;
 
-  constructor(private aiService: AIAssistantService) {}
+  constructor(private aiService: AiAssistantService) {}
 
   ngOnInit(): void {
     // 初期化処理

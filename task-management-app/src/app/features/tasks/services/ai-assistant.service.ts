@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
+import { Firestore, collection, query, where, getDocs, CollectionReference, Query } from '@angular/fire/firestore';
 import { AISuggestion, EisenhowerMatrix, TaskAnalysis } from '../models/ai-assistant.model';
 import { Task } from '../models/task.model';
 import { Observable, of } from 'rxjs';
@@ -55,11 +55,11 @@ export class AiAssistantService {
   async analyzeTaskHistory(userId: string): Promise<TaskAnalysis> {
     try {
       // タスク履歴の分析
-      const tasksRef = collection(this.firestore, 'tasks');
-      const q = query(tasksRef, where('userId', '==', userId));
+      const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
+      const q = query(tasksRef, where('userId', '==', userId)) as Query<Task>;
       const querySnapshot = await getDocs(q);
       
-      const tasks = querySnapshot.docs.map(doc => doc.data() as Task);
+      const tasks = querySnapshot.docs.map(doc => doc.data());
       
       return {
         historicalData: {
@@ -143,15 +143,15 @@ export class AiAssistantService {
     return false;
   }
 
-  private determineQuadrant(urgent: boolean, important: boolean): EisenhowerMatrix['quadrant'] {
+  private determineQuadrant(urgent: boolean, important: boolean): '重要かつ緊急' | '重要だが緊急でない' | '緊急だが重要でない' | '重要でも緊急でもない' {
     if (urgent && important) return '重要かつ緊急';
-    if (!urgent && important) return '重要だが緊急でない';
+    if (important && !urgent) return '重要だが緊急でない';
     if (urgent && !important) return '緊急だが重要でない';
     return '重要でも緊急でもない';
   }
 
   private calculateAverageCompletionTime(tasks: Task[]): number {
-    // 平均完了時間計算のロジック
+    // 平均完了時間の計算ロジック
     // TODO: より高度な分析を実装
     return 0;
   }
@@ -163,31 +163,31 @@ export class AiAssistantService {
   }
 
   private findFrequentCollaborators(tasks: Task[]): string[] {
-    // 頻繁な協力者検出のロジック
+    // 頻繁な共同作業者の検出ロジック
     // TODO: より高度な分析を実装
     return [];
   }
 
   private calculateCurrentWorkload(tasks: Task[]): number {
-    // 現在の作業負荷計算のロジック
+    // 現在の作業負荷の計算ロジック
     // TODO: より高度な分析を実装
     return 0;
   }
 
   private countOverdueTasks(tasks: Task[]): number {
-    // 期限切れタスクカウントのロジック
+    // 期限切れタスクのカウントロジック
     // TODO: より高度な分析を実装
     return 0;
   }
 
   private countUpcomingDeadlines(tasks: Task[]): number {
-    // 近い期限のタスクカウントのロジック
+    // 近づく期限のカウントロジック
     // TODO: より高度な分析を実装
     return 0;
   }
 
   private generatePriorityRecommendations(tasks: Task[]): string[] {
-    // 優先度調整の推奨生成のロジック
+    // 優先度の推奨生成のロジック
     // TODO: より高度な分析を実装
     return [];
   }
@@ -220,25 +220,6 @@ export class AiAssistantService {
     return 'その他';
   }
 
-  // Eisenhower Matrixに基づいて優先度を設定
-  setPriority(task: Task): '高' | '中' | '低' {
-    const title = task.title.toLowerCase();
-    const description = task.description?.toLowerCase() || '';
-    const text = `${title} ${description}`;
-
-    // 優先度の判定（高→中→低の順で判定）
-    const priorities = ['高', '中', '低'] as const;
-    for (const priority of priorities) {
-      const keywords = this.priorityKeywords[priority];
-      if (keywords.some(keyword => text.includes(keyword))) {
-        return priority;
-      }
-    }
-
-    // キーワードに一致しない場合はデフォルトで'中'を返す
-    return '中';
-  }
-
   // 過去のタスク履歴に基づいてサジェストを提供
   suggestTasks(previousTasks: Task[]): Observable<Task[]> {
     const suggestions: Task[] = [];
@@ -254,7 +235,7 @@ export class AiAssistantService {
         description: pattern.description,
         category: pattern.category,
         priority: pattern.priority,
-        dueDate: new Date(),
+        dueDate: Timestamp.now(),
         completed: false,
         status: '未着手',
         assignedTo: '',
@@ -267,41 +248,9 @@ export class AiAssistantService {
     return of(suggestions);
   }
 
-  private analyzeTaskPatterns(tasks: Task[]): Array<{
-    title: string;
-    description: string;
-    category: string;
-    priority: '高' | '中' | '低';
-  }> {
-    const patterns: Array<{
-      title: string;
-      description: string;
-      category: string;
-      priority: '高' | '中' | '低';
-    }> = [];
-    
-    // 単純な頻度分析
-    const categoryCount = new Map<string, number>();
-    const priorityCount = new Map<string, number>();
-    
-    tasks.forEach(task => {
-      categoryCount.set(task.category, (categoryCount.get(task.category) || 0) + 1);
-      priorityCount.set(task.priority, (priorityCount.get(task.priority) || 0) + 1);
-    });
-
-    // 最も頻出するカテゴリと優先度の組み合わせを返す
-    const mostCommonCategory = [...categoryCount.entries()]
-      .sort((a, b) => b[1] - a[1])[0][0];
-    const mostCommonPriority = [...priorityCount.entries()]
-      .sort((a, b) => b[1] - a[1])[0][0] as '高' | '中' | '低';
-
-    patterns.push({
-      title: '定期的なタスク',
-      description: '定期的に発生するタスクを追加',
-      category: mostCommonCategory,
-      priority: mostCommonPriority
-    });
-
-    return patterns;
+  private analyzeTaskPatterns(tasks: Task[]): Task[] {
+    // タスクパターンの分析ロジック
+    // TODO: より高度な分析を実装
+    return tasks;
   }
 } 
