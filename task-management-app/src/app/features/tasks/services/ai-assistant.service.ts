@@ -37,6 +37,9 @@ export class AiAssistantService {
     '低': ['確認', '連絡', '報告', '依頼', '対応', '資料']
   };
 
+  private readonly ERROR_RETRY_COUNT = 3;
+  private readonly ERROR_RETRY_DELAY = 1000; // 1秒
+
   private getCacheKey(method: string, params: any): string {
     // パラメータを文字列化する際の最適化
     const paramString = typeof params === 'object' 
@@ -114,7 +117,7 @@ export class AiAssistantService {
   }
 
   // タスクのカテゴリを自動分類
-  categorizeTask(task: Task): string {
+  async categorizeTask(task: Task): Promise<string> {
     try {
       this.validateTask(task);
       
@@ -146,7 +149,7 @@ export class AiAssistantService {
   }
 
   // タスクの優先度を自動設定
-  calculatePriority(task: Task): '低' | '中' | '高' {
+  async calculatePriority(task: Task): Promise<'低' | '中' | '高'> {
     try {
       this.validateTask(task);
       
@@ -177,6 +180,66 @@ export class AiAssistantService {
     }
   }
 
+  // 推奨期限を計算
+  async calculateSuggestedDueDate(priority: '低' | '中' | '高'): Promise<Date> {
+    const today = new Date();
+    const suggestedDueDate = new Date(today);
+    
+    // 優先度に基づく期限の提案
+    switch (priority) {
+      case '高':
+        suggestedDueDate.setDate(today.getDate() + 3);
+        break;
+      case '中':
+        suggestedDueDate.setDate(today.getDate() + 7);
+        break;
+      case '低':
+        suggestedDueDate.setDate(today.getDate() + 14);
+        break;
+    }
+    
+    return suggestedDueDate;
+  }
+
+  private async retryOperation<T>(
+    operation: () => Promise<T>,
+    context: string
+  ): Promise<T> {
+    let lastError: Error | null = null;
+    
+    for (let i = 0; i < this.ERROR_RETRY_COUNT; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`[${context}] リトライ ${i + 1}/${this.ERROR_RETRY_COUNT}:`, error);
+        
+        if (i < this.ERROR_RETRY_COUNT - 1) {
+          await new Promise(resolve => setTimeout(resolve, this.ERROR_RETRY_DELAY));
+        }
+      }
+    }
+    
+    throw lastError;
+  }
+
+  private handleFirestoreError(error: Error, context: string): never {
+    if (error.name === 'FirebaseError') {
+      const firebaseError = error as any;
+      switch (firebaseError.code) {
+        case 'permission-denied':
+          throw new FirestoreError('データベースへのアクセス権限がありません', error);
+        case 'unavailable':
+          throw new FirestoreError('データベースが一時的に利用できません', error);
+        case 'cancelled':
+          throw new FirestoreError('操作がキャンセルされました', error);
+        default:
+          throw new FirestoreError(`データベースエラー: ${firebaseError.message}`, error);
+      }
+    }
+    throw new FirestoreError(`${context}中に予期せぬエラーが発生しました`, error);
+  }
+
   // タスクの分析と提案を生成
   async analyzeTask(task: Task): Promise<AISuggestion> {
     try {
@@ -190,10 +253,21 @@ export class AiAssistantService {
       const cached = this.getFromCache<AISuggestion>(cacheKey);
       if (cached) return cached;
 
-      // 並列処理によるパフォーマンス改善
-      const category = await this.categorizeTask(task);
-      const priority: '低' | '中' | '高' = await this.calculatePriority(task);
-      const suggestedDueDate = await this.calculateSuggestedDueDate(priority);
+      const category = await this.retryOperation<string>(
+        () => this.categorizeTask(task),
+        'タスクのカテゴリ分析'
+      );
+      
+      const priority = await this.retryOperation<'低' | '中' | '高'>(
+        () => this.calculatePriority(task),
+        'タスクの優先度分析'
+      );
+      
+      const suggestedDueDate = await this.retryOperation<Date>(
+        () => this.calculateSuggestedDueDate(priority),
+        '推奨期限の計算'
+      );
+      
       const allTasks = await this.getActiveTasks(task.userId);
 
       // 依存関係の分析を最適化
@@ -209,7 +283,7 @@ export class AiAssistantService {
         group.some(t => t.id === task.id)
       ) || [];
 
-      const result = {
+      const result: AISuggestion = {
         category,
         priority,
         suggestedDueDate,
@@ -228,6 +302,9 @@ export class AiAssistantService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
+      if (error instanceof FirestoreError) {
+        throw error;
+      }
       this.errorHandler.handleError(error);
       throw new TaskAnalysisError(ERROR_MESSAGES.TASK_ANALYSIS.ACTION_PLAN_GENERATION_FAILED, error);
     }
@@ -1023,43 +1100,30 @@ export class AiAssistantService {
     return groups;
   }
 
-  private calculateSuggestedDueDate(priority: '低' | '中' | '高'): Date {
-    const today = new Date();
-    const suggestedDueDate = new Date(today);
-    
-    // 優先度に基づく期限の提案
-    switch (priority) {
-      case '高':
-        suggestedDueDate.setDate(today.getDate() + 3);
-        break;
-      case '中':
-        suggestedDueDate.setDate(today.getDate() + 7);
-        break;
-      case '低':
-        suggestedDueDate.setDate(today.getDate() + 14);
-        break;
-    }
-    
-    return suggestedDueDate;
-  }
-
   // アクティブなタスクを取得するヘルパーメソッド
   private async getActiveTasks(userId: string): Promise<Task[]> {
     const cacheKey = this.getCacheKey('getActiveTasks', { userId });
     const cached = this.getFromCache<Task[]>(cacheKey);
     if (cached) return cached;
 
-    const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
-    const q = query(
-      tasksRef,
-      where('userId', '==', userId),
-      where('completed', '==', false)
-    ) as Query<Task>;
-    
-    const querySnapshot = await getDocs(q);
-    const tasks = querySnapshot.docs.map(doc => doc.data());
-    
-    this.setCache(cacheKey, tasks);
-    return tasks;
+    try {
+      const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
+      const q = query(
+        tasksRef,
+        where('userId', '==', userId),
+        where('completed', '==', false)
+      ) as Query<Task>;
+      
+      const querySnapshot = await this.retryOperation(
+        () => getDocs(q),
+        'アクティブタスクの取得'
+      );
+      
+      const tasks = querySnapshot.docs.map(doc => doc.data());
+      this.setCache(cacheKey, tasks);
+      return tasks;
+    } catch (error) {
+      this.handleFirestoreError(error as Error, 'アクティブタスクの取得');
+    }
   }
 } 
