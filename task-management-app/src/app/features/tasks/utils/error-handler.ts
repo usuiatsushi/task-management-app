@@ -4,6 +4,7 @@ import { ERROR_MESSAGES } from '../constants/error-messages';
 import { AIAssistantError, FirestoreError } from '../models/ai-assistant.error';
 import { Observable, throwError } from 'rxjs';
 import { retry } from 'rxjs/operators';
+import { ErrorLoggingService } from '../services/error-logging.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,17 +13,20 @@ export class ErrorHandler {
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAY = 1000; // 1秒
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(
+    private snackBar: MatSnackBar,
+    private errorLoggingService: ErrorLoggingService
+  ) {}
 
   // エラーの処理とユーザーへの通知
-  handleError(error: any): void {
+  handleError(error: any, userId?: string): void {
     console.error('エラーが発生しました:', error);
 
     let errorMessage = this.getErrorMessage(error);
     this.showErrorNotification(errorMessage);
 
-    // エラーログの送信やモニタリング（必要に応じて実装）
-    this.logError(error);
+    // エラーログの記録
+    this.logError(error, userId);
   }
 
   // エラーメッセージの取得
@@ -59,16 +63,9 @@ export class ErrorHandler {
   }
 
   // エラーログの記録
-  private logError(error: any): void {
-    // TODO: エラーログの送信やモニタリングの実装
-    console.error('エラーログ:', {
-      timestamp: new Date().toISOString(),
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        code: error.code
-      }
+  private logError(error: any, userId?: string): void {
+    this.errorLoggingService.logErrorWithRetry(error, userId).catch(loggingError => {
+      console.error('エラーログの保存に失敗しました:', loggingError);
     });
   }
 
