@@ -96,10 +96,21 @@
     justify-content: flex-end;
     margin-bottom: 20px;
 
-    button {
+    .date-range-form {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      mat-form-field {
+        width: 200px;
+      }
+
+      button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
     }
   }
 

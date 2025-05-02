@@ -33,15 +33,13 @@ export class ErrorAnalysisService {
 
   constructor(private firestore: Firestore) {}
 
-  async analyzeErrors(): Promise<ErrorAnalysis> {
+  async analyzeErrors(startDate: Date = new Date(new Date().setDate(new Date().getDate() - 30)), endDate: Date = new Date()): Promise<ErrorAnalysis> {
     try {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - this.ANALYSIS_PERIOD_DAYS);
-
       const errorLogsRef = collection(this.firestore, this.COLLECTION_NAME);
       const q = query(
         errorLogsRef,
-        where('timestamp', '>=', Timestamp.fromDate(thirtyDaysAgo))
+        where('timestamp', '>=', Timestamp.fromDate(startDate)),
+        where('timestamp', '<=', Timestamp.fromDate(endDate))
       );
 
       const querySnapshot = await getDocs(q);

@@ -1,10 +1,31 @@
 <!-- エラー分析チャート -->
 <div class="charts-container" *ngIf="!loading && !error">
   <div class="chart-actions">
-    <button mat-button (click)="exportToCSV()">
-      <mat-icon>download</mat-icon>
-      CSVエクスポート
-    </button>
+    <form [formGroup]="analysisForm" (ngSubmit)="loadErrorAnalysis()" class="date-range-form">
+      <mat-form-field>
+        <mat-label>開始日</mat-label>
+        <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+        <mat-datepicker #startPicker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>終了日</mat-label>
+        <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+        <mat-datepicker #endPicker></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-button type="submit" [disabled]="loading">
+        <mat-icon>refresh</mat-icon>
+        更新
+      </button>
+
+      <button mat-button type="button" (click)="exportToCSV()">
+        <mat-icon>download</mat-icon>
+        CSVエクスポート
+      </button>
+    </form>
   </div>
 
   <div class="chart">
@@ -21,7 +42,7 @@
       [data]="errorTypeChartData"
       [options]="errorTypeChartOptions"
       type="pie"
-      (chartClick)="onChartClick($event, $event.active, 'errorType')">
+      (chartClick)="onChartClick($event, 'errorType')">
     </canvas>
   </div>
   <div class="chart">
@@ -30,7 +51,7 @@
       [data]="hourlyErrorChartData"
       [options]="hourlyErrorChartOptions"
       type="bar"
-      (chartClick)="onChartClick($event, $event.active, 'hourly')">
+      (chartClick)="onChartClick($event, 'hourly')">
     </canvas>
   </div>
   <div class="chart">
@@ -39,7 +60,7 @@
       [data]="userImpactChartData"
       [options]="userImpactChartOptions"
       type="bar"
-      (chartClick)="onChartClick($event, $event.active, 'userImpact')">
+      (chartClick)="onChartClick($event, 'userImpact')">
     </canvas>
   </div>
 </div> 

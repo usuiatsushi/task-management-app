@@ -7,6 +7,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType, ChartEvent, ActiveElement } from 'chart.js';
 import { ErrorAnalysisService, ErrorAnalysis } from '../../services/error-analysis.service';
@@ -26,6 +31,11 @@ import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-detai
     MatIconModule,
     MatDialogModule,
     MatSnackBarModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatFormFieldModule,
+    MatInputModule,
+    ReactiveFormsModule,
     BaseChartDirective
   ]
 })
@@ -35,6 +45,7 @@ export class ErrorAnalysisComponent implements OnInit {
   loading = false;
   error: string | null = null;
   errorAnalysis: ErrorAnalysis | null = null;
+  analysisForm: FormGroup;
 
   // エラー発生率の時系列グラフ
   errorTrendChartData: ChartConfiguration['data'] = {
@@ -150,18 +161,25 @@ export class ErrorAnalysisComponent implements OnInit {
   constructor(
     private errorAnalysisService: ErrorAnalysisService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
-  ) {}
+    private snackBar: MatSnackBar,
+    private fb: FormBuilder
+  ) {
+    this.analysisForm = this.fb.group({
+      startDate: [new Date(new Date().setDate(new Date().getDate() - 30))],
+      endDate: [new Date()]
+    });
+  }
 
   async ngOnInit(): Promise<void> {
     await this.loadErrorAnalysis();
   }
 
-  private async loadErrorAnalysis(): Promise<void> {
+  async loadErrorAnalysis(): Promise<void> {
     try {
       this.loading = true;
       this.error = null;
-      this.errorAnalysis = await this.errorAnalysisService.analyzeErrors();
+      const { startDate, endDate } = this.analysisForm.value;
+      this.errorAnalysis = await this.errorAnalysisService.analyzeErrors(startDate, endDate);
       this.updateCharts();
     } catch (error) {
       this.error = 'エラー分析の読み込みに失敗しました';
@@ -195,10 +213,10 @@ export class ErrorAnalysisComponent implements OnInit {
   }
 
   // グラフのクリックイベントハンドラ
-  onChartClick(event: ChartEvent, elements: ActiveElement[], chartType: string): void {
-    if (elements.length === 0) return;
+  onChartClick(event: any, chartType: string): void {
+    if (!event.active || event.active.length === 0) return;
 
-    const element = elements[0];
+    const element = event.active[0];
     const index = element.index;
 
     switch (chartType) {
