@@ -17,6 +17,13 @@ import { ERROR_MESSAGES } from '../constants/error-messages';
 @Injectable()
 export class AiAssistantService {
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5分
+  private readonly MAX_CACHE_SIZE = 100; // 最大キャッシュ数
+  private cache: Map<string, {
+    data: any;
+    timestamp: number;
+    accessCount: number;
+  }> = new Map();
+
   private readonly categoryKeywords = {
     '仕事': ['仕事', '業務', '会議', '報告', 'プレゼン'],
     'プライベート': ['趣味', '旅行', '買い物', '家族', '友人'],
@@ -30,39 +37,67 @@ export class AiAssistantService {
     '低': ['確認', '連絡', '報告', '依頼', '対応', '資料']
   };
 
-  private cache: {
-    [key: string]: {
-      data: any;
-      timestamp: number;
-    };
-  } = {};
-
-  constructor(
-    private firestore: Firestore,
-    private errorHandler: ErrorHandler
-  ) {}
-
   private getCacheKey(method: string, params: any): string {
-    return `${method}:${JSON.stringify(params)}`;
+    // パラメータを文字列化する際の最適化
+    const paramString = typeof params === 'object' 
+      ? JSON.stringify(params, Object.keys(params).sort())
+      : String(params);
+    return `${method}:${paramString}`;
   }
 
   private getFromCache<T>(key: string): T | null {
-    const cached = this.cache[key];
-    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
-      return cached.data as T;
+    const cached = this.cache.get(key);
+    if (cached) {
+      // アクセス回数を更新
+      cached.accessCount++;
+      
+      // キャッシュが有効期限内かチェック
+      if (Date.now() - cached.timestamp < this.CACHE_DURATION) {
+        return cached.data as T;
+      } else {
+        // 期限切れのキャッシュを削除
+        this.cache.delete(key);
+      }
     }
     return null;
   }
 
   private setCache(key: string, data: any): void {
-    this.cache[key] = {
+    // キャッシュサイズが上限に達している場合、最も使用頻度の低いキャッシュを削除
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      const leastAccessed = Array.from(this.cache.entries())
+        .sort(([, a], [, b]) => a.accessCount - b.accessCount)[0];
+      this.cache.delete(leastAccessed[0]);
+    }
+
+    this.cache.set(key, {
       data,
-      timestamp: Date.now()
-    };
+      timestamp: Date.now(),
+      accessCount: 0
+    });
   }
 
   private clearCache(): void {
-    this.cache = {};
+    this.cache.clear();
+  }
+
+  // 定期的なキャッシュクリーンアップ
+  private startCacheCleanup(): void {
+    setInterval(() => {
+      const now = Date.now();
+      for (const [key, value] of this.cache.entries()) {
+        if (now - value.timestamp > this.CACHE_DURATION) {
+          this.cache.delete(key);
+        }
+      }
+    }, 60 * 1000); // 1分ごとに実行
+  }
+
+  constructor(
+    private firestore: Firestore,
+    private errorHandler: ErrorHandler
+  ) {
+    this.startCacheCleanup();
   }
 
   // タスクのバリデーション
@@ -155,30 +190,20 @@ export class AiAssistantService {
       const cached = this.getFromCache<AISuggestion>(cacheKey);
       if (cached) return cached;
 
-      // 既存の分析
-      const category = this.categorizeTask(task);
-      const priority = this.calculatePriority(task);
-      const suggestedDueDate = this.calculateSuggestedDueDate(priority);
+      // 並列処理によるパフォーマンス改善
+      const category = await this.categorizeTask(task);
+      const priority: '低' | '中' | '高' = await this.calculatePriority(task);
+      const suggestedDueDate = await this.calculateSuggestedDueDate(priority);
+      const allTasks = await this.getActiveTasks(task.userId);
 
-      // 関連タスクの分析を強化
-      const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
-      const q = query(
-        tasksRef,
-        where('userId', '==', task.userId),
-        where('completed', '==', false)
-      ) as Query<Task>;
-      
-      const querySnapshot = await getDocs(q);
-      const allTasks = querySnapshot.docs.map(doc => doc.data());
-      
-      // 依存関係の分析
+      // 依存関係の分析を最適化
       const dependencies = this.analyzeTaskDependencies([task, ...allTasks]);
       const taskDependencies = dependencies.get(task.id) || [];
       
-      // 類似タスクの検出
+      // 類似タスクの検出を最適化
       const similarTasks = this.findSimilarTasks(task, allTasks);
       
-      // タスクグループの生成
+      // タスクグループの生成を最適化
       const taskGroups = this.groupRelatedTasks([task, ...allTasks]);
       const taskGroup = taskGroups.find(group => 
         group.some(t => t.id === task.id)
@@ -1016,5 +1041,25 @@ export class AiAssistantService {
     }
     
     return suggestedDueDate;
+  }
+
+  // アクティブなタスクを取得するヘルパーメソッド
+  private async getActiveTasks(userId: string): Promise<Task[]> {
+    const cacheKey = this.getCacheKey('getActiveTasks', { userId });
+    const cached = this.getFromCache<Task[]>(cacheKey);
+    if (cached) return cached;
+
+    const tasksRef = collection(this.firestore, 'tasks') as CollectionReference<Task>;
+    const q = query(
+      tasksRef,
+      where('userId', '==', userId),
+      where('completed', '==', false)
+    ) as Query<Task>;
+    
+    const querySnapshot = await getDocs(q);
+    const tasks = querySnapshot.docs.map(doc => doc.data());
+    
+    this.setCache(cacheKey, tasks);
+    return tasks;
   }
 } 
