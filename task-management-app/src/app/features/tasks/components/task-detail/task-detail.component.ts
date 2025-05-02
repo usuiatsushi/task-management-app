@@ -86,7 +86,7 @@ export class TaskDetailComponent implements OnInit {
     if (date instanceof Date) return date;
     if (date?.toDate) return date.toDate();
     if (date?.seconds) return new Date(date.seconds * 1000);
-    return new Date(date);
+    return new Date();
   }
 
   async deleteTask() {
