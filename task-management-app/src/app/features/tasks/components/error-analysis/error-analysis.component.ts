@@ -11,6 +11,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartType, ChartEvent, ActiveElement } from 'chart.js';
@@ -35,6 +36,7 @@ import { ErrorDetailsDialogComponent } from '../error-details-dialog/error-detai
     MatNativeDateModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     ReactiveFormsModule,
     BaseChartDirective
   ]
@@ -46,6 +48,7 @@ export class ErrorAnalysisComponent implements OnInit {
   error: string | null = null;
   errorAnalysis: ErrorAnalysis | null = null;
   analysisForm: FormGroup;
+  filterForm: FormGroup;
 
   // エラー発生率の時系列グラフ
   errorTrendChartData: ChartConfiguration['data'] = {
@@ -168,10 +171,66 @@ export class ErrorAnalysisComponent implements OnInit {
       startDate: [new Date(new Date().setDate(new Date().getDate() - 30))],
       endDate: [new Date()]
     });
+
+    this.filterForm = this.fb.group({
+      errorType: [''],
+      minErrorCount: [0],
+      userFilter: ['']
+    });
   }
 
   async ngOnInit(): Promise<void> {
     await this.loadErrorAnalysis();
+    this.setupFilterListeners();
+  }
+
+  private setupFilterListeners(): void {
+    this.filterForm.valueChanges.subscribe(() => {
+      this.applyFilters();
+    });
+  }
+
+  private applyFilters(): void {
+    if (!this.errorAnalysis) return;
+
+    const { errorType, minErrorCount, userFilter } = this.filterForm.value;
+
+    // エラータイプのフィルタリング
+    if (errorType) {
+      this.errorTypeChartData.labels = [errorType];
+      this.errorTypeChartData.datasets[0].data = [this.errorAnalysis.errorTypes[errorType]];
+    } else {
+      const errorTypes = Object.entries(this.errorAnalysis.errorTypes);
+      this.errorTypeChartData.labels = errorTypes.map(([type]) => type);
+      this.errorTypeChartData.datasets[0].data = errorTypes.map(([, count]) => count);
+    }
+
+    // 最小エラー数のフィルタリング
+    if (minErrorCount > 0) {
+      const filteredUserImpact = this.errorAnalysis.userImpact.filter(
+        impact => impact.errorCount >= minErrorCount
+      );
+      this.userImpactChartData.labels = filteredUserImpact.map(impact => impact.userId);
+      this.userImpactChartData.datasets[0].data = filteredUserImpact.map(impact => impact.errorCount);
+    } else {
+      this.userImpactChartData.labels = this.errorAnalysis.userImpact.map(impact => impact.userId);
+      this.userImpactChartData.datasets[0].data = this.errorAnalysis.userImpact.map(impact => impact.errorCount);
+    }
+
+    // ユーザーフィルタリング
+    if (userFilter) {
+      const filteredHourlyErrors = this.errorAnalysis.hourlyErrors.map((count, hour) => {
+        const userErrors = this.errorAnalysis?.recentErrors.filter(
+          error => error.userId === userFilter && error.timestamp.toDate().getHours() === hour
+        ).length || 0;
+        return userErrors;
+      });
+      this.hourlyErrorChartData.datasets[0].data = filteredHourlyErrors;
+    } else {
+      this.hourlyErrorChartData.datasets[0].data = this.errorAnalysis.hourlyErrors;
+    }
+
+    this.chart?.update();
   }
 
   async loadErrorAnalysis(): Promise<void> {

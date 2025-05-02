@@ -1,7 +1,7 @@
 <!-- エラー分析チャート -->
 <div class="charts-container" *ngIf="!loading && !error">
-  <div class="chart-actions">
-    <form [formGroup]="analysisForm" (ngSubmit)="loadErrorAnalysis()" class="date-range-form">
+  <div class="date-range-form">
+    <form [formGroup]="analysisForm" (ngSubmit)="loadErrorAnalysis()">
       <mat-form-field>
         <mat-label>開始日</mat-label>
         <input matInput [matDatepicker]="startPicker" formControlName="startDate">
@@ -16,16 +16,43 @@
         <mat-datepicker #endPicker></mat-datepicker>
       </mat-form-field>
 
-      <button mat-button type="submit" [disabled]="loading">
+      <button mat-raised-button color="primary" type="submit">
         <mat-icon>refresh</mat-icon>
-        更新
-      </button>
-
-      <button mat-button type="button" (click)="exportToCSV()">
-        <mat-icon>download</mat-icon>
-        CSVエクスポート
+        分析を更新
       </button>
     </form>
+
+    <form [formGroup]="filterForm" class="filter-form">
+      <mat-form-field>
+        <mat-label>エラータイプ</mat-label>
+        <mat-select formControlName="errorType">
+          <mat-option [value]="''">すべて</mat-option>
+          <mat-option *ngFor="let type of errorAnalysis?.errorTypes | keyvalue" [value]="type.key">
+            {{type.key}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>最小エラー数</mat-label>
+        <input matInput type="number" formControlName="minErrorCount" min="0">
+      </mat-form-field>
+
+      <mat-form-field>
+        <mat-label>ユーザー</mat-label>
+        <mat-select formControlName="userFilter">
+          <mat-option [value]="''">すべて</mat-option>
+          <mat-option *ngFor="let user of errorAnalysis?.userImpact" [value]="user.userId">
+            {{user.userId}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+
+    <button mat-raised-button color="accent" (click)="exportToCSV()">
+      <mat-icon>download</mat-icon>
+      CSVエクスポート
+    </button>
   </div>
 
   <div class="chart">
