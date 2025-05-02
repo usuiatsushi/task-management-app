@@ -1,0 +1,35 @@
+:host {
+  display: block;
+  padding: 16px;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.screenshot-section {
+  margin: 16px 0;
+  
+  button {
+    margin-bottom: 8px;
+  }
+}
+
+.screenshot-preview {
+  max-width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+mat-dialog-actions {
+  margin-top: 16px;
+  padding: 0;
+} 

@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { ErrorFeedbackComponent } from '../error-feedback/error-feedback.component';
 
 @Component({
   selector: 'app-error-dashboard',
@@ -146,6 +147,13 @@ export class ErrorDashboardComponent implements OnInit {
     await this.loadErrorAnalysis();
     this.snackBar.open('データを更新しました', '閉じる', {
       duration: 3000
+    });
+  }
+
+  openFeedbackDialog(errorLog: ErrorLog): void {
+    this.dialog.open(ErrorFeedbackComponent, {
+      width: '600px',
+      data: { errorLog }
     });
   }
 } 

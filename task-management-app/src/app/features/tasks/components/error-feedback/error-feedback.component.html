@@ -1,0 +1,76 @@
+<h2 mat-dialog-title>エラーフィードバック</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="feedbackForm" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>エラーの説明</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        rows="3"
+        placeholder="エラーが発生した状況を詳しく説明してください"
+      ></textarea>
+      <mat-error *ngIf="feedbackForm.get('description')?.hasError('required')">
+        エラーの説明を入力してください
+      </mat-error>
+      <mat-error *ngIf="feedbackForm.get('description')?.hasError('minlength')">
+        10文字以上で入力してください
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>再現手順</mat-label>
+      <textarea
+        matInput
+        formControlName="reproductionSteps"
+        rows="4"
+        placeholder="エラーを再現するための手順を順番に記述してください"
+      ></textarea>
+      <mat-error *ngIf="feedbackForm.get('reproductionSteps')?.hasError('required')">
+        再現手順を入力してください
+      </mat-error>
+      <mat-error *ngIf="feedbackForm.get('reproductionSteps')?.hasError('minlength')">
+        20文字以上で入力してください
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>追加情報</mat-label>
+      <textarea
+        matInput
+        formControlName="additionalInfo"
+        rows="2"
+        placeholder="その他、参考になる情報があれば入力してください"
+      ></textarea>
+    </mat-form-field>
+
+    <div class="screenshot-section">
+      <button
+        mat-button
+        type="button"
+        (click)="captureScreenshot()"
+        [disabled]="!!screenshot"
+      >
+        <mat-icon>camera_alt</mat-icon>
+        スクリーンショットを撮影
+      </button>
+
+      <div class="screenshot-preview" *ngIf="screenshot">
+        <img [src]="screenshot" alt="スクリーンショット">
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">キャンセル</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="feedbackForm.invalid || isSubmitting"
+  >
+    <mat-icon>send</mat-icon>
+    送信
+  </button>
+</mat-dialog-actions> 
