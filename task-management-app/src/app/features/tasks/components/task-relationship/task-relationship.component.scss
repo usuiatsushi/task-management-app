@@ -1,0 +1,55 @@
+.relationship-container {
+  padding: 1rem;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.relationships {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.relationship-card {
+  mat-card-header {
+    margin-bottom: 1rem;
+  }
+
+  .task-info {
+    h3 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem;
+    }
+
+    p {
+      margin: 0.25rem 0;
+      color: var(--text-secondary);
+
+      &.category {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background-color: var(--primary-light);
+        color: var(--primary);
+        border-radius: 4px;
+      }
+
+      &.status {
+        font-weight: 500;
+      }
+
+      &.due-date {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+.no-relationships {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+} 

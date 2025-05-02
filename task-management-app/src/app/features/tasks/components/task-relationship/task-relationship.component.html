@@ -1,0 +1,40 @@
+<div class="relationship-container">
+  <div class="loading" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div class="relationships" *ngIf="!loading">
+    <mat-card *ngFor="let relationship of relationships" class="relationship-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar [color]="getRelationshipColor(relationship.relationshipType)">
+          {{getRelationshipIcon(relationship.relationshipType)}}
+        </mat-icon>
+        <mat-card-title>{{getRelationshipLabel(relationship.relationshipType)}}</mat-card-title>
+        <mat-card-subtitle>
+          関連性: {{relationship.strength | percent:'1.0-1'}}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content *ngIf="relatedTasks[relationship.targetTaskId]">
+        <div class="task-info">
+          <h3>{{relatedTasks[relationship.targetTaskId].title}}</h3>
+          <p class="category">{{relatedTasks[relationship.targetTaskId].category}}</p>
+          <p class="status">{{relatedTasks[relationship.targetTaskId].status}}</p>
+          <p class="due-date" *ngIf="relatedTasks[relationship.targetTaskId].dueDate">
+            期限: {{relatedTasks[relationship.targetTaskId].dueDate | date:'yyyy/MM/dd'}}
+          </p>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button color="primary" [routerLink]="['/tasks', relationship.targetTaskId]">
+          タスクを表示
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="no-relationships" *ngIf="!loading && relationships.length === 0">
+    <p>関連するタスクは見つかりませんでした。</p>
+  </div>
+</div> 

@@ -36,8 +36,9 @@ import { CommentSectionComponent } from '../comment-section/comment-section.comp
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskDetailComponent implements OnInit {
-  task: (Task & { dueDate: Date; createdAt: Date; updatedAt: Date }) | null = null;
-  loading = true;
+  task: Task | null = null;
+  taskId: string | null = null;
+  loading = false;
   deleting = false;
   progressControl = new FormControl(0);
   newSubTaskTitle = '';
@@ -52,63 +53,40 @@ export class TaskDetailComponent implements OnInit {
     private taskService: TaskService
   ) { }
 
-  async ngOnInit() {
-    const taskId = this.route.snapshot.paramMap.get('id');
-    if (taskId) {
-      await this.loadTask(taskId);
-      if (this.task) {
-        this.progressControl.setValue(this.task.progress ?? 0);
-        this.progressControl.valueChanges.subscribe(value => {
-          this.task!.progress = value ?? 0;
-          this.onProgressChange(this.task!);
-        });
+  ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const id = params.get('id');
+      if (id) {
+        this.taskId = id;
+        this.loadTask(id);
       }
-    }
-    this.loading = false;
-    this.checkDeadlineReminder();
+    });
   }
 
   private async loadTask(taskId: string) {
-    const taskRef = doc(this.firestore, 'tasks', taskId);
-    const taskDoc = await getDoc(taskRef);
-    
-    if (taskDoc.exists()) {
-      const data = taskDoc.data();
-      const task = {
-        id: taskDoc.id,
-        ...data,
-        dueDate: this.convertTimestampToDate(data['dueDate']),
-        createdAt: this.convertTimestampToDate(data['createdAt']),
-        updatedAt: this.convertTimestampToDate(data['updatedAt'])
-      } as Task & { dueDate: Date; createdAt: Date; updatedAt: Date };
-      
-      // 日付が正しく変換されていることを確認
-      if (!(task.dueDate instanceof Date)) {
-        console.warn('Invalid dueDate for task:', task.id, task.dueDate);
+    this.loading = true;
+    try {
+      const task = await this.taskService.getTask(taskId);
+      if (task) {
+        this.task = {
+          ...task,
+          dueDate: this.convertToDate(task.dueDate),
+          createdAt: this.convertToDate(task.createdAt),
+          updatedAt: this.convertToDate(task.updatedAt)
+        };
       }
-      
-      this.task = task;
+    } catch (error) {
+      console.error('タスクの読み込みに失敗しました:', error);
+    } finally {
+      this.loading = false;
     }
   }
 
-  private convertTimestampToDate(timestamp: any): Date {
-    if (timestamp instanceof Timestamp) {
-      return timestamp.toDate();
-    }
-    if (timestamp && typeof timestamp.toDate === 'function') {
-      return timestamp.toDate();
-    }
-    if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
-      return new Date(timestamp.seconds * 1000 + timestamp.nanoseconds / 1000000);
-    }
-    if (timestamp instanceof Date) {
-      return timestamp;
-    }
-    if (typeof timestamp === 'string') {
-      return new Date(timestamp);
-    }
-    console.warn('Invalid timestamp format:', timestamp);
-    return new Date();
+  private convertToDate(date: any): Date {
+    if (date instanceof Date) return date;
+    if (date?.toDate) return date.toDate();
+    if (date?.seconds) return new Date(date.seconds * 1000);
+    return new Date(date);
   }
 
   async deleteTask() {
