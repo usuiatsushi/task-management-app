@@ -47,6 +47,11 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+
+      <button mat-raised-button color="accent" (click)="openFilterPresetDialog()">
+        <mat-icon>bookmark</mat-icon>
+        プリセット
+      </button>
     </form>
 
     <button mat-raised-button color="accent" (click)="exportToCSV()">
