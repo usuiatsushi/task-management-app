@@ -174,9 +174,8 @@ export class ErrorAnalysisComponent implements OnInit {
     this.hourlyErrorChartData.datasets[0].data = this.errorAnalysis.hourlyErrors;
 
     // ユーザー影響度データを更新
-    const userImpacts = Object.entries(this.errorAnalysis.userImpact);
-    this.userImpactChartData.labels = userImpacts.map(([userId]) => userId);
-    this.userImpactChartData.datasets[0].data = userImpacts.map(([, count]) => count);
+    this.userImpactChartData.labels = this.errorAnalysis.userImpact.map(impact => impact.userId);
+    this.userImpactChartData.datasets[0].data = this.errorAnalysis.userImpact.map(impact => impact.errorCount);
 
     // グラフを更新
     this.chart?.update();

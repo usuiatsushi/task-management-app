@@ -21,6 +21,7 @@ export interface ErrorAnalysis {
     userId: string;
     errorCount: number;
   }[];
+  hourlyErrors: number[];
 }
 
 @Injectable({
@@ -47,6 +48,7 @@ export class ErrorAnalysisService {
       const errorLogs: ErrorLog[] = [];
       const errorTypes: { [key: string]: number } = {};
       const userErrors: { [key: string]: number } = {};
+      const hourlyErrors = new Array(24).fill(0);
 
       querySnapshot.forEach(doc => {
         const errorLog = doc.data() as ErrorLog;
@@ -59,6 +61,10 @@ export class ErrorAnalysisService {
         if (errorLog.userId) {
           userErrors[errorLog.userId] = (userErrors[errorLog.userId] || 0) + 1;
         }
+
+        // 時間帯別のエラー集計
+        const hour = errorLog.timestamp.toDate().getHours();
+        hourlyErrors[hour]++;
       });
 
       // 日付ごとのエラー傾向を計算
@@ -87,7 +93,8 @@ export class ErrorAnalysisService {
         recentErrors: errorLogs.slice(-10), // 直近10件のエラー
         errorTrends,
         mostCommonErrors,
-        userImpact
+        userImpact,
+        hourlyErrors
       };
     } catch (error) {
       console.error('エラー分析に失敗しました:', error);
