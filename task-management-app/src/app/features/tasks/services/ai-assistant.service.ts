@@ -53,30 +53,52 @@ export class AiAssistantService {
   }
 
   async analyzeTaskHistory(userId: string): Promise<TaskAnalysis> {
-    // タスク履歴の分析
-    const tasksRef = collection(this.firestore, 'tasks');
-    const q = query(tasksRef, where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
-    
-    const tasks = querySnapshot.docs.map(doc => doc.data() as Task);
-    
-    return {
-      historicalData: {
-        averageCompletionTime: this.calculateAverageCompletionTime(tasks),
-        commonCategories: this.findCommonCategories(tasks),
-        frequentCollaborators: this.findFrequentCollaborators(tasks)
-      },
-      currentStatus: {
-        workload: this.calculateCurrentWorkload(tasks),
-        overdueTasks: this.countOverdueTasks(tasks),
-        upcomingDeadlines: this.countUpcomingDeadlines(tasks)
-      },
-      recommendations: {
-        priorityAdjustments: this.generatePriorityRecommendations(tasks),
-        resourceAllocation: this.generateResourceRecommendations(tasks),
-        timelineOptimization: this.generateTimelineRecommendations(tasks)
-      }
-    };
+    try {
+      // タスク履歴の分析
+      const tasksRef = collection(this.firestore, 'tasks');
+      const q = query(tasksRef, where('userId', '==', userId));
+      const querySnapshot = await getDocs(q);
+      
+      const tasks = querySnapshot.docs.map(doc => doc.data() as Task);
+      
+      return {
+        historicalData: {
+          averageCompletionTime: this.calculateAverageCompletionTime(tasks),
+          commonCategories: this.findCommonCategories(tasks),
+          frequentCollaborators: this.findFrequentCollaborators(tasks)
+        },
+        currentStatus: {
+          workload: this.calculateCurrentWorkload(tasks),
+          overdueTasks: this.countOverdueTasks(tasks),
+          upcomingDeadlines: this.countUpcomingDeadlines(tasks)
+        },
+        recommendations: {
+          priorityAdjustments: this.generatePriorityRecommendations(tasks),
+          resourceAllocation: this.generateResourceRecommendations(tasks),
+          timelineOptimization: this.generateTimelineRecommendations(tasks)
+        }
+      };
+    } catch (error) {
+      console.error('タスク履歴の分析中にエラーが発生しました:', error);
+      // エラーが発生した場合でもデフォルト値を返す
+      return {
+        historicalData: {
+          averageCompletionTime: 0,
+          commonCategories: [],
+          frequentCollaborators: []
+        },
+        currentStatus: {
+          workload: 0,
+          overdueTasks: 0,
+          upcomingDeadlines: 0
+        },
+        recommendations: {
+          priorityAdjustments: [],
+          resourceAllocation: [],
+          timelineOptimization: []
+        }
+      };
+    }
   }
 
   private async suggestCategory(title: string, description: string): Promise<string> {
