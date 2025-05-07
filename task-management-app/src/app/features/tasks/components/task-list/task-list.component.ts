@@ -629,32 +629,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
-  public async exportTasksToExcel(): Promise<void> {
-    const headers = ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'];
-    const rows = this.tasks.map(task => [
-      task.title,
-      task.description,
-      task.status,
-      task.priority,
-      task.category,
-      task.assignedTo,
-      this.getDateFromTimestamp(task.dueDate).toLocaleDateString()
-    ]);
-    const worksheetData = [headers, ...rows];
-    const xlsx = await import('xlsx');
-    const worksheet = xlsx.utils.aoa_to_sheet(worksheetData);
-    const workbook = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Tasks');
-    const excelBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tasks.xlsx';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
   public async onImportCSV(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) {
