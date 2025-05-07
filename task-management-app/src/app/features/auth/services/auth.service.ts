@@ -61,10 +61,7 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
-      console.log('ログアウト処理を開始');
       await signOut(this.auth);
-      console.log('ログアウト処理が完了');
-      this.authState.next(false);
     } catch (error) {
       console.error('ログアウトに失敗しました:', error);
       throw error;

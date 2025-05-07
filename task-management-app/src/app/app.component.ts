@@ -1,64 +1,55 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
+import { Component, ViewChild, OnInit } from '@angular/core';
+import { Router, NavigationStart, RouterOutlet } from '@angular/router';
+import { ToastContainerComponent } from './shared/components/toast-container/toast-container.component';
+import { ToastService } from './shared/services/toast.service';
+import { environment } from '../environments/environment';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { SideMenuComponent } from './shared/components/side-menu/side-menu.component';
-import { AuthService } from './features/auth/services/auth.service';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { NavMenuComponent } from './components/nav-menu/nav-menu.component';
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    RouterModule,
-    MatButtonModule,
-    MatIconModule,
+    RouterOutlet,
     MatSidenavModule,
     MatToolbarModule,
-    SideMenuComponent
-  ]
+    MatButtonModule,
+    MatIconModule,
+    NavMenuComponent,
+    ToastContainerComponent
+  ],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent {
-  isMenuOpen = false;
+export class AppComponent implements OnInit {
+  @ViewChild('drawer') drawer: any;
+  title = 'task-management-app';
 
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
-  toggleMenu(): void {
-    this.isMenuOpen = !this.isMenuOpen;
+  constructor(private toastService: ToastService, private router: Router) {
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationStart) {
+        this.toastService.clearAll();
+      }
+    });
   }
 
-  onExportCsv(): void {
-    // 実装は各コンポーネントで行う
-  }
+  ngOnInit() {
+    // セキュリティ設定を適用
+    if (environment.security) {
+      // Cross-Origin-Opener-Policy
+      const coopMeta = document.createElement('meta');
+      coopMeta.httpEquiv = 'Cross-Origin-Opener-Policy';
+      coopMeta.content = environment.security.crossOriginOpenerPolicy;
+      document.head.appendChild(coopMeta);
 
-  onExportExcel(): void {
-    // 実装は各コンポーネントで行う
-  }
-
-  onImportCsv(): void {
-    // 実装は各コンポーネントで行う
-  }
-
-  onDownloadSampleCsv(): void {
-    // 実装は各コンポーネントで行う
-  }
-
-  async onLogout(): Promise<void> {
-    try {
-      console.log('ログアウト処理を開始');
-      await this.authService.logout();
-      console.log('ログアウト処理が完了、ログイン画面に遷移します');
-      await this.router.navigate(['/auth/login']);
-    } catch (error) {
-      console.error('ログアウトに失敗しました:', error);
+      // Cross-Origin-Embedder-Policy
+      const coepMeta = document.createElement('meta');
+      coepMeta.httpEquiv = 'Cross-Origin-Embedder-Policy';
+      coepMeta.content = environment.security.crossOriginEmbedderPolicy;
+      document.head.appendChild(coepMeta);
     }
   }
 }

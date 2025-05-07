@@ -1,0 +1,16 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+mat-nav-list {
+  padding-top: 0;
+}
+
+a[mat-list-item] {
+  height: 48px;
+}
+
+mat-icon {
+  margin-right: 8px;
+} 

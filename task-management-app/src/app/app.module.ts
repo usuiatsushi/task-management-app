@@ -21,6 +21,9 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatListModule } from '@angular/material/list';
 
 // NgRx
 import { StoreModule } from '@ngrx/store';
@@ -63,6 +66,9 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
     MatSnackBarModule,
     MatProgressBarModule,
     MatCheckboxModule,
+    MatSidenavModule,
+    MatToolbarModule,
+    MatListModule,
     TaskListComponent,
     TaskFormComponent,
     TaskDetailComponent,
