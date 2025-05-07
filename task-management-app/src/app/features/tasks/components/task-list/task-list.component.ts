@@ -628,7 +628,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-
   public async onImportCSV(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) {
@@ -705,39 +704,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       // 入力イベントを強制的に発火
       input.dispatchEvent(new Event('change'));
     }
-  }
-
-  public downloadSampleCSV() {
-    const today = new Date();
-    const twoDaysAgo = new Date(today);
-    twoDaysAgo.setDate(today.getDate() - 2);
-    const twoDaysLater = new Date(today);
-    twoDaysLater.setDate(today.getDate() + 2);
-    const oneWeekLater = new Date(today);
-    oneWeekLater.setDate(today.getDate() + 7);
-
-    const formatDate = (date: Date) => {
-      return date.toISOString().split('T')[0];
-    };
-
-    const sampleData = [
-      ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'],
-      ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '技術的課題', '山田太郎', formatDate(twoDaysAgo)],
-      ['タスク2', 'サンプルタスク2の説明', '進行中', '中', '業務フロー', '鈴木花子', formatDate(today)],
-      ['タスク3', 'サンプルタスク3の説明', '完了', '低', '新機能・改善提案', '佐藤一郎', formatDate(twoDaysLater)],
-      ['タスク4', 'サンプルタスク4の説明', '未着手', '高', 'バグ修正', '田中次郎', formatDate(oneWeekLater)],
-    ];
-
-    const csvContent = sampleData.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'sample_tasks.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   }
 
   // ファイルタイプを判定するメソッド

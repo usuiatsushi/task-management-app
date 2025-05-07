@@ -25,10 +25,6 @@
       </div>
 
       <div class="import-export-container">
-        <button mat-raised-button color="primary" (click)="downloadSampleCSV()">
-          <mat-icon>download</mat-icon>
-          サンプルCSVをダウンロード
-        </button>
         <input type="file" accept=".csv" (change)="onFileSelected($event)" #fileInput style="display: none">
         <button mat-button (click)="fileInput.click()">
           <mat-icon>file_upload</mat-icon>
