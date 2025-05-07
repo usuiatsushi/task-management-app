@@ -61,6 +61,14 @@ export class TaskService implements OnDestroy {
           this.ngZone.run(() => {
             const tasks = querySnapshot.docs.map(doc => {
               const data = doc.data();
+              // Timestamp型をDate型に変換
+              const convertToDate = (value: any) => {
+                if (!value) return null;
+                if (typeof value.toDate === 'function') return value.toDate();
+                if (typeof value === 'object' && 'seconds' in value) return new Date(value.seconds * 1000);
+                if (typeof value === 'string' || value instanceof Date) return new Date(value);
+                return value;
+              };
               const task: Task = {
                 id: doc.id,
                 userId: data['userId'] || '',
@@ -70,9 +78,9 @@ export class TaskService implements OnDestroy {
                 priority: data['priority'] || '中',
                 category: data['category'] || '',
                 assignedTo: data['assignedTo'] || '',
-                createdAt: data['createdAt'],
-                updatedAt: data['updatedAt'],
-                dueDate: data['dueDate'],
+                createdAt: convertToDate(data['createdAt']),
+                updatedAt: convertToDate(data['updatedAt']),
+                dueDate: convertToDate(data['dueDate']),
                 completed: data['completed'] || false
               };
               return task;

@@ -1,4 +1,21 @@
 <mat-nav-list>
+  <!-- ナビゲーションメニュー -->
+  <a mat-list-item routerLink="/tasks" routerLinkActive="active">
+    <mat-icon matListItemIcon>list</mat-icon>
+    <span matListItemTitle>タスク一覧</span>
+  </a>
+  <a mat-list-item routerLink="/tasks/new" routerLinkActive="active">
+    <mat-icon matListItemIcon>add</mat-icon>
+    <span matListItemTitle>新規タスク</span>
+  </a>
+  <a mat-list-item routerLink="/dashboard" routerLinkActive="active">
+    <mat-icon matListItemIcon>dashboard</mat-icon>
+    <span matListItemTitle>ダッシュボード</span>
+  </a>
+
+  <mat-divider></mat-divider>
+
+  <!-- エクスポート/インポートメニュー -->
   <a mat-list-item (click)="onExportCsv()">
     <mat-icon matListItemIcon>file_download</mat-icon>
     <span matListItemTitle>エクスポート（CSV）</span>
@@ -15,7 +32,10 @@
     <mat-icon matListItemIcon>download</mat-icon>
     <span matListItemTitle>サンプルCSVをダウンロード</span>
   </a>
+
   <mat-divider></mat-divider>
+
+  <!-- ログアウト -->
   <a mat-list-item (click)="onLogout()">
     <mat-icon matListItemIcon>logout</mat-icon>
     <span matListItemTitle>ログアウト</span>

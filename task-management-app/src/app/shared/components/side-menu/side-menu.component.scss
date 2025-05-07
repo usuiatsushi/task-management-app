@@ -21,6 +21,19 @@ a[mat-list-item] {
     background-color: rgba(0, 0, 0, 0.04);
   }
 
+  &.active {
+    background-color: rgba(0, 0, 0, 0.08);
+    
+    mat-icon {
+      color: #1976d2;
+    }
+    
+    span {
+      color: #1976d2;
+      font-weight: 500;
+    }
+  }
+
   mat-icon {
     margin-right: 16px;
     color: #666;
