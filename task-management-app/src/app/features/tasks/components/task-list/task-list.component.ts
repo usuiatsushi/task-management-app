@@ -34,6 +34,8 @@ import { Subscription } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
+import { ToastService } from '../../../../shared/services/toast.service';
+import { ToastContainerComponent } from '../../../../shared/components/toast-container/toast-container.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -92,7 +94,8 @@ enum FileType {
     MatCheckboxModule,
     MatMenuModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    ToastContainerComponent
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
@@ -175,7 +178,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
-    private calendarService: CalendarService
+    private calendarService: CalendarService,
+    private toastService: ToastService
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({

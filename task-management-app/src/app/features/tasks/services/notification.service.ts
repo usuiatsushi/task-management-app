@@ -3,12 +3,16 @@ import { Firestore, collection, addDoc, query, where, getDocs, updateDoc, doc } 
 import { Notification } from '../models/notification.model';
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../models/task.model';
+import { ToastService } from '../../../shared/services/toast.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  constructor(private firestore: Firestore) {}
+  constructor(
+    private firestore: Firestore,
+    private toastService: ToastService
+  ) {}
 
   async createNotification(notification: Omit<Notification, 'id'>): Promise<string> {
     const notificationsRef = collection(this.firestore, 'notifications');
@@ -41,9 +45,13 @@ export class NotificationService {
   }
 
   async checkTaskDeadlines(tasks: Task[]): Promise<void> {
+    console.log('Checking task deadlines...');
     const now = new Date();
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
+
+    console.log('Current date:', now);
+    console.log('Tomorrow:', tomorrow);
 
     for (const task of tasks) {
       if (task.dueDate) {
@@ -58,16 +66,29 @@ export class NotificationService {
           dueDate = new Date(task.dueDate);
         }
 
+        console.log('Task:', task.title);
+        console.log('Due date:', dueDate);
+
         if (isNaN(dueDate.getTime())) {
           console.error('Invalid due date for task:', task);
           continue;
         }
 
-        // 期限が明日のタスクをチェック
-        if (dueDate.toDateString() === tomorrow.toDateString()) {
+        // 期限が今日または明日のタスクをチェック
+        const isToday = dueDate.toDateString() === now.toDateString();
+        const isTomorrow = dueDate.toDateString() === tomorrow.toDateString();
+
+        if (isToday) {
+          console.log('Today deadline notification for task:', task.title);
+          await this.showNotification(
+            '期限が今日です',
+            `「${task.title}」の期限が今日です。`
+          );
+        } else if (isTomorrow) {
+          console.log('Tomorrow deadline notification for task:', task.title);
           await this.showNotification(
             '期限が近づいています',
-            `タスク「${task.title}」の期限が明日です。`
+            `「${task.title}」の期限が明日です。`
           );
         }
       }
@@ -75,6 +96,7 @@ export class NotificationService {
   }
 
   async showNotification(title: string, message: string): Promise<void> {
-    // Implementation of showNotification method
+    console.log('Showing notification:', { title, message });
+    this.toastService.show(message, 'warning');
   }
 } 

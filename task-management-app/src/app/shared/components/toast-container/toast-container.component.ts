@@ -25,13 +25,17 @@ import { MatButtonModule } from '@angular/material/button';
     </ng-container>
   `,
   styles: [`
-    ::ng-deep .toast-overlay {
+    .toast-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: rgba(0,0,0,0.3);
       z-index: 9998;
     }
-    ::ng-deep .toast-container {
+
+    .toast-container {
       position: fixed;
       top: 24px;
       left: 50%;
@@ -42,7 +46,8 @@ import { MatButtonModule } from '@angular/material/button';
       gap: 12px;
       align-items: center;
     }
-    ::ng-deep .toast {
+
+    .toast {
       display: flex;
       align-items: center;
       gap: 16px;
@@ -50,19 +55,22 @@ import { MatButtonModule } from '@angular/material/button';
       border-radius: 8px;
       min-width: 300px;
       justify-content: space-between;
-      box-shadow: 0 2px 4px #000000;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    ::ng-deep .message {
+
+    .message {
       flex: 1;
       font-weight: 500;
     }
-    ::ng-deep .close-button {
-      color:rgb(255, 255, 255) !important;
+
+    .close-button {
+      color: white !important;
       margin-left: 16px;
       opacity: 0.9;
       transition: opacity 0.2s;
     }
-    ::ng-deep .close-button:hover {
+
+    .close-button:hover {
       opacity: 1;
     }
   `],
@@ -73,18 +81,17 @@ export class ToastContainerComponent {
   constructor(public toastService: ToastService) {}
 
   getStyle(type: string | undefined) {
-    console.log('toast type:', type);
     switch (type) {
       case 'info':
-        return { background: ' #000000', color: ' #000000' };
+        return { background: '#2196f3', color: 'white' };
       case 'success':
-        return { background: ' #000000', color:'  #000000' };
+        return { background: '#4caf50', color: 'white' };
       case 'warning':
-        return { background: 'rgb(255, 170, 0)', color: 'rgb(0, 0, 0)' };
+        return { background: '#ff9800', color: 'white' };
       case 'error':
-        return { background: 'rgb(255, 0, 0)', color: 'rgb(0, 0, 0)' };
+        return { background: '#f44336', color: 'white' };
       default:
-        return { background: ' #000000', color: ' #000000' };
+        return { background: '#2196f3', color: 'white' };
     }
   }
 } 
