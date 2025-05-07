@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -26,7 +26,10 @@ import { AuthService } from './features/auth/services/auth.service';
 export class AppComponent {
   isMenuOpen = false;
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
@@ -48,7 +51,14 @@ export class AppComponent {
     // 実装は各コンポーネントで行う
   }
 
-  onLogout(): void {
-    this.authService.logout();
+  async onLogout(): Promise<void> {
+    try {
+      console.log('ログアウト処理を開始');
+      await this.authService.logout();
+      console.log('ログアウト処理が完了、ログイン画面に遷移します');
+      await this.router.navigate(['/auth/login']);
+    } catch (error) {
+      console.error('ログアウトに失敗しました:', error);
+    }
   }
 }
