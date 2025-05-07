@@ -4,7 +4,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { MatDividerModule } from '@angular/material/divider';
-import { AuthService } from '../../features/auth/services/auth.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-nav-menu',
@@ -36,8 +36,7 @@ export class NavMenuComponent {
 
   async logout(): Promise<void> {
     try {
-      await this.authService.logout();
-      this.router.navigate(['/auth/login']);
+      await this.authService.signOut();
     } catch (error) {
       console.error('ログアウトに失敗しました:', error);
     }

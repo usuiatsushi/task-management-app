@@ -31,7 +31,7 @@ import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, Na
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../models/task.model';
 import { Subscription } from 'rxjs';
-import { AuthService } from '../../../auth/services/auth.service';
+import { AuthService } from '../../../../core/services/auth.service';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 
@@ -614,9 +614,12 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  async logout() {
-    await this.authService.logout();
-    this.router.navigate(['/auth/login']);
+  async logout(): Promise<void> {
+    try {
+      await this.authService.signOut();
+    } catch (error) {
+      console.error('ログアウトに失敗しました:', error);
+    }
   }
 
   ngOnDestroy() {
