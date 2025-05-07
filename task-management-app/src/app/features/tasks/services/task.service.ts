@@ -1,10 +1,11 @@
 import { Injectable, OnDestroy, NgZone, Inject } from '@angular/core';
 import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData, getDoc } from '@angular/fire/firestore';
-import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, map, of, throwError } from 'rxjs';
 import { Task } from '../models/task.model';
 import { Timestamp } from 'firebase/firestore';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
+import { CalendarService } from '../services/calendar.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,12 +17,14 @@ export class TaskService implements OnDestroy {
   private onlineHandler: () => void;
   private offlineHandler: () => void;
   private authSubscription: Subscription | null = null;
+  private tasksSubscription: Subscription | null = null;
 
   constructor(
     private firestore: Firestore,
     private snackBar: MatSnackBar,
     private ngZone: NgZone,
-    @Inject(AuthService) private authService: AuthService
+    @Inject(AuthService) private authService: AuthService,
+    private calendarService: CalendarService
   ) {
     this.onlineHandler = this.handleOnlineStatus.bind(this);
     this.offlineHandler = this.handleOnlineStatus.bind(this);
@@ -275,39 +278,42 @@ export class TaskService implements OnDestroy {
       console.log('Update data received:', updateData);
 
       const taskDoc = doc(this.firestore, 'tasks', taskId);
+      const taskSnapshot = await getDoc(taskDoc);
+      const currentTask = taskSnapshot.data() as Task;
       
       // dueDateの処理
       if (updateData.dueDate) {
         if (updateData.dueDate instanceof Date) {
-          updateData.dueDate = {
-            seconds: Math.floor(updateData.dueDate.getTime() / 1000),
-            nanoseconds: 0
-          } as any;
+          updateData.dueDate = Timestamp.fromDate(updateData.dueDate);
         } else if (updateData.dueDate instanceof Timestamp) {
-          const date = updateData.dueDate.toDate();
-          updateData.dueDate = {
-            seconds: Math.floor(date.getTime() / 1000),
-            nanoseconds: 0
-          } as any;
+          // すでにTimestampの場合はそのまま使用
         } else if (typeof updateData.dueDate === 'object' && 'seconds' in updateData.dueDate) {
-          // すでにタイムスタンプ形式の場合はそのまま使用
-          updateData.dueDate = {
-            seconds: (updateData.dueDate as any).seconds,
-            nanoseconds: (updateData.dueDate as any).nanoseconds || 0
-          } as any;
+          updateData.dueDate = Timestamp.fromMillis(updateData.dueDate.seconds * 1000);
         }
       }
 
       // updatedAtの設定
-      const now = new Date();
-      updateData.updatedAt = {
-        seconds: Math.floor(now.getTime() / 1000),
-        nanoseconds: 0
-      } as any;
+      updateData.updatedAt = Timestamp.fromDate(new Date());
 
       console.log('Final update data:', updateData);
       await updateDoc(taskDoc, updateData);
       console.log('Update completed successfully');
+
+      // カレンダーイベントの更新
+      if (currentTask.calendarEventId && updateData.dueDate) {
+        try {
+          const updatedTask = {
+            ...currentTask,
+            ...updateData,
+            id: taskId
+          };
+          await this.calendarService.updateCalendarEvent(updatedTask);
+          console.log('Calendar event updated successfully');
+        } catch (error) {
+          console.error('Error updating calendar event:', error);
+          // カレンダー更新の失敗はタスク更新を妨げない
+        }
+      }
     } catch (error) {
       console.error('Error updating task:', error);
       throw error;

@@ -33,8 +33,7 @@ enum FileType {
 export class NavMenuComponent {
   menuItems = [
     { path: '/tasks', label: 'タスク一覧', icon: 'list' },
-    { path: '/tasks/new', label: '新規タスク', icon: 'add' },
-    { path: '/tasks/completed', label: '完了済みタスク', icon: 'check_circle' }
+    { path: '/tasks/new', label: '新規タスク', icon: 'add' }
   ];
 
   constructor(
