@@ -24,14 +24,6 @@
         </div>
       </div>
 
-      <div class="import-export-container">
-        <input type="file" accept=".csv" (change)="onFileSelected($event)" #fileInput style="display: none">
-        <button mat-button (click)="fileInput.click()">
-          <mat-icon>file_upload</mat-icon>
-          CSVインポート
-        </button>
-      </div>
-
       <form [formGroup]="filterForm" class="task-list-filters">
         <mat-form-field class="category-field">
           <mat-label>カテゴリ</mat-label>
