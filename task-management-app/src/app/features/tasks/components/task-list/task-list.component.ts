@@ -628,28 +628,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  public exportTasksToCSV(): void {
-    const headers = ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'];
-    const rows = this.tasks.map(task => [
-      task.title,
-      task.description,
-      task.status,
-      task.priority,
-      task.category,
-      task.assignedTo,
-      this.getDateFromTimestamp(task.dueDate).toLocaleDateString()
-    ]);
-    const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n');
-    // BOMを付与
-    const bom = '\uFEFF';
-    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'tasks.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 
   public async exportTasksToExcel(): Promise<void> {
     const headers = ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'];

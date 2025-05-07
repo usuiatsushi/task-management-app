@@ -3,11 +3,24 @@ import { TaskListComponent } from './components/task-list/task-list.component';
 import { TaskFormComponent } from './components/task-form/task-form.component';
 import { TaskDetailComponent } from './components/task-detail/task-detail.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { AuthGuard } from '../../core/guards/auth.guard';
 
 export const TASK_ROUTES: Routes = [
-  { path: '', component: TaskListComponent },
-  { path: 'new', component: TaskFormComponent },
-  { path: ':id', component: TaskDetailComponent },
+  {
+    path: '',
+    component: TaskListComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'new',
+    component: TaskFormComponent,
+    canActivate: [AuthGuard]
+  },
+  {
+    path: ':id',
+    component: TaskDetailComponent,
+    canActivate: [AuthGuard]
+  },
   { path: ':id/edit', component: TaskFormComponent },
   { path: 'dashboard', component: DashboardComponent }
 ]; 

@@ -4,6 +4,11 @@
     <span matListItemTitle>{{item.label}}</span>
   </a>
   <mat-divider></mat-divider>
+  <a mat-list-item (click)="exportToCSV()">
+    <mat-icon matListItemIcon>download</mat-icon>
+    <span matListItemTitle>CSVエクスポート</span>
+  </a>
+  <mat-divider></mat-divider>
   <a mat-list-item (click)="logout()">
     <mat-icon matListItemIcon>logout</mat-icon>
     <span matListItemTitle>ログアウト</span>

@@ -33,9 +33,9 @@ export class TaskService implements OnDestroy {
   }
 
   private initializeAuthListener() {
-    this.authSubscription = this.authService.authState$.subscribe((isAuthenticated: boolean) => {
-      if (isAuthenticated) {
-    this.initializeTasksListener();
+    this.authSubscription = this.authService.authState$.subscribe((user) => {
+      if (user) {
+        this.initializeTasksListener();
       } else {
         if (this.unsubscribe) {
           this.unsubscribe();
