@@ -1,0 +1,33 @@
+:host {
+  display: block;
+  width: 250px;
+  height: 100%;
+  background-color: #fff;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+}
+
+mat-nav-list {
+  padding-top: 16px;
+}
+
+mat-divider {
+  margin: 16px 0;
+}
+
+a[mat-list-item] {
+  height: 48px;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  mat-icon {
+    margin-right: 16px;
+    color: #666;
+  }
+
+  span {
+    color: #333;
+    font-size: 14px;
+  }
+} 

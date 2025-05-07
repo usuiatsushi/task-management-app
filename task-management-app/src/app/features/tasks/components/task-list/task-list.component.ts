@@ -103,16 +103,16 @@ enum FileType {
 })
 export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns: string[] = ['select', 'title', 'category', 'status', 'priority', 'dueDate', 'actions'];
-  dataSource = new MatTableDataSource<any>();
+  dataSource: MatTableDataSource<Task>;
   loading = false;
   filterForm: FormGroup;
   searchControl: FormControl;
-  selectedTasks: any[] = [];
-  editingTask: any = null;
+  selectedTasks: Task[] = [];
+  editingTask: Task | null = null;
   editingField: string | null = null;
   categories: string[] = [];
   tasks: Task[] = [];
-  private subscription: Subscription | null = null;
+  private subscription: Subscription = new Subscription();
 
   // 選択肢の定義
   statusOptions = ['未着手', '進行中', '完了'];
@@ -177,6 +177,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private calendarService: CalendarService
   ) {
+    this.dataSource = new MatTableDataSource<Task>([]);
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
       category: [''],
@@ -194,33 +195,35 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     // リアルタイムアップデートの購読
-    this.subscription = this.taskService.tasks$.subscribe(
-      (tasks) => {
-        console.log('Received tasks update:', tasks.length);
-        this.tasks = tasks;
-        this.dataSource.data = tasks;
-        
-        // ソートとページネーションの設定を確認
-        if (this.sort && !this.dataSource.sort) {
-          this.dataSource.sort = this.sort;
-        }
-        if (this.paginator && !this.dataSource.paginator) {
-          this.dataSource.paginator = this.paginator;
-        }
+    this.subscription.add(
+      this.taskService.tasks$.subscribe(
+        (tasks) => {
+          console.log('Received tasks update:', tasks.length);
+          this.tasks = tasks;
+          this.dataSource.data = tasks;
+          
+          // ソートとページネーションの設定を確認
+          if (this.sort && !this.dataSource.sort) {
+            this.dataSource.sort = this.sort;
+          }
+          if (this.paginator && !this.dataSource.paginator) {
+            this.dataSource.paginator = this.paginator;
+          }
 
-        // フィルター述語を設定
-        this.dataSource.filterPredicate = this.createFilter();
-        
-        // 現在のフィルターを適用（フィルターが設定されている場合のみ）
-        const currentFilters = this.filterForm.value;
-        if (Object.values(currentFilters).some(value => value)) {
-          this.applyFilters();
+          // フィルター述語を設定
+          this.dataSource.filterPredicate = this.createFilter();
+          
+          // 現在のフィルターを適用（フィルターが設定されている場合のみ）
+          const currentFilters = this.filterForm.value;
+          if (Object.values(currentFilters).some(value => value)) {
+            this.applyFilters();
+          }
+
+          this.notificationService.checkTaskDeadlines(tasks);
+
+          this.cdr.detectChanges();
         }
-
-        this.notificationService.checkTaskDeadlines(tasks);
-
-        this.cdr.detectChanges();
-      }
+      )
     );
   }
 
@@ -229,21 +232,23 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dataSource.paginator = this.paginator;
 
     // 優先度・ステータスのカスタムソート
-    this.dataSource.sortingDataAccessor = (item, property) => {
+    this.dataSource.sortingDataAccessor = (item: Task, property: string) => {
       if (property === 'priority') {
         return this.priorityOrder[item.priority as keyof typeof this.priorityOrder] || 0;
       }
       if (property === 'status') {
         return this.statusOrder[item.status as keyof typeof this.statusOrder] || 0;
       }
-      return item[property];
+      return (item as any)[property];
     };
   }
 
   private setupFilterForm(): void {
-    this.filterForm.valueChanges.subscribe(() => {
-      this.applyFilters();
-    });
+    this.subscription.add(
+      this.filterForm.valueChanges.subscribe(() => {
+        this.applyFilters();
+      })
+    );
   }
 
   async loadTasks(): Promise<void> {
@@ -273,6 +278,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.loading = false;
       console.log('Task loading completed');
     }
+  }
+
+  navigateToNewTask(): void {
+    this.router.navigate(['/tasks/new']);
   }
 
   private createFilter(): (data: any, filter: string) => boolean {
@@ -352,17 +361,15 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filterForm.reset();
   }
 
-  viewTask(task: any): void {
+  viewTask(task: Task): void {
     this.router.navigate(['/tasks', task.id]);
   }
 
-  navigateToNewTask(): void {
-    this.router.navigate(['/tasks/new']);
+  editTask(task: Task): void {
+    this.router.navigate(['/tasks', task.id, 'edit']);
   }
 
-  async deleteTask(task: any, event: Event): Promise<void> {
-    event.stopPropagation();
-    
+  async deleteTask(task: Task): Promise<void> {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'タスクの削除',
@@ -386,7 +393,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  isSelected(task: any): boolean {
+  isSelected(task: Task): boolean {
     return this.selectedTasks.some(t => t.id === task.id);
   }
 
@@ -398,7 +405,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.selectedTasks.length > 0 && this.selectedTasks.length < this.dataSource.data.length;
   }
 
-  toggleTaskSelection(task: any): void {
+  toggleTaskSelection(task: Task): void {
     const index = this.selectedTasks.findIndex(t => t.id === task.id);
     if (index === -1) {
       this.selectedTasks.push(task);
@@ -480,7 +487,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  startEditing(task: any, field: string) {
+  startEditing(task: Task, field: string) {
     this.editingTask = task;
     this.editingField = field;
   }
@@ -490,7 +497,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editingField = null;
   }
 
-  async updateTaskField(task: any, field: string, value: any) {
+  async updateTaskField(task: Task, field: string, value: any) {
     try {
       console.log(`Updating field "${field}" for task:`, task);
       console.log('New value:', value);
@@ -510,19 +517,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onFieldChange(task: any, field: string, event: any) {
+  onFieldChange(task: Task, field: string, event: any) {
     const value = event.target.value;
     this.updateTaskField(task, field, value);
     this.stopEditing();
   }
 
-  onSelectChange(task: any, field: string, event: any) {
+  onSelectChange(task: Task, field: string, event: any) {
     const value = event.value;
     this.updateTaskField(task, field, value);
     this.stopEditing();
   }
 
-  async onDateChange(task: any, event: any) {
+  async onDateChange(task: Task, event: any) {
     try {
       console.log('日付変更処理を開始:', task.id, task.title);
       console.log('選択された日付:', event.value);
@@ -619,10 +626,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/auth/login']);
   }
 
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe();
   }
 
   public exportTasksToCSV(): void {

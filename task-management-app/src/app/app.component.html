@@ -1,2 +1,24 @@
-<app-toast-container></app-toast-container>
-<router-outlet></router-outlet>
+<mat-sidenav-container class="app-container">
+  <mat-sidenav #sidenav mode="over" [opened]="isMenuOpen" (closed)="isMenuOpen = false">
+    <app-side-menu
+      (exportCsv)="onExportCsv()"
+      (exportExcel)="onExportExcel()"
+      (importCsv)="onImportCsv()"
+      (downloadSampleCsv)="onDownloadSampleCsv()"
+      (logout)="onLogout()">
+    </app-side-menu>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary">
+      <button mat-icon-button (click)="toggleMenu()">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span>タスク管理アプリ</span>
+    </mat-toolbar>
+
+    <div class="content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

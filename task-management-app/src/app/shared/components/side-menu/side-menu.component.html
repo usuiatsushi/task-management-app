@@ -1,0 +1,23 @@
+<mat-nav-list>
+  <a mat-list-item (click)="onExportCsv()">
+    <mat-icon matListItemIcon>file_download</mat-icon>
+    <span matListItemTitle>エクスポート（CSV）</span>
+  </a>
+  <a mat-list-item (click)="onExportExcel()">
+    <mat-icon matListItemIcon>file_download</mat-icon>
+    <span matListItemTitle>エクスポート（Excel）</span>
+  </a>
+  <a mat-list-item (click)="onImportCsv()">
+    <mat-icon matListItemIcon>file_upload</mat-icon>
+    <span matListItemTitle>CSVインポート</span>
+  </a>
+  <a mat-list-item (click)="onDownloadSampleCsv()">
+    <mat-icon matListItemIcon>download</mat-icon>
+    <span matListItemTitle>サンプルCSVをダウンロード</span>
+  </a>
+  <mat-divider></mat-divider>
+  <a mat-list-item (click)="onLogout()">
+    <mat-icon matListItemIcon>logout</mat-icon>
+    <span matListItemTitle>ログアウト</span>
+  </a>
+</mat-nav-list> 
