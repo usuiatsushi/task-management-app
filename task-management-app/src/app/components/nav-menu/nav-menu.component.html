@@ -16,6 +16,11 @@
     <mat-icon matListItemIcon>download</mat-icon>
     <span matListItemTitle>サンプルCSVダウンロード</span>
   </a>
+  <a mat-list-item (click)="fileInput.click()">
+    <mat-icon matListItemIcon>upload</mat-icon>
+    <span matListItemTitle>CSVインポート</span>
+    <input type="file" accept=".csv" (change)="onFileSelected($event)" #fileInput style="display: none">
+  </a>
   <mat-divider></mat-divider>
   <a mat-list-item (click)="logout()">
     <mat-icon matListItemIcon>logout</mat-icon>
