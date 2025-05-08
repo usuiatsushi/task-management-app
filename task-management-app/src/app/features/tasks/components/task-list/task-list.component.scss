@@ -628,4 +628,11 @@ mat-form-field {
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
+}
+
+.cdk-drag-preview {
+  transition: none !important;
+  animation: none !important;
+  will-change: unset !important;
+  pointer-events: none !important;
 } 
