@@ -27,6 +27,8 @@
     "@ngrx/store": "^18.0.0",
     "@ngrx/store-devtools": "^18.0.0",
     "@types/marked": "^5.0.2",
+    "angular-google-charts": "^16.0.2",
+    "dhtmlx-gantt": "^9.0.10",
     "firebase": "^10.14.1",
     "marked": "^15.0.11",
     "rxjs": "~7.8.0",

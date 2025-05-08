@@ -44,6 +44,8 @@ import { BehaviorSubject } from 'rxjs';
 import { Firestore } from '@angular/fire/firestore';
 import { MatTabsModule } from '@angular/material/tabs';
 import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
+import { GoogleChartsModule, ChartType } from 'angular-google-charts';
+import { GanttComponent } from '../gantt/gantt.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -105,7 +107,9 @@ enum FileType {
     MatNativeDateModule,
     ToastContainerComponent,
     MatTabsModule,
-    DragDropModule
+    DragDropModule,
+    GoogleChartsModule,
+    GanttComponent
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
@@ -179,6 +183,50 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // デフォルトのカテゴリ選択肢
   defaultCategories = ['技術的課題', '業務フロー', 'バグ修正', '新機能・改善提案'];
+
+  ganttColumns = [
+    { type: 'string', label: 'Task ID' },
+    { type: 'string', label: 'Task Name' },
+    { type: 'string', label: 'Resource' },
+    { type: 'date', label: 'Start Date' },
+    { type: 'date', label: 'End Date' },
+    { type: 'number', label: 'Duration' },
+    { type: 'number', label: 'Percent Complete' },
+    { type: 'string', label: 'Dependencies' }
+  ];
+
+  ganttData = [
+    ['task1', 'タスク1', '開発', new Date(2025, 4, 8), new Date(2025, 4, 10), null,  100,  null],
+    ['task2', 'タスク2', '設計', new Date(2025, 4, 11), new Date(2025, 4, 13), null,  60,  'task1'],
+    ['task3', 'タスク3', 'テスト', new Date(2025, 4, 14), new Date(2025, 4, 16), null,  0,  'task2'],
+  ];
+
+  ganttOptions = {
+    height: 400,
+    gantt: {
+      palette: [
+        { color: '#5e97f6', dark: '#2a56c6', light: '#c6dafc' },
+        { color: '#db4437', dark: '#a52714', light: '#f4c7c3' },
+        { color: '#f2a600', dark: '#ee8100', light: '#fce8b2' }
+      ],
+      trackHeight: 36,
+      barHeight: 24,
+      labelStyle: {
+        fontName: 'Roboto',
+        fontSize: 14,
+        color: '#333'
+      },
+      criticalPathEnabled: false,
+      innerGridHorizLine: {
+        stroke: '#e0e0e0',
+        strokeWidth: 1
+      }
+    }
+  };
+
+  ganttChartType = ChartType.Gantt;
+
+  isTimelineTabActive = false;
 
   constructor(
     private taskService: TaskService,
@@ -1076,5 +1124,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get dropListIds(): string[] {
     return this.statusOptions.map(s => 'dropList-' + s);
+  }
+
+  get ganttItems() {
+    return this.tasks.map(task => ({
+      id: task.id,
+      title: task.title,
+      start: task.dueDate ? this.getDateFromTimestamp(task.dueDate) : new Date(),
+      end: task.dueDate ? this.getDateFromTimestamp(task.dueDate) : new Date(),
+      color: '#1976d2'
+    }));
+  }
+
+  onTabChange(event: any) {
+    this.isTimelineTabActive = (event.index === 2); // タイムラインタブのindex
   }
 } 

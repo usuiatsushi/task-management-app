@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
+import { GoogleChartsModule } from 'angular-google-charts';
 
 // Angular Material
 import { MatButtonModule } from '@angular/material/button';
@@ -82,7 +83,8 @@ import { TaskDetailComponent } from './features/tasks/components/task-detail/tas
 
     // AngularFire
     AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule
+    AngularFirestoreModule,
+    GoogleChartsModule
   ],
   providers: [],
   exports: []
