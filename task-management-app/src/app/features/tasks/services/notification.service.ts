@@ -54,6 +54,7 @@ export class NotificationService {
     console.log('Tomorrow:', tomorrow);
 
     for (const task of tasks) {
+      if (task.status === '完了') continue;
       if (task.dueDate) {
         let dueDate: Date;
         if (task.dueDate instanceof Timestamp) {
