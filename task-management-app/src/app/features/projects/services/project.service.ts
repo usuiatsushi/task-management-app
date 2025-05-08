@@ -15,7 +15,13 @@ export class ProjectService {
     private firestore: Firestore,
     private authService: AuthService
   ) {
-    this.loadProjects();
+    this.authService.authState$.subscribe(user => {
+      if (user) {
+        this.loadProjects();
+      } else {
+        this.projectsSubject.next([]);
+      }
+    });
   }
 
   private async loadProjects(): Promise<void> {
