@@ -24,4 +24,6 @@ export interface Task {
   subTasks?: SubTask[];
   completed: boolean;
   projectId?: string;
+  startDate?: Timestamp | Date | string | null;
+  duration?: number;
 } 

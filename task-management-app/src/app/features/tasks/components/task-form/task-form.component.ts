@@ -240,8 +240,13 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         const dueDate = new Date(date);
         dueDate.setHours(23, 59, 0, 0);
 
+        const now = new Date();
+        const startDate = now;
+        const duration = 7;
         const taskData = {
           ...this.taskForm.value,
+          startDate: startDate,
+          duration: duration,
           dueDate: dueDate,
           updatedAt: Timestamp.now()
         };

@@ -195,12 +195,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     { type: 'string', label: 'Dependencies' }
   ];
 
-  ganttData = [
-    ['task1', 'タスク1', '開発', new Date(2025, 4, 8), new Date(2025, 4, 10), null,  100,  null],
-    ['task2', 'タスク2', '設計', new Date(2025, 4, 11), new Date(2025, 4, 13), null,  60,  'task1'],
-    ['task3', 'タスク3', 'テスト', new Date(2025, 4, 14), new Date(2025, 4, 16), null,  0,  'task2'],
-  ];
-
   ganttOptions = {
     height: 400,
     gantt: {
@@ -755,7 +749,17 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       const data = rows.slice(1);
       
       // タスクデータに変換
+      const importDate = new Date();
       const tasks = data.map(row => {
+        // 開始日カラムがあればそれを使う。なければインポート日。
+        let startDate: Date;
+        const startDateIndex = headers.findIndex(h => h === '開始日' || h === 'startDate');
+        if (startDateIndex !== -1 && row[startDateIndex]?.trim()) {
+          startDate = new Date(row[startDateIndex]);
+        } else {
+          startDate = importDate;
+        }
+        const duration = 7;
         const taskData: Omit<Task, 'id'> = {
           title: row[headers.indexOf('タイトル')] || '',
           description: row[headers.indexOf('説明')] || '',
@@ -767,7 +771,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           userId: 'user1',
           createdAt: Timestamp.fromDate(new Date()),
           updatedAt: Timestamp.fromDate(new Date()),
-          completed: row[headers.indexOf('完了')] === '完了' || false
+          completed: row[headers.indexOf('完了')] === '完了' || false,
+          startDate: startDate,
+          duration: duration
         };
         return taskData;
       }).filter(task => task.title.trim() !== ''); // タイトルが空のタスクを除外
