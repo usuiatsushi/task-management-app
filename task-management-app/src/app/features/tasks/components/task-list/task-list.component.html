@@ -324,12 +324,17 @@
   </mat-tab>
   <mat-tab label="ボード">
     <div class="board-view">
-      <div class="board-column" *ngFor="let status of ['未着手', '進行中', '完了']">
+      <div class="board-column" *ngFor="let status of statusOptions">
         <div class="board-column-header">
           <span>{{ status }}</span>
         </div>
-        <div class="board-tasks" cdkDropList [cdkDropListData]="getTasksByStatus(status)" (cdkDropListDropped)="onTaskDrop($event, status)">
-          <mat-card class="board-task-card" *ngFor="let task of getTasksByStatus(status)" cdkDrag>
+        <div class="board-tasks"
+             cdkDropList
+             [cdkDropListData]="getTasksByStatus(status)"
+             [cdkDropListConnectedTo]="dropListIds"
+             [id]="'dropList-' + status"
+             (cdkDropListDropped)="onTaskDrop($event, status)">
+          <mat-card class="board-task-card" *ngFor="let task of getTasksByStatus(status)" cdkDrag [cdkDragData]="task">
             <div class="board-task-title">{{ task.title }}</div>
             <div class="board-task-meta">
               <span *ngIf="task.dueDate">期限: {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/dd') : '期限なし' }}</span>

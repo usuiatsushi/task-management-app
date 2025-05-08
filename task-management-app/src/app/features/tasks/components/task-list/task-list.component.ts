@@ -43,7 +43,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { Firestore } from '@angular/fire/firestore';
 import { MatTabsModule } from '@angular/material/tabs';
-import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -1059,8 +1059,22 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   async onTaskDrop(event: CdkDragDrop<any[]>, newStatus: string) {
     const task = event.item.data;
-    if (task.status !== newStatus) {
+    if (event.previousContainer !== event.container && task.status !== newStatus) {
+      // ステータスを即時変更（UI反映用）
+      task.status = newStatus;
+      // ローカル配列も移動
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+      // Firestoreも更新
       await this.updateTaskField(task, 'status', newStatus);
     }
+  }
+
+  get dropListIds(): string[] {
+    return this.statusOptions.map(s => 'dropList-' + s);
   }
 } 
