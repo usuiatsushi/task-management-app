@@ -579,11 +579,13 @@ mat-form-field {
   border-radius: 4px;
 }
 
-// ドラッグ時の装飾を消す
-.board-task-card .cdk-drag-placeholder,
-.board-task-card .cdk-drag-preview,
-.board-task-card .cdk-drag-animating {
-  display: none !important;
+// ドラッグ時の装飾を消す（display: noneやopacity: 0は削除）
+.cdk-drag-placeholder,
+.cdk-drag-preview,
+.cdk-drag-animating {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 // Materialフォームの装飾をリセット
@@ -593,25 +595,6 @@ mat-form-field {
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
-}
-
-// すべてのcdk-drag系装飾を徹底的に非表示
-.cdk-drag-placeholder,
-.cdk-drag-preview,
-.cdk-drag-animating {
-  display: none !important;
-  background: none !important;
-  border: none !important;
-  box-shadow: none !important;
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  height: 0 !important;
-  min-height: 0 !important;
-  max-height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  opacity: 0 !important;
 }
 
 // カード内の左端に余白や装飾が出る場合のリセット
