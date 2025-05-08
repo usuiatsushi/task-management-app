@@ -1142,4 +1142,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   onTabChange(event: any) {
     this.isTimelineTabActive = (event.index === 2); // タイムラインタブのindex
   }
+
+  async onGanttTaskUpdate(updatedTask: any) {
+    try {
+      await this.taskService.updateTask(updatedTask.id, {
+        title: updatedTask.title,
+        startDate: updatedTask.startDate,
+        duration: updatedTask.duration,
+        dueDate: updatedTask.dueDate
+      });
+      this.snackBar.open('タスクを更新しました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('タスクの更新に失敗しました:', error);
+      this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
 } 

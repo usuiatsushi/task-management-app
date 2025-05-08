@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import 'dhtmlx-gantt';
 
 declare let gantt: any;
@@ -14,6 +14,7 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   @ViewChild('gantt_here', { static: true }) ganttContainer!: ElementRef;
   @Input() active = false; // タブのアクティブ状態を受け取る
   @Input() tasks: any[] = []; // タスクデータを受け取る
+  @Output() taskUpdated = new EventEmitter<any>();
 
   ngOnInit() {
     this.configureGantt();
@@ -65,6 +66,37 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
     // 日付フォーマットの設定
     gantt.config.date_format = "%Y-%m-%d %H:%i";
+
+    // タスクの編集を許可
+    gantt.config.editable = true;
+    gantt.config.drag_progress = true;
+    gantt.config.drag_resize = true;
+    gantt.config.drag_move = true;
+
+    // イベントハンドラの設定
+    gantt.attachEvent("onAfterTaskUpdate", (id: string, task: any) => {
+      this.handleTaskUpdate(id, task);
+    });
+
+    gantt.attachEvent("onAfterTaskDrag", (id: string, mode: string, e: any) => {
+      const task = gantt.getTask(id);
+      this.handleTaskUpdate(id, task);
+    });
+  }
+
+  private handleTaskUpdate(id: string, task: any) {
+    const originalTask = this.tasks.find(t => t.id === id);
+    if (!originalTask) return;
+
+    const updatedTask = {
+      ...originalTask,
+      title: task.text,
+      startDate: task.start_date,
+      duration: task.duration,
+      dueDate: new Date(task.start_date.getTime() + task.duration * 24 * 60 * 60 * 1000)
+    };
+
+    this.taskUpdated.emit(updatedTask);
   }
 
   ngAfterViewInit() {

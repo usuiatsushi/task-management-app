@@ -288,30 +288,50 @@ export class TaskService implements OnDestroy {
       const taskSnapshot = await getDoc(taskDoc);
       const currentTask = taskSnapshot.data() as Task;
       
-      // dueDateの処理
-      if (updateData.dueDate) {
-        if (updateData.dueDate instanceof Date) {
-          updateData.dueDate = Timestamp.fromDate(updateData.dueDate);
-        } else if (updateData.dueDate instanceof Timestamp) {
-          // すでにTimestampの場合はそのまま使用
-        } else if (typeof updateData.dueDate === 'object' && 'seconds' in updateData.dueDate) {
-          updateData.dueDate = Timestamp.fromMillis(updateData.dueDate.seconds * 1000);
+      // 日付の処理
+      const processedData: any = { ...updateData };
+
+      // startDateの処理
+      if (updateData.startDate) {
+        if (updateData.startDate instanceof Date) {
+          processedData.startDate = Timestamp.fromDate(updateData.startDate);
+        } else if (updateData.startDate instanceof Timestamp) {
+          processedData.startDate = updateData.startDate;
+        } else if (typeof updateData.startDate === 'object' && updateData.startDate !== null && 'seconds' in updateData.startDate) {
+          const dateObj = updateData.startDate as { seconds: number };
+          processedData.startDate = Timestamp.fromMillis(dateObj.seconds * 1000);
         }
       }
 
-      // updatedAtの設定
-      updateData.updatedAt = Timestamp.fromDate(new Date());
+      // dueDateの処理
+      if (updateData.dueDate) {
+        if (updateData.dueDate instanceof Date) {
+          processedData.dueDate = Timestamp.fromDate(updateData.dueDate);
+        } else if (updateData.dueDate instanceof Timestamp) {
+          processedData.dueDate = updateData.dueDate;
+        } else if (typeof updateData.dueDate === 'object' && 'seconds' in updateData.dueDate) {
+          processedData.dueDate = Timestamp.fromMillis(updateData.dueDate.seconds * 1000);
+        }
+      }
 
-      console.log('Final update data:', updateData);
-      await updateDoc(taskDoc, updateData);
+      // durationの処理
+      if (updateData.duration) {
+        processedData.duration = Number(updateData.duration);
+      }
+
+      // updatedAtの設定
+      processedData.updatedAt = Timestamp.fromDate(new Date());
+
+      console.log('Final update data:', processedData);
+      await updateDoc(taskDoc, processedData);
       console.log('Update completed successfully');
 
       // カレンダーイベントの更新
-      if (currentTask.calendarEventId && updateData.dueDate) {
+      if (currentTask.calendarEventId && (processedData.dueDate || processedData.startDate)) {
         try {
           const updatedTask = {
             ...currentTask,
-            ...updateData,
+            ...processedData,
             id: taskId
           };
           await this.calendarService.updateCalendarEvent(updatedTask);

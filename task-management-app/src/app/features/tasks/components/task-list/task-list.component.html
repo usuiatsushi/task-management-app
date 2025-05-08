@@ -360,7 +360,11 @@
   </mat-tab>
   <mat-tab label="タイムライン">
     <div class="timeline-view">
-      <app-gantt [active]="isTimelineTabActive" [tasks]="tasks"></app-gantt>
+      <app-gantt
+        [tasks]="tasks"
+        [active]="isTimelineTabActive"
+        (taskUpdated)="onGanttTaskUpdate($event)">
+      </app-gantt>
     </div>
   </mat-tab>
   <mat-tab label="ダッシュボード">
