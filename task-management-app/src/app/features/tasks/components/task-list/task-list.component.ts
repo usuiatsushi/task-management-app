@@ -252,27 +252,23 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.projectService.loadProjects();
 
-    this.route.params.subscribe(params => {
+    this.route.params.pipe(
+      take(1),
+      distinctUntilChanged()
+    ).subscribe(async params => {
       const projectId = params['id'];
       if (projectId) {
-        this.projectName = '';
-        this.projectService.projects$.pipe(
-          take(1)  // 最初の1回だけ実行
-        ).subscribe(projects => {
-          const project = projects.find((p: Project) => p.id === projectId);
-          if (project) {
-            this.projectName = project.name;
-          }
-        });
-        this.taskService.getTasksByProject(projectId).pipe(
-          take(1)  // 最初の1回だけ実行
-        ).subscribe(tasks => {
-          this.tasks = tasks;
-          this.dataSource.data = tasks;
-        });
-      } else {
-        this.projectName = 'すべてのタスク';
+        const project = await this.projectService.getProject(projectId);
+        this.projectName = project?.name || '';
       }
+    });
+
+    this.taskService.tasks$.pipe(
+      distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
+    ).subscribe(tasks => {
+      this.tasks = tasks;
+      this.dataSource.data = tasks;
+      this.cdr.detectChanges();
     });
 
     this.setupFilterForm();
@@ -1109,9 +1105,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getTasksByStatus(status: string): Task[] {
-    const filteredTasks = this.dataSource.data.filter(task => task.status === status);
-    console.log(`Status ${status} tasks:`, filteredTasks);
-    return filteredTasks;
+    return this.dataSource.data.filter(task => task.status === status);
   }
 
   async onTaskDrop(event: CdkDragDrop<any[]>, newStatus: string) {
