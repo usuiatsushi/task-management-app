@@ -93,24 +93,11 @@
           </mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>プロジェクト</mat-label>
-          <mat-select formControlName="projectId">
-            <mat-option [value]="null">プロジェクトなし</mat-option>
-            <mat-option *ngFor="let project of projects" [value]="project.id">
-              {{ project.name }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
         <div class="button-container">
           <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!taskForm.valid || loading">
             {{ isEditMode ? '更新' : '作成' }}
           </button>
           <button mat-button (click)="onCancel()" [disabled]="loading">キャンセル</button>
-          <button mat-button type="button" (click)="getTaskSuggestions()" [disabled]="loading">
-            タスクの提案
-          </button>
         </div>
       </form>
     </mat-card-content>
