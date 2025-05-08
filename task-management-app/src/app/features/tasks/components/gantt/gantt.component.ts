@@ -20,7 +20,7 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     gantt.config.row_height = 36;
     gantt.config.bar_height = 24;
     gantt.config.grid_width = 320;
-    gantt.config.scale_height = 32;
+    gantt.config.scale_height = 40;
     gantt.config.min_column_width = 16;
     gantt.config.scales = [
       { unit: "month", step: 1, format: "%Y年%m月" },
@@ -63,22 +63,26 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       setTimeout(() => this.initGantt(), 0); // DOMが描画された後に初期化
     }
   }
-
   initGantt() {
     gantt.clearAll();
     gantt.init(this.ganttContainer.nativeElement);
-
-    // タスクデータをdhtmlx-gantt用に変換
+  
+    // ここでデータを確認
+    console.log('gantt tasks:', this.tasks);
+  
     const ganttData = this.tasks.map((task, i) => ({
       id: task.id || i + 1,
       text: task.title,
-      start_date: this.formatDate(task.dueDate || task.startDate),
-      duration: task.duration || 3,
+      start_date: this.formatDate(task.startDate || task.dueDate),
+      duration: task.duration || 7,
       status: task.status || ''
     }));
-
+  
+    console.log('ganttData:', ganttData);
+  
     gantt.parse({ data: ganttData });
   }
+
 
   formatDate(date: any): string {
     // Firestore TimestampやDate型を "YYYY-MM-DD" 形式に変換

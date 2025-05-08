@@ -253,12 +253,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.route.params.subscribe(params => {
       const projectId = params['id'];
-      console.log('URLのprojectId:', projectId);
       if (projectId) {
         this.projectName = '';
         this.projectService.projects$.subscribe(projects => {
           const project = projects.find((p: Project) => p.id === projectId);
-          console.log('見つかったプロジェクト:', project);
           if (project) {
             this.projectName = project.name;
           }
@@ -269,19 +267,14 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       } else {
         this.projectName = 'すべてのタスク';
-        this.taskService.tasks$.subscribe(tasks => {
-          this.tasks = tasks;
-          this.dataSource.data = tasks;
-    });
       }
     });
 
     this.setupFilterForm();
 
-    // リアルタイムアップデートの購読
+    // すべてのタスクの購読は1か所だけ
     this.subscription = this.taskService.tasks$.subscribe(
       (tasks) => {
-        console.log('Received tasks update:', tasks);
         this.tasks = tasks;
         this.dataSource.data = tasks;
         
