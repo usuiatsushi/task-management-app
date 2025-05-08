@@ -1,33 +1,40 @@
 <mat-nav-list>
-  <a mat-list-item *ngFor="let item of menuItems" (click)="navigateTo(item.path)">
-    <mat-icon matListItemIcon>{{item.icon}}</mat-icon>
-    <span matListItemTitle>{{item.label}}</span>
+  <a mat-list-item routerLink="/tasks" routerLinkActive="active">
+    <mat-icon matListItemIcon>task</mat-icon>
+    <span matListItemTitle>タスク</span>
   </a>
-  <mat-divider></mat-divider>
+
+  <a mat-list-item routerLink="/projects" routerLinkActive="active">
+    <mat-icon matListItemIcon>folder</mat-icon>
+    <span matListItemTitle>プロジェクト</span>
+  </a>
+
   <a mat-list-item (click)="toggleExportMenu()">
-    <mat-icon matListItemIcon>download</mat-icon>
+    <mat-icon matListItemIcon>file_download</mat-icon>
     <span matListItemTitle>エクスポート</span>
   </a>
+
   <div class="export-submenu" *ngIf="showExportMenu">
     <a mat-list-item (click)="exportToCSV()">
-      <mat-icon matListItemIcon>file_download</mat-icon>
+      <mat-icon matListItemIcon>description</mat-icon>
       <span matListItemTitle>CSVエクスポート</span>
     </a>
     <a mat-list-item (click)="exportToExcel()">
-      <mat-icon matListItemIcon>file_download</mat-icon>
+      <mat-icon matListItemIcon>table_chart</mat-icon>
       <span matListItemTitle>Excelエクスポート</span>
     </a>
     <a mat-list-item (click)="downloadSampleCSV()">
-      <mat-icon matListItemIcon>file_download</mat-icon>
+      <mat-icon matListItemIcon>download</mat-icon>
       <span matListItemTitle>サンプルCSV</span>
     </a>
   </div>
+
   <a mat-list-item (click)="fileInput.click()">
-    <mat-icon matListItemIcon>upload</mat-icon>
+    <mat-icon matListItemIcon>file_upload</mat-icon>
     <span matListItemTitle>CSVインポート</span>
-    <input type="file" accept=".csv" (change)="onFileSelected($event)" #fileInput style="display: none">
   </a>
-  <mat-divider></mat-divider>
+  <input #fileInput type="file" accept=".csv" (change)="onFileSelected($event)" style="display: none">
+
   <a mat-list-item (click)="logout()">
     <mat-icon matListItemIcon>logout</mat-icon>
     <span matListItemTitle>ログアウト</span>

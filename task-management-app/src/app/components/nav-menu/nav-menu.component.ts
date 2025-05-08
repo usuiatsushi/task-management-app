@@ -9,6 +9,8 @@ import { TaskService } from '../../features/tasks/services/task.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../features/tasks/models/task.model';
+import { RouterModule } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 
 // ファイルタイプの列挙型
 enum FileType {
@@ -27,7 +29,9 @@ enum FileType {
     CommonModule,
     MatListModule,
     MatIconModule,
-    MatDividerModule
+    MatDividerModule,
+    RouterModule,
+    MatButtonModule
   ]
 })
 export class NavMenuComponent {
@@ -417,5 +421,10 @@ export class NavMenuComponent {
 
   private generateTaskId(): string {
     return Math.random().toString(36).substring(2, 15);
+  }
+
+  navigateToNewProject(event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/projects/new']);
   }
 } 

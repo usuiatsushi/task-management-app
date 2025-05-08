@@ -1,0 +1,31 @@
+<div class="project-form-container">
+  <h1>{{ isEditMode ? 'プロジェクトの編集' : '新規プロジェクト' }}</h1>
+
+  <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="project-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>プロジェクト名</mat-label>
+      <input matInput formControlName="name" placeholder="プロジェクト名を入力">
+      <mat-error *ngIf="projectForm.get('name')?.hasError('required')">
+        プロジェクト名は必須です
+      </mat-error>
+      <mat-error *ngIf="projectForm.get('name')?.hasError('maxlength')">
+        プロジェクト名は100文字以内で入力してください
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>説明</mat-label>
+      <textarea matInput formControlName="description" rows="4" placeholder="プロジェクトの説明を入力"></textarea>
+      <mat-error *ngIf="projectForm.get('description')?.hasError('maxlength')">
+        説明は500文字以内で入力してください
+      </mat-error>
+    </mat-form-field>
+
+    <div class="form-actions">
+      <button mat-button type="button" (click)="onCancel()">キャンセル</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="projectForm.invalid">
+        {{ isEditMode ? '更新' : '作成' }}
+      </button>
+    </div>
+  </form>
+</div> 
