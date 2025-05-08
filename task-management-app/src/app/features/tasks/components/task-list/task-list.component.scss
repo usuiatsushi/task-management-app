@@ -246,16 +246,41 @@
   }
 }
 
+.task-status-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.task-status-section {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+}
+
+.status-header {
+  margin: 0 0 1rem 0;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
 .status-not-started {
-  color: #f44336;
+  background-color: #e3f2fd;
+  color: #1976d2;
 }
 
 .status-in-progress {
-  color: #ff9800;
+  background-color: #fff3e0;
+  color: #f57c00;
 }
 
 .status-completed {
-  color: #4caf50;
+  background-color: #e8f5e9;
+  color: #388e3c;
 }
 
 .priority-low {

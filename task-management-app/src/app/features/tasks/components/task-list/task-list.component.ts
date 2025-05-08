@@ -105,7 +105,7 @@ enum FileType {
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
-  displayedColumns: string[] = ['select', 'title', 'category', 'status', 'priority', 'dueDate', 'actions'];
+  displayedColumns: string[] = ['select', 'title', 'category', 'priority', 'dueDate', 'actions'];
   dataSource = new MatTableDataSource<any>();
   loading = false;
   filterForm: FormGroup;
@@ -191,8 +191,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.log('TaskListComponent initialized');
     this.loadTasks();
     this.setupFilterForm();
+    
     this.categoryService.categories$.subscribe(categories => {
       this.categories = categories;
     });
@@ -200,7 +202,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     // リアルタイムアップデートの購読
     this.subscription = this.taskService.tasks$.subscribe(
       (tasks) => {
-        console.log('Received tasks update:', tasks.length);
+        console.log('Received tasks update:', tasks);
         this.tasks = tasks;
         this.dataSource.data = tasks;
         
@@ -222,7 +224,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.notificationService.checkTaskDeadlines(tasks);
-
         this.cdr.detectChanges();
       }
     );
@@ -264,8 +265,12 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.dataSource = new MatTableDataSource<Task>(this.tasks);
       
       // データソースの設定を再適用
-      this.dataSource.sort = this.sort;
-      this.dataSource.paginator = this.paginator;
+      if (this.sort) {
+        this.dataSource.sort = this.sort;
+      }
+      if (this.paginator) {
+        this.dataSource.paginator = this.paginator;
+      }
       this.dataSource.filterPredicate = this.createFilter();
       
       this.notificationService.checkTaskDeadlines(tasks);
@@ -1002,5 +1007,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('CSVインポートエラー:', error);
       this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
     }
+  }
+
+  getTasksByStatus(status: string): Task[] {
+    const filteredTasks = this.dataSource.data.filter(task => task.status === status);
+    console.log(`Status ${status} tasks:`, filteredTasks);
+    return filteredTasks;
   }
 } 
