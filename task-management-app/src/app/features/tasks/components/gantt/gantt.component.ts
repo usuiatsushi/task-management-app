@@ -21,11 +21,21 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     gantt.config.bar_height = 24;
     gantt.config.grid_width = 320;
     gantt.config.scale_height = 32;
-    gantt.config.min_column_width = 40;
+    gantt.config.min_column_width = 16;
     gantt.config.scales = [
       { unit: "month", step: 1, format: "%Y年%m月" },
-      { unit: "day", step: 1, format: "%j日" }
+      { unit: "day", step: 1, format: "%d" }
     ];
+
+    // 本日の1週間前
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    // そこから1か月後
+    const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 30);
+
+    gantt.config.start_date = startDate;
+    gantt.config.end_date = endDate;
+
     gantt.templates.scale_cell_class = function(date: any){
       if(date.getDay() === 0 || date.getDay() === 6){
         return "gantt-weekend";
