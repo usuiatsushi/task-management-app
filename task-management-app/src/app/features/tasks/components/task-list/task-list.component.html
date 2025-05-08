@@ -1,321 +1,337 @@
-<div class="task-list-layout">
+<h2 *ngIf="projectName; else loading">{{ projectName }}</h2>
+<ng-template #loading><span>読み込み中...</span></ng-template>
 
-  <!-- メインコンテンツ -->
-  <div class="task-list-main">
-    <div class="task-list-container">
-      <app-toast-container></app-toast-container>
-      <div class="task-list-header">
-        <h2 *ngIf="projectName; else loading">{{ projectName }}</h2>
-        <ng-template #loading><span>読み込み中...</span></ng-template>
-        <div class="task-list-actions">
-          <button mat-raised-button color="primary" (click)="navigateToNewTask()">
-            <mat-icon>add</mat-icon>
-            新規タスク
-          </button>
-          <button mat-raised-button color="accent" (click)="openBulkEditDialog()" [disabled]="selectedTasks.length === 0">
-            <mat-icon>edit</mat-icon>
-            一括編集
-          </button>
-          <button mat-raised-button color="warn" (click)="openBulkDeleteDialog()" [disabled]="selectedTasks.length === 0">
-            <mat-icon>delete</mat-icon>
-            一括削除
-          </button>
-          <span class="selected-count" *ngIf="selectedTasks.length > 0">
-            {{ selectedTasks.length }}件選択中
-          </span>
-        </div>
-      </div>
-
-      <form [formGroup]="filterForm" class="task-list-filters">
-        <mat-form-field class="category-field">
-          <mat-label>カテゴリ</mat-label>
-          <mat-select formControlName="category">
-            <mat-option value="">すべて</mat-option>
-            <mat-option *ngFor="let category of getFilterCategories()" [value]="category">
-              {{ category }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field class="priority-field">
-          <mat-label>優先度</mat-label>
-          <mat-select formControlName="priority">
-            <mat-option value="">すべて</mat-option>
-            <mat-option value="低">低</mat-option>
-            <mat-option value="中">中</mat-option>
-            <mat-option value="高">高</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field>
-          <mat-label>検索</mat-label>
-          <input matInput formControlName="search" placeholder="タスクを検索">
-        </mat-form-field>
-      </form>
-
-      <div class="task-status-sections">
-        <!-- ヘッダー行 -->
-        <div class="task-list-table">
-          <table mat-table matSort>
-            <ng-container matColumnDef="select">
-              <th mat-header-cell *matHeaderCellDef>
-                <mat-checkbox
-                  (change)="toggleAllSelection($event)"
-                  [checked]="isAllSelected()"
-                  [indeterminate]="isSomeSelected()">
-                </mat-checkbox>
-              </th>
-            </ng-container>
-
-            <ng-container matColumnDef="title">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>タイトル</th>
-            </ng-container>
-
-            <ng-container matColumnDef="category">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>カテゴリ</th>
-            </ng-container>
-
-            <ng-container matColumnDef="priority">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>優先度</th>
-            </ng-container>
-
-            <ng-container matColumnDef="dueDate">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header>期限</th>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          </table>
-        </div>
-
-        <!-- 未着手のタスク -->
-        <div class="task-status-section">
-          <h2 class="status-header status-not-started">未着手</h2>
-          <div class="task-list-table">
-            <table mat-table [dataSource]="getTasksByStatus('未着手')" matSort>
-              <ng-container matColumnDef="select">
-                <td mat-cell *matCellDef="let task">
-                  <mat-checkbox
-                    (click)="$event.stopPropagation()"
-                    (change)="toggleTaskSelection(task)"
-                    [checked]="isSelected(task)">
-                  </mat-checkbox>
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="title">
-                <td mat-cell *matCellDef="let task">
-                  <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="category">
-                <td mat-cell *matCellDef="let task">{{ task.category }}</td>
-              </ng-container>
-
-              <ng-container matColumnDef="priority">
-                <td mat-cell *matCellDef="let task">
-                  <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
-                    {{ task.priority }}
-                  </span>
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="dueDate">
-                <td mat-cell *matCellDef="let task">
-                  <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-                    <span class="editable-field" (click)="startEditing(task, 'dueDate')">
-                      {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
-                    </span>
-                  </div>
-                  <ng-template #editDueDate>
-                    <mat-form-field class="edit-field">
-                      <input matInput
-                        [matDatepicker]="picker"
-                        [value]="getDateFromTimestamp(task.dueDate)"
-                        (dateChange)="onDateChange(task, $event)"
-                        (blur)="stopEditing()"
-                        [matDatepickerFilter]="filterDates">
-                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
-                    </mat-form-field>
-                  </ng-template>
-                </td>
-              </ng-container>
-
-              <ng-container matColumnDef="actions">
-                <td mat-cell *matCellDef="let task">
-                  <div class="action-buttons">
-                    <button mat-icon-button color="primary" (click)="viewTask(task)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
-
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                  [class.selected]="isSelected(row)">
-              </tr>
-            </table>
+<mat-tab-group>
+  <mat-tab label="リスト">
+    <div class="task-list-layout">
+      <!-- メインコンテンツ -->
+      <div class="task-list-main">
+        <div class="task-list-container">
+          <app-toast-container></app-toast-container>
+          <div class="task-list-header">
+            <div class="task-list-actions">
+              <button mat-raised-button color="primary" (click)="navigateToNewTask()">
+                <mat-icon>add</mat-icon>
+                新規タスク
+              </button>
+              <button mat-raised-button color="accent" (click)="openBulkEditDialog()" [disabled]="selectedTasks.length === 0">
+                <mat-icon>edit</mat-icon>
+                一括編集
+              </button>
+              <button mat-raised-button color="warn" (click)="openBulkDeleteDialog()" [disabled]="selectedTasks.length === 0">
+                <mat-icon>delete</mat-icon>
+                一括削除
+              </button>
+              <span class="selected-count" *ngIf="selectedTasks.length > 0">
+                {{ selectedTasks.length }}件選択中
+              </span>
+            </div>
           </div>
-        </div>
 
-        <!-- 進行中のタスク -->
-        <div class="task-status-section">
-          <h2 class="status-header status-in-progress">進行中</h2>
-          <div class="task-list-table">
-            <table mat-table [dataSource]="getTasksByStatus('進行中')" matSort>
-              <ng-container matColumnDef="select">
-                <td mat-cell *matCellDef="let task">
-                  <mat-checkbox
-                    (click)="$event.stopPropagation()"
-                    (change)="toggleTaskSelection(task)"
-                    [checked]="isSelected(task)">
-                  </mat-checkbox>
-                </td>
-              </ng-container>
+          <form [formGroup]="filterForm" class="task-list-filters">
+            <mat-form-field class="category-field">
+              <mat-label>カテゴリ</mat-label>
+              <mat-select formControlName="category">
+                <mat-option value="">すべて</mat-option>
+                <mat-option *ngFor="let category of getFilterCategories()" [value]="category">
+                  {{ category }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
 
-              <ng-container matColumnDef="title">
-                <td mat-cell *matCellDef="let task">
-                  <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
-                </td>
-              </ng-container>
+            <mat-form-field class="priority-field">
+              <mat-label>優先度</mat-label>
+              <mat-select formControlName="priority">
+                <mat-option value="">すべて</mat-option>
+                <mat-option value="低">低</mat-option>
+                <mat-option value="中">中</mat-option>
+                <mat-option value="高">高</mat-option>
+              </mat-select>
+            </mat-form-field>
 
-              <ng-container matColumnDef="category">
-                <td mat-cell *matCellDef="let task">{{ task.category }}</td>
-              </ng-container>
+            <mat-form-field>
+              <mat-label>検索</mat-label>
+              <input matInput formControlName="search" placeholder="タスクを検索">
+            </mat-form-field>
+          </form>
 
-              <ng-container matColumnDef="priority">
-                <td mat-cell *matCellDef="let task">
-                  <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
-                    {{ task.priority }}
-                  </span>
-                </td>
-              </ng-container>
+          <div class="task-status-sections">
+            <!-- ヘッダー行 -->
+            <div class="task-list-table">
+              <table mat-table matSort>
+                <ng-container matColumnDef="select">
+                  <th mat-header-cell *matHeaderCellDef>
+                    <mat-checkbox
+                      (change)="toggleAllSelection($event)"
+                      [checked]="isAllSelected()"
+                      [indeterminate]="isSomeSelected()">
+                    </mat-checkbox>
+                  </th>
+                </ng-container>
 
-              <ng-container matColumnDef="dueDate">
-                <td mat-cell *matCellDef="let task">
-                  <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-                    <span class="editable-field" (click)="startEditing(task, 'dueDate')">
-                      {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
-                    </span>
-                  </div>
-                  <ng-template #editDueDate>
-                    <mat-form-field class="edit-field">
-                      <input matInput
-                        [matDatepicker]="picker"
-                        [value]="getDateFromTimestamp(task.dueDate)"
-                        (dateChange)="onDateChange(task, $event)"
-                        (blur)="stopEditing()"
-                        [matDatepickerFilter]="filterDates">
-                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
-                    </mat-form-field>
-                  </ng-template>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="title">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>タイトル</th>
+                </ng-container>
 
-              <ng-container matColumnDef="actions">
-                <td mat-cell *matCellDef="let task">
-                  <div class="action-buttons">
-                    <button mat-icon-button color="primary" (click)="viewTask(task)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="category">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>カテゴリ</th>
+                </ng-container>
 
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                  [class.selected]="isSelected(row)">
-              </tr>
-            </table>
-          </div>
-        </div>
+                <ng-container matColumnDef="priority">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>優先度</th>
+                </ng-container>
 
-        <!-- 完了のタスク -->
-        <div class="task-status-section">
-          <h2 class="status-header status-completed">完了</h2>
-          <div class="task-list-table">
-            <table mat-table [dataSource]="getTasksByStatus('完了')" matSort>
-              <ng-container matColumnDef="select">
-                <td mat-cell *matCellDef="let task">
-                  <mat-checkbox
-                    (click)="$event.stopPropagation()"
-                    (change)="toggleTaskSelection(task)"
-                    [checked]="isSelected(task)">
-                  </mat-checkbox>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="dueDate">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header>期限</th>
+                </ng-container>
 
-              <ng-container matColumnDef="title">
-                <td mat-cell *matCellDef="let task">
-                  <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
-                </td>
-              </ng-container>
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef></th>
+                </ng-container>
 
-              <ng-container matColumnDef="category">
-                <td mat-cell *matCellDef="let task">{{ task.category }}</td>
-              </ng-container>
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              </table>
+            </div>
 
-              <ng-container matColumnDef="priority">
-                <td mat-cell *matCellDef="let task">
-                  <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
-                    {{ task.priority }}
-                  </span>
-                </td>
-              </ng-container>
+            <!-- 未着手のタスク -->
+            <div class="task-status-section">
+              <h2 class="status-header status-not-started">未着手</h2>
+              <div class="task-list-table">
+                <table mat-table [dataSource]="getTasksByStatus('未着手')" matSort>
+                  <ng-container matColumnDef="select">
+                    <td mat-cell *matCellDef="let task">
+                      <mat-checkbox
+                        (click)="$event.stopPropagation()"
+                        (change)="toggleTaskSelection(task)"
+                        [checked]="isSelected(task)">
+                      </mat-checkbox>
+                    </td>
+                  </ng-container>
 
-              <ng-container matColumnDef="dueDate">
-                <td mat-cell *matCellDef="let task">
-                  <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-                    <span class="editable-field" (click)="startEditing(task, 'dueDate')">
-                      {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
-                    </span>
-                  </div>
-                  <ng-template #editDueDate>
-                    <mat-form-field class="edit-field">
-                      <input matInput
-                        [matDatepicker]="picker"
-                        [value]="getDateFromTimestamp(task.dueDate)"
-                        (dateChange)="onDateChange(task, $event)"
-                        (blur)="stopEditing()"
-                        [matDatepickerFilter]="filterDates">
-                      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                      <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
-                    </mat-form-field>
-                  </ng-template>
-                </td>
-              </ng-container>
+                  <ng-container matColumnDef="title">
+                    <td mat-cell *matCellDef="let task">
+                      <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
+                    </td>
+                  </ng-container>
 
-              <ng-container matColumnDef="actions">
-                <td mat-cell *matCellDef="let task">
-                  <div class="action-buttons">
-                    <button mat-icon-button color="primary" (click)="viewTask(task)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </td>
-              </ng-container>
+                  <ng-container matColumnDef="category">
+                    <td mat-cell *matCellDef="let task">{{ task.category }}</td>
+                  </ng-container>
 
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                  [class.selected]="isSelected(row)">
-              </tr>
-            </table>
+                  <ng-container matColumnDef="priority">
+                    <td mat-cell *matCellDef="let task">
+                      <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                        {{ task.priority }}
+                      </span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="dueDate">
+                    <td mat-cell *matCellDef="let task">
+                      <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
+                        <span class="editable-field" (click)="startEditing(task, 'dueDate')">
+                          {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
+                        </span>
+                      </div>
+                      <ng-template #editDueDate>
+                        <mat-form-field class="edit-field">
+                          <input matInput
+                            [matDatepicker]="picker"
+                            [value]="getDateFromTimestamp(task.dueDate)"
+                            (dateChange)="onDateChange(task, $event)"
+                            (blur)="stopEditing()"
+                            [matDatepickerFilter]="filterDates">
+                          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                          <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
+                        </mat-form-field>
+                      </ng-template>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="actions">
+                    <td mat-cell *matCellDef="let task">
+                      <div class="action-buttons">
+                        <button mat-icon-button color="primary" (click)="viewTask(task)">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                      [class.selected]="isSelected(row)">
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- 進行中のタスク -->
+            <div class="task-status-section">
+              <h2 class="status-header status-in-progress">進行中</h2>
+              <div class="task-list-table">
+                <table mat-table [dataSource]="getTasksByStatus('進行中')" matSort>
+                  <ng-container matColumnDef="select">
+                    <td mat-cell *matCellDef="let task">
+                      <mat-checkbox
+                        (click)="$event.stopPropagation()"
+                        (change)="toggleTaskSelection(task)"
+                        [checked]="isSelected(task)">
+                      </mat-checkbox>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="title">
+                    <td mat-cell *matCellDef="let task">
+                      <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="category">
+                    <td mat-cell *matCellDef="let task">{{ task.category }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="priority">
+                    <td mat-cell *matCellDef="let task">
+                      <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                        {{ task.priority }}
+                      </span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="dueDate">
+                    <td mat-cell *matCellDef="let task">
+                      <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
+                        <span class="editable-field" (click)="startEditing(task, 'dueDate')">
+                          {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
+                        </span>
+                      </div>
+                      <ng-template #editDueDate>
+                        <mat-form-field class="edit-field">
+                          <input matInput
+                            [matDatepicker]="picker"
+                            [value]="getDateFromTimestamp(task.dueDate)"
+                            (dateChange)="onDateChange(task, $event)"
+                            (blur)="stopEditing()"
+                            [matDatepickerFilter]="filterDates">
+                          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                          <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
+                        </mat-form-field>
+                      </ng-template>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="actions">
+                    <td mat-cell *matCellDef="let task">
+                      <div class="action-buttons">
+                        <button mat-icon-button color="primary" (click)="viewTask(task)">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                      [class.selected]="isSelected(row)">
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- 完了のタスク -->
+            <div class="task-status-section">
+              <h2 class="status-header status-completed">完了</h2>
+              <div class="task-list-table">
+                <table mat-table [dataSource]="getTasksByStatus('完了')" matSort>
+                  <ng-container matColumnDef="select">
+                    <td mat-cell *matCellDef="let task">
+                      <mat-checkbox
+                        (click)="$event.stopPropagation()"
+                        (change)="toggleTaskSelection(task)"
+                        [checked]="isSelected(task)">
+                      </mat-checkbox>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="title">
+                    <td mat-cell *matCellDef="let task">
+                      <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="category">
+                    <td mat-cell *matCellDef="let task">{{ task.category }}</td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="priority">
+                    <td mat-cell *matCellDef="let task">
+                      <span class="priority-badge" [ngClass]="getPriorityClass(task.priority)">
+                        {{ task.priority }}
+                      </span>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="dueDate">
+                    <td mat-cell *matCellDef="let task">
+                      <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
+                        <span class="editable-field" (click)="startEditing(task, 'dueDate')">
+                          {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
+                        </span>
+                      </div>
+                      <ng-template #editDueDate>
+                        <mat-form-field class="edit-field">
+                          <input matInput
+                            [matDatepicker]="picker"
+                            [value]="getDateFromTimestamp(task.dueDate)"
+                            (dateChange)="onDateChange(task, $event)"
+                            (blur)="stopEditing()"
+                            [matDatepickerFilter]="filterDates">
+                          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                          <mat-datepicker #picker [startView]="'month'" [startAt]="getDateFromTimestamp(task.dueDate)" [dateFormats]="dateFormat"></mat-datepicker>
+                        </mat-form-field>
+                      </ng-template>
+                    </td>
+                  </ng-container>
+
+                  <ng-container matColumnDef="actions">
+                    <td mat-cell *matCellDef="let task">
+                      <div class="action-buttons">
+                        <button mat-icon-button color="primary" (click)="viewTask(task)">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
+                          <mat-icon>delete</mat-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </ng-container>
+
+                  <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                      [class.selected]="isSelected(row)">
+                  </tr>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div> 
+  </mat-tab>
+  <mat-tab label="ボード">
+    <div>ボードビュー（今後実装）</div>
+  </mat-tab>
+  <mat-tab label="タイムライン">
+    <div>タイムラインビュー（今後実装）</div>
+  </mat-tab>
+  <mat-tab label="ダッシュボード">
+    <div>ダッシュボードビュー（今後実装）</div>
+  </mat-tab>
+  <mat-tab label="カレンダー">
+    <div>カレンダービュー（今後実装）</div>
+  </mat-tab>
+</mat-tab-group> 

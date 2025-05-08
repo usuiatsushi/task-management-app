@@ -108,8 +108,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.taskId = this.route.snapshot.paramMap.get('id');
-    this.isEditMode = !!this.taskId;
+    // 新規作成かどうかをURLで判定
+    this.isEditMode = !this.router.url.endsWith('/new');
 
     // オンライン状態の監視を開始
     window.addEventListener('online', this.handleOnlineStatus.bind(this));
@@ -123,8 +123,11 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     });
 
     // プロジェクトリストを取得
-    if (this.isEditMode && this.taskId) {
-      await this.loadTask(this.taskId);
+    if (this.isEditMode) {
+      const taskId = this.route.snapshot.paramMap.get('id');
+      if (taskId) {
+        await this.loadTask(taskId);
+      }
     }
     } catch (error) {
       console.error('初期化中にエラーが発生しました:', error);
@@ -306,7 +309,12 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           });
         }
 
-        this.router.navigate(['/tasks']);
+        // 保存後の遷移先を分岐
+        if (this.taskForm.value.projectId) {
+          this.router.navigate(['/projects', this.taskForm.value.projectId, 'tasks']);
+        } else {
+          this.router.navigate(['/tasks']);
+        }
       } catch (error) {
         console.error('タスクの保存に失敗しました:', error);
         this.handleError(error);

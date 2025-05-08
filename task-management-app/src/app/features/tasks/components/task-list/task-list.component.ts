@@ -42,6 +42,7 @@ import { Project } from '../../../projects/models/project.model';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { Firestore } from '@angular/fire/firestore';
+import { MatTabsModule } from '@angular/material/tabs';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -101,7 +102,8 @@ enum FileType {
     MatMenuModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    ToastContainerComponent
+    ToastContainerComponent,
+    MatTabsModule
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
@@ -399,7 +401,12 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   navigateToNewTask(): void {
-    this.router.navigate(['/tasks/new']);
+    const projectId = this.route.snapshot.params['id'];
+    if (projectId) {
+      this.router.navigate(['/projects', projectId, 'tasks', 'new']);
+    } else {
+      this.router.navigate(['/tasks/new']);
+    }
   }
 
   async deleteTask(task: any, event: Event): Promise<void> {
