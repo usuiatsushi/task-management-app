@@ -30,4 +30,20 @@ mat-icon {
   height: 20px;
   width: 20px;
   margin-right: 16px;
+}
+
+.project-submenu {
+  padding-left: 16px;
+}
+
+.project-submenu a {
+  height: 40px;
+  font-size: 14px;
+}
+
+.project-submenu mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  margin-right: 16px;
 } 

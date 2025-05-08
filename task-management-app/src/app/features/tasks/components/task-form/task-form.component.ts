@@ -22,6 +22,8 @@ import { Timestamp } from '@angular/fire/firestore';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 import { AiAssistantService } from '../../services/ai-assistant.service';
+import { ProjectService } from '../../../projects/services/project.service';
+import { Project } from '../../../projects/models/project.model';
 
 @Component({
   selector: 'app-task-form',
@@ -56,6 +58,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   categories: string[] = [];
   dueDateOnly: Date | null = null;
   dueTimeOnly: string = '23:59'; // デフォルト
+  projects: Project[] = [];
 
   // カスタムコンパレータを追加
   compareWith = (o1: any, o2: any) => o1 === o2;
@@ -72,7 +75,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private calendarService: CalendarService,
     private ngZone: NgZone,
     private dialog: MatDialog,
-    private aiAssistant: AiAssistantService
+    private aiAssistant: AiAssistantService,
+    private projectService: ProjectService
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
@@ -82,7 +86,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       priority: ['中', Validators.required],
       dueDate: [new Date(), [Validators.required, this.dueDateValidator.bind(this)]],
       assignedTo: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
-      newCategoryName: ['']
+      newCategoryName: [''],
+      projectId: ['']
     });
   }
 
@@ -110,6 +115,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       this.cdr.detectChanges();
     });
 
+    // プロジェクトリストを取得
     if (this.isEditMode && this.taskId) {
       await this.loadTask(this.taskId);
     }

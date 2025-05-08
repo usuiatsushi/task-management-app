@@ -11,6 +11,8 @@ import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../features/tasks/models/task.model';
 import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { ProjectService } from '../../features/projects/services/project.service';
+import { Project } from '../../features/projects/models/project.model';
 
 // ファイルタイプの列挙型
 enum FileType {
@@ -41,13 +43,19 @@ export class NavMenuComponent {
   ];
 
   showExportMenu = false;
+  projects: Project[] = [];
 
   constructor(
     private router: Router,
     private authService: AuthService,
     private taskService: TaskService,
+    private projectService: ProjectService,
     private snackBar: MatSnackBar
-  ) {}
+  ) {
+    this.projectService.projects$.subscribe(projects => {
+      this.projects = projects;
+    });
+  }
 
   toggleExportMenu(): void {
     this.showExportMenu = !this.showExportMenu;
@@ -426,5 +434,9 @@ export class NavMenuComponent {
   navigateToNewProject(event: Event): void {
     event.stopPropagation();
     this.router.navigate(['/projects/new']);
+  }
+
+  navigateToProject(projectId: string): void {
+    this.router.navigate(['/projects', projectId, 'tasks']);
   }
 } 

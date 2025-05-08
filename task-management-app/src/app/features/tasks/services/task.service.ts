@@ -321,8 +321,8 @@ export class TaskService implements OnDestroy {
   }
 
   async deleteTask(id: string): Promise<void> {
-    const taskDoc = doc(this.firestore, 'tasks', id);
-    await deleteDoc(taskDoc);
+    const taskRef = doc(this.firestore, 'tasks', id);
+    await deleteDoc(taskRef);
   }
 
   async getTask(taskId: string): Promise<Task> {
@@ -354,5 +354,11 @@ export class TaskService implements OnDestroy {
       console.error('Error fetching task:', error);
       throw error;
     }
+  }
+
+  getTasksByProject(projectId: string): Observable<Task[]> {
+    return this.tasks$.pipe(
+      map(tasks => tasks.filter(task => task.projectId === projectId))
+    );
   }
 }

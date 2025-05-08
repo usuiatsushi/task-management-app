@@ -85,10 +85,22 @@
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="form-field">
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>担当者</mat-label>
-          <input matInput formControlName="assignedTo" placeholder="タスクの担当者を入力">
-          <mat-error>{{ getErrorMessage('assignedTo') }}</mat-error>
+          <input matInput formControlName="assignedTo" placeholder="担当者名を入力">
+          <mat-error *ngIf="taskForm.get('assignedTo')?.hasError('required')">
+            担当者は必須です
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>プロジェクト</mat-label>
+          <mat-select formControlName="projectId">
+            <mat-option [value]="null">プロジェクトなし</mat-option>
+            <mat-option *ngFor="let project of projects" [value]="project.id">
+              {{ project.name }}
+            </mat-option>
+          </mat-select>
         </mat-form-field>
 
         <div class="button-container">

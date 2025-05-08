@@ -30,12 +30,13 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, NativeDateAdapter } from '@angular/material/core';
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../models/task.model';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ToastContainerComponent } from '../../../../shared/components/toast-container/toast-container.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -114,6 +115,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   editingTask: any = null;
   editingField: string | null = null;
   categories: string[] = [];
+  categories$: Observable<string[]>;
   tasks: Task[] = [];
   private subscription: Subscription | null = null;
 
@@ -179,7 +181,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private authService: AuthService,
     private calendarService: CalendarService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private route: ActivatedRoute
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -188,16 +191,26 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       priority: [''],
       search: this.searchControl
     });
+    this.categories$ = this.categoryService.categories$;
   }
 
   ngOnInit(): void {
-    console.log('TaskListComponent initialized');
-    this.loadTasks();
-    this.setupFilterForm();
-    
-    this.categoryService.categories$.subscribe(categories => {
-      this.categories = categories;
+    this.route.params.subscribe(params => {
+      const projectId = params['projectId'];
+      if (projectId) {
+        this.taskService.getTasksByProject(projectId).subscribe(tasks => {
+          this.tasks = tasks;
+          this.dataSource.data = tasks;
+        });
+      } else {
+        this.taskService.tasks$.subscribe(tasks => {
+          this.tasks = tasks;
+          this.dataSource.data = tasks;
+        });
+      }
     });
+
+    this.setupFilterForm();
 
     // リアルタイムアップデートの購読
     this.subscription = this.taskService.tasks$.subscribe(

@@ -9,6 +9,13 @@
     <span matListItemTitle>プロジェクト</span>
   </a>
 
+  <div class="project-submenu">
+    <a mat-list-item *ngFor="let project of projects" (click)="navigateToProject(project.id)">
+      <mat-icon matListItemIcon>folder_open</mat-icon>
+      <span matListItemTitle>{{ project.name }}</span>
+    </a>
+  </div>
+
   <a mat-list-item (click)="toggleExportMenu()">
     <mat-icon matListItemIcon>file_download</mat-icon>
     <span matListItemTitle>エクスポート</span>

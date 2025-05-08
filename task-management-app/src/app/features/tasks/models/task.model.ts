@@ -23,4 +23,5 @@ export interface Task {
   progress?: number;
   subTasks?: SubTask[];
   completed: boolean;
+  projectId?: string;
 } 
