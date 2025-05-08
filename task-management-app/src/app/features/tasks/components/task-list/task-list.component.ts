@@ -39,6 +39,9 @@ import { ToastContainerComponent } from '../../../../shared/components/toast-con
 import { ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../../projects/services/project.service';
 import { Project } from '../../../projects/models/project.model';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { BehaviorSubject } from 'rxjs';
+import { Firestore } from '@angular/fire/firestore';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -186,7 +189,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private calendarService: CalendarService,
     private toastService: ToastService,
     private route: ActivatedRoute,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private firestore: Firestore
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -199,12 +203,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.projectService.loadProjects();
+
     this.route.params.subscribe(params => {
       const projectId = params['projectId'];
+      console.log('URLのprojectId:', projectId);
       if (projectId) {
+        this.projectName = '';
         this.projectService.projects$.subscribe(projects => {
           const project = projects.find((p: Project) => p.id === projectId);
-          this.projectName = project ? project.name : '';
+          console.log('見つかったプロジェクト:', project);
+          if (project) {
+            this.projectName = project.name;
+          }
         });
         this.taskService.getTasksByProject(projectId).subscribe(tasks => {
           this.tasks = tasks;

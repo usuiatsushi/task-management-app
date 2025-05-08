@@ -24,7 +24,7 @@ export class ProjectService {
     });
   }
 
-  private async loadProjects(): Promise<void> {
+  public async loadProjects(): Promise<void> {
     const user = await this.authService.getCurrentUser();
     if (!user) return;
 
