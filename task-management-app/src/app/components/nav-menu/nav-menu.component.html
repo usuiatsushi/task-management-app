@@ -4,18 +4,24 @@
     <span matListItemTitle>{{item.label}}</span>
   </a>
   <mat-divider></mat-divider>
-  <a mat-list-item (click)="exportToCSV()">
+  <a mat-list-item (click)="toggleExportMenu()">
     <mat-icon matListItemIcon>download</mat-icon>
-    <span matListItemTitle>CSVエクスポート</span>
+    <span matListItemTitle>エクスポート</span>
   </a>
-  <a mat-list-item (click)="exportToExcel()">
-    <mat-icon matListItemIcon>download</mat-icon>
-    <span matListItemTitle>Excelエクスポート</span>
-  </a>
-  <a mat-list-item (click)="downloadSampleCSV()">
-    <mat-icon matListItemIcon>download</mat-icon>
-    <span matListItemTitle>サンプルCSV</span>
-  </a>
+  <div class="export-submenu" *ngIf="showExportMenu">
+    <a mat-list-item (click)="exportToCSV()">
+      <mat-icon matListItemIcon>file_download</mat-icon>
+      <span matListItemTitle>CSVエクスポート</span>
+    </a>
+    <a mat-list-item (click)="exportToExcel()">
+      <mat-icon matListItemIcon>file_download</mat-icon>
+      <span matListItemTitle>Excelエクスポート</span>
+    </a>
+    <a mat-list-item (click)="downloadSampleCSV()">
+      <mat-icon matListItemIcon>file_download</mat-icon>
+      <span matListItemTitle>サンプルCSV</span>
+    </a>
+  </div>
   <a mat-list-item (click)="fileInput.click()">
     <mat-icon matListItemIcon>upload</mat-icon>
     <span matListItemTitle>CSVインポート</span>

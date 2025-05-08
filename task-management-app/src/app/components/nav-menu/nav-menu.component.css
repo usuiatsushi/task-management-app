@@ -13,4 +13,21 @@ a[mat-list-item] {
 
 mat-icon {
   margin-right: 8px;
+}
+
+.export-submenu {
+  padding-left: 16px;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.export-submenu a[mat-list-item] {
+  height: 40px;
+  font-size: 14px;
+}
+
+.export-submenu mat-icon {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  margin-right: 16px;
 } 

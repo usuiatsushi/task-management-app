@@ -36,12 +36,18 @@ export class NavMenuComponent {
     { path: '/tasks/new', label: '新規タスク', icon: 'add' }
   ];
 
+  showExportMenu = false;
+
   constructor(
     private router: Router,
     private authService: AuthService,
     private taskService: TaskService,
     private snackBar: MatSnackBar
   ) {}
+
+  toggleExportMenu(): void {
+    this.showExportMenu = !this.showExportMenu;
+  }
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
