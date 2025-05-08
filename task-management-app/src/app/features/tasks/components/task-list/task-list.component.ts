@@ -43,6 +43,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { Firestore } from '@angular/fire/firestore';
 import { MatTabsModule } from '@angular/material/tabs';
+import { DragDropModule, CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -103,7 +104,8 @@ enum FileType {
     MatDatepickerModule,
     MatNativeDateModule,
     ToastContainerComponent,
-    MatTabsModule
+    MatTabsModule,
+    DragDropModule
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
@@ -1053,5 +1055,21 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     const filteredTasks = this.dataSource.data.filter(task => task.status === status);
     console.log(`Status ${status} tasks:`, filteredTasks);
     return filteredTasks;
+  }
+
+  onTaskDrop(event: CdkDragDrop<any[]>, newStatus: string) {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    } else {
+      const task = event.previousContainer.data[event.previousIndex];
+      // ステータスを変更
+      this.updateTaskField(task, 'status', newStatus);
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+    }
   }
 } 
