@@ -488,4 +488,161 @@ mat-form-field {
 .task-list-main {
   flex: 1;
   padding: 32px;
+}
+
+.board-view {
+  display: flex;
+  gap: 24px;
+  padding: 24px 0;
+  overflow-x: auto;
+  min-height: 70vh;
+}
+
+.board-column {
+  flex: 1 1 0;
+  min-width: 320px;
+  background: #fff;
+  color: #222;
+  border-radius: 12px;
+  padding: 16px 12px 24px 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.board-column-header {
+  font-weight: bold;
+  font-size: 1.15em;
+  margin-bottom: 12px;
+  color: #222;
+  letter-spacing: 0.05em;
+}
+
+.board-tasks {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  min-height: 40px;
+}
+
+.board-task-card {
+  margin-bottom: 12px;
+  background: #f7f8fa;
+  color: #222;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+  padding: 12px 14px 10px 14px;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: grab;
+  position: relative;
+}
+
+.board-task-card:active {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  transform: scale(1.01);
+}
+
+.board-task-title {
+  font-weight: bold;
+  font-size: 1.08em;
+  margin-bottom: 4px;
+}
+
+.board-task-meta {
+  font-size: 0.93em;
+  color: #666;
+  margin-bottom: 6px;
+}
+
+.board-task-actions {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.board-column .mat-stroked-button {
+  margin-top: 8px;
+  color: #1976d2;
+  border-color: #1976d2;
+  background: #f7f8fa;
+  font-weight: bold;
+}
+
+// スクロールバーのカスタマイズ
+.board-tasks::-webkit-scrollbar {
+  width: 8px;
+  background: #fff;
+}
+.board-tasks::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+
+// ドラッグ時の装飾を消す
+.board-task-card .cdk-drag-placeholder,
+.board-task-card .cdk-drag-preview,
+.board-task-card .cdk-drag-animating {
+  display: none !important;
+}
+
+// Materialフォームの装飾をリセット
+.board-task-card ::ng-deep .mat-form-field-wrapper,
+.board-task-card ::ng-deep .mat-form-field-flex,
+.board-task-card ::ng-deep .mat-form-field-infix {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+// すべてのcdk-drag系装飾を徹底的に非表示
+.cdk-drag-placeholder,
+.cdk-drag-preview,
+.cdk-drag-animating {
+  display: none !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+}
+
+// カード内の左端に余白や装飾が出る場合のリセット
+.board-task-card > *:first-child {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.board-task-card, 
+.board-task-card * {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.board-task-card button,
+.board-task-card .mdc-button,
+.board-task-card .mat-mdc-button-base {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.cdk-drag {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
 } 

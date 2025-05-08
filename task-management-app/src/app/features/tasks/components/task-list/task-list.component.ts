@@ -43,8 +43,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { BehaviorSubject } from 'rxjs';
 import { Firestore } from '@angular/fire/firestore';
 import { MatTabsModule } from '@angular/material/tabs';
-import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { DragDropModule } from '@angular/cdk/drag-drop';
+import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -231,7 +230,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.taskService.tasks$.subscribe(tasks => {
           this.tasks = tasks;
           this.dataSource.data = tasks;
-        });
+    });
       }
     });
 
@@ -304,10 +303,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       
       // データソースの設定を再適用
       if (this.sort) {
-        this.dataSource.sort = this.sort;
+      this.dataSource.sort = this.sort;
       }
       if (this.paginator) {
-        this.dataSource.paginator = this.paginator;
+      this.dataSource.paginator = this.paginator;
       }
       this.dataSource.filterPredicate = this.createFilter();
       
@@ -408,7 +407,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (projectId) {
       this.router.navigate(['/projects', projectId, 'tasks', 'new']);
     } else {
-      this.router.navigate(['/tasks/new']);
+    this.router.navigate(['/tasks/new']);
     }
   }
 
@@ -1058,21 +1057,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     return filteredTasks;
   }
 
-  onTaskDrop(event: CdkDragDrop<any[]>, newStatus: Task['status']) {
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-    } else {
-      const task = event.previousContainer.data[event.previousIndex];
-      // ステータスを更新
-      task.status = newStatus;
-      // サーバー側も更新
-      this.taskService.updateTask(task.id, { status: newStatus });
-      transferArrayItem(
-        event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex
-      );
+  async onTaskDrop(event: CdkDragDrop<any[]>, newStatus: string) {
+    const task = event.item.data;
+    if (task.status !== newStatus) {
+      await this.updateTaskField(task, 'status', newStatus);
     }
   }
 } 
