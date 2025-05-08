@@ -1,1 +1,19 @@
 <p>dashboard works!</p>
+
+<div class="dashboard-section">
+  <h3>進捗率</h3>
+  <div class="progress-bar-container">
+    <div class="progress-bar" [style.width.%]="progressPercent"></div>
+    <span class="progress-label">{{ progressPercent }}%</span>
+  </div>
+</div>
+
+<div class="dashboard-section">
+  <google-chart
+    [type]="chartType"
+    [data]="statusChartData"
+    [options]="statusChartOptions"
+    [width]="400"
+    [height]="300">
+  </google-chart>
+</div>

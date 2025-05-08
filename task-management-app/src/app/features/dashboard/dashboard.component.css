@@ -1,0 +1,28 @@
+.dashboard-section {
+  margin-bottom: 32px;
+}
+
+.progress-bar-container {
+  position: relative;
+  background: #eee;
+  border-radius: 8px;
+  height: 32px;
+  width: 400px;
+  margin-bottom: 16px;
+}
+
+.progress-bar {
+  background: #1976d2;
+  height: 100%;
+  border-radius: 8px 0 0 8px;
+  transition: width 0.5s;
+}
+
+.progress-label {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-weight: bold;
+  line-height: 32px;
+}
