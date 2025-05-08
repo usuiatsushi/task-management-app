@@ -47,6 +47,7 @@ import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/dra
 import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { GanttComponent } from '../gantt/gantt.component';
 import { take, distinctUntilChanged } from 'rxjs/operators';
+import { DashboardComponent } from '../dashboard/dashboard.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -110,7 +111,8 @@ enum FileType {
     MatTabsModule,
     DragDropModule,
     GoogleChartsModule,
-    GanttComponent
+    GanttComponent,
+    DashboardComponent
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
@@ -222,6 +224,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   ganttChartType = ChartType.Gantt;
 
   isTimelineTabActive = false;
+  isDashboardTabActive = false;
 
   constructor(
     private taskService: TaskService,
@@ -1140,7 +1143,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onTabChange(event: any) {
-    this.isTimelineTabActive = (event.index === 2); // タイムラインタブのindex
+    this.isTimelineTabActive = event.index === 1;
+    this.isDashboardTabActive = event.index === 2;
   }
 
   async onGanttTaskUpdate(updatedTask: any) {
