@@ -16,7 +16,10 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   @Input() tasks: any[] = []; // タスクデータを受け取る
 
   ngOnInit() {
-    // 見た目・カレンダー部分のカスタマイズ
+    this.configureGantt();
+  }
+
+  private configureGantt() {
     gantt.config.row_height = 36;
     gantt.config.bar_height = 24;
     gantt.config.grid_width = 320;
@@ -27,29 +30,41 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       { unit: "day", step: 1, format: "%d" }
     ];
 
-    // 本日の1週間前
+    // 表示期間の設定
     const today = new Date();
     const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
-    // そこから1か月後
     const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 30);
 
     gantt.config.start_date = startDate;
     gantt.config.end_date = endDate;
 
-    gantt.templates.scale_cell_class = function(date: any){
-      if(date.getDay() === 0 || date.getDay() === 6){
+    // 週末と今日のスタイル設定
+    gantt.templates.scale_cell_class = function(date: any) {
+      if (date.getDay() === 0 || date.getDay() === 6) {
         return "gantt-weekend";
       }
-      if(gantt.date.date_part(new Date(), date) === 0){
+      if (gantt.date.date_part(new Date(), date) === 0) {
         return "gantt-today";
       }
       return "";
     };
-    gantt.templates.task_class = function (start: any, end: any, task: any) {
+
+    // タスクのスタイル設定
+    gantt.templates.task_class = function(start: any, end: any, task: any) {
       if (task.status === '完了') return "gantt-bar-complete";
       if (task.status === '進行中') return "gantt-bar-progress";
       return "gantt-bar-default";
     };
+
+    // タスクの表示設定
+    gantt.config.columns = [
+      { name: "text", label: "タスク名", tree: true, width: 200 },
+      { name: "start_date", label: "開始日", align: "center", width: 100 },
+      { name: "duration", label: "期間", align: "center", width: 60 }
+    ];
+
+    // 日付フォーマットの設定
+    gantt.config.date_format = "%Y-%m-%d %H:%i";
   }
 
   ngAfterViewInit() {
@@ -60,35 +75,53 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['active'] && this.active) {
-      setTimeout(() => this.initGantt(), 0); // DOMが描画された後に初期化
+      setTimeout(() => this.initGantt(), 0);
+    }
+    if (changes['tasks']) {
+      this.updateGanttData();
     }
   }
-  initGantt() {
+
+  private initGantt() {
+    if (!this.ganttContainer?.nativeElement) return;
+    
     gantt.clearAll();
     gantt.init(this.ganttContainer.nativeElement);
-  
-    // ここでデータを確認
-    console.log('gantt tasks:', this.tasks);
-  
-    const ganttData = this.tasks.map((task, i) => ({
-      id: task.id || i + 1,
-      text: task.title,
-      start_date: this.formatDate(task.startDate || task.dueDate),
-      duration: task.duration || 7,
-      status: task.status || ''
-    }));
-  
-    console.log('ganttData:', ganttData);
-  
+    this.updateGanttData();
+  }
+
+  private updateGanttData() {
+    if (!this.tasks?.length) return;
+
+    const ganttData = this.tasks.map((task, i) => {
+      const startDate = this.getDateFromTask(task);
+      return {
+        id: task.id || i + 1,
+        text: task.title,
+        start_date: startDate,
+        duration: task.duration || 7,
+        status: task.status || '未着手',
+        progress: task.status === '完了' ? 1 : (task.status === '進行中' ? 0.5 : 0)
+      };
+    });
+
     gantt.parse({ data: ganttData });
   }
 
+  private getDateFromTask(task: any): Date {
+    let date: Date;
+    
+    if (task.startDate) {
+      date = task.startDate instanceof Date ? task.startDate : new Date(task.startDate.seconds * 1000);
+    } else if (task.dueDate) {
+      date = task.dueDate instanceof Date ? task.dueDate : new Date(task.dueDate.seconds * 1000);
+    } else {
+      date = new Date();
+    }
 
-  formatDate(date: any): string {
-    // Firestore TimestampやDate型を "YYYY-MM-DD" 形式に変換
-    if (!date) return "2024-07-01";
-    const d = date instanceof Date ? date : new Date(date.seconds ? date.seconds * 1000 : date);
-    return d.toISOString().slice(0, 10);
+    // 時刻を00:00:00に設定
+    date.setHours(0, 0, 0, 0);
+    return date;
   }
 
   ngOnDestroy() {
