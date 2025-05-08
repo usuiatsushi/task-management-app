@@ -92,6 +92,13 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   async ngOnInit() {
+    this.route.params.subscribe(params => {
+      const projectId = params['id'];
+      if (projectId) {
+        this.taskForm.patchValue({ projectId });
+      }
+    });
+
     // オフライン状態をチェック
     if (!navigator.onLine) {
       this.snackBar.open('オフライン状態です。インターネット接続を確認してください。', '閉じる', {
@@ -217,15 +224,108 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   async onSubmit() {
-    if (this.taskForm.invalid) return;
-    let newTask = this.taskForm.value;
-    // URLからprojectIdを取得し、newTaskにセット
-    const projectId = this.route.snapshot.paramMap.get('id');
-    if (projectId) {
-      newTask = { ...newTask, projectId };
+    if (!navigator.onLine) {
+      this.handleError(new Error('network-error'));
+      return;
     }
-    // ここでnewTaskを保存
-    // ...既存の保存処理...
+
+    if (this.taskForm.valid) {
+      try {
+        this.loading = true;
+        // dueDateを23:59に設定
+        const date: Date = this.taskForm.value.dueDate;
+        const dueDate = new Date(date);
+        dueDate.setHours(23, 59, 0, 0);
+
+        const taskData = {
+          ...this.taskForm.value,
+          dueDate: dueDate,
+          updatedAt: Timestamp.now()
+        };
+
+        // カレンダー連携の確認ダイアログを表示
+        const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
+          width: '350px',
+          data: { taskTitle: taskData.title }
+        });
+
+        const result = await dialogRef.afterClosed().toPromise();
+        const shouldSyncWithCalendar = result === true;
+
+        if (this.isEditMode && this.taskId) {
+          const taskRef = doc(this.firestore, 'tasks', this.taskId);
+          const currentTask = await getDoc(taskRef);
+          const currentTaskData = currentTask.data() as Task;
+          
+          await updateDoc(taskRef, taskData);
+          
+          if (shouldSyncWithCalendar) {
+            if (currentTaskData.calendarEventId) {
+              try {
+                console.log('既存のカレンダーイベントを削除します:', {
+                  taskId: this.taskId,
+                  calendarEventId: currentTaskData.calendarEventId
+                });
+                // 既存のカレンダーイベントを削除
+                await this.calendarService.deleteCalendarEvent(currentTaskData);
+                console.log('古いカレンダーイベントを削除しました:', currentTaskData.calendarEventId);
+              } catch (error) {
+                console.error('古いカレンダーイベントの削除に失敗しました:', error);
+              }
+              // 新しいカレンダーイベントを作成
+              console.log('新しいカレンダーイベントを作成します:', {
+                taskId: this.taskId,
+                dueDate: taskData.dueDate
+              });
+              await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
+            } else {
+              // 新しいカレンダーイベントを作成
+              console.log('新しいカレンダーイベントを作成します（初回）:', {
+                taskId: this.taskId,
+                dueDate: taskData.dueDate
+              });
+              await this.calendarService.addTaskToCalendar({ ...taskData, id: this.taskId });
+            }
+          }
+          this.snackBar.open('タスクを更新しました', '閉じる', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        } else {
+          const tasksRef = collection(this.firestore, 'tasks');
+          const docRef = await addDoc(tasksRef, {
+            ...taskData,
+            createdAt: Timestamp.now()
+          });
+          if (shouldSyncWithCalendar) {
+            await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
+          }
+          this.snackBar.open('タスクを作成しました', '閉じる', { 
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        }
+
+        this.router.navigate(['/tasks']);
+      } catch (error) {
+        console.error('タスクの保存に失敗しました:', error);
+        this.handleError(error);
+      } finally {
+        this.loading = false;
+      }
+    } else {
+      Object.keys(this.taskForm.controls).forEach(key => {
+        const control = this.taskForm.get(key);
+        if (control) {
+          control.markAsTouched();
+        }
+      });
+
+      this.snackBar.open('入力内容に誤りがあります。エラーメッセージをご確認ください。', '閉じる', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+    }
   }
 
   addNewCategory(): void {
