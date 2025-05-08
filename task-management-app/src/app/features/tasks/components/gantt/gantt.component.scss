@@ -11,3 +11,14 @@
   min-width: 600px;
   min-height: 400px;
 }
+
+.gantt-bar-complete .gantt_task_content { background: #81c784 !important; }
+.gantt-bar-progress .gantt_task_content { background: #ffd54f !important; }
+.gantt-bar-default .gantt_task_content { background: #64b5f6 !important; }
+.gantt-weekend { background: #fbe9e7 !important; }
+.gantt-today { background: #fff59d !important; }
+:host ::ng-deep .gantt_task_content {
+  font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+  color: #333;
+}
