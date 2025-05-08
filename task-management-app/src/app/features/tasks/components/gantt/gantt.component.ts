@@ -16,6 +16,8 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   @Input() tasks: any[] = []; // タスクデータを受け取る
   @Output() taskUpdated = new EventEmitter<any>();
 
+  private isUpdating = false;
+
   ngOnInit() {
     this.configureGantt();
   }
@@ -68,35 +70,103 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     gantt.config.date_format = "%Y-%m-%d %H:%i";
 
     // タスクの編集を許可
-    gantt.config.editable = true;
+    gantt.config.edit_on_create = true;
     gantt.config.drag_progress = true;
     gantt.config.drag_resize = true;
     gantt.config.drag_move = true;
 
     // イベントハンドラの設定
-    gantt.attachEvent("onAfterTaskUpdate", (id: string, task: any) => {
+    gantt.attachEvent('onAfterTaskUpdate', (id: string, task: any) => {
+      console.log('タスク更新イベント:', { id, task });
       this.handleTaskUpdate(id, task);
+      return true;
     });
 
-    gantt.attachEvent("onAfterTaskDrag", (id: string, mode: string, e: any) => {
+    gantt.attachEvent('onAfterTaskDrag', (id: string, mode: string, e: any) => {
+      console.log('タスクドラッグイベント:', { id, mode, e });
       const task = gantt.getTask(id);
       this.handleTaskUpdate(id, task);
+      return true;
     });
+
+    // タスクの移動を許可
+    gantt.config.drag_move = true;
+    gantt.config.drag_resize = true;
+    gantt.config.drag_progress = true;
   }
 
   private handleTaskUpdate(id: string, task: any) {
-    const originalTask = this.tasks.find(t => t.id === id);
-    if (!originalTask) return;
+    if (this.isUpdating) {
+      console.log('更新処理中です。重複更新をスキップします。');
+      return;
+    }
+    this.isUpdating = true;
 
-    const updatedTask = {
-      ...originalTask,
-      title: task.text,
-      startDate: task.start_date,
-      duration: task.duration,
-      dueDate: new Date(task.start_date.getTime() + task.duration * 24 * 60 * 60 * 1000)
-    };
+    try {
+      const originalTask = this.tasks.find(t => t.id === id);
+      if (!originalTask) return;
 
-    this.taskUpdated.emit(updatedTask);
+      console.log('更新前のタスク:', originalTask);
+
+      // Ganttからの日付データを直接取得
+      const ganttTask = gantt.getTask(id);
+      console.log('Ganttタスクデータ:', ganttTask);
+
+      // 開始日を取得
+      const startDate = new Date(ganttTask.start_date);
+      console.log('Gantt開始日:', startDate);
+
+      // 時刻を00:00:00に設定
+      startDate.setHours(0, 0, 0, 0);
+      
+      // 終了日を計算
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + ganttTask.duration - 1);
+      endDate.setHours(0, 0, 0, 0);
+
+      console.log('計算後の終了日:', endDate);
+
+      // タイムスタンプに変換
+      const startTimestamp = {
+        seconds: Math.floor(startDate.getTime() / 1000),
+        nanoseconds: 0
+      };
+
+      const endTimestamp = {
+        seconds: Math.floor(endDate.getTime() / 1000),
+        nanoseconds: 0
+      };
+
+      console.log('変換後のタイムスタンプ:', {
+        start: startTimestamp,
+        end: endTimestamp
+      });
+
+      const updatedTask = {
+        ...originalTask,
+        title: ganttTask.text || originalTask.title,
+        startDate: startTimestamp,
+        duration: ganttTask.duration,
+        dueDate: endTimestamp
+      };
+
+      console.log('更新後のタスク:', updatedTask);
+
+      // タスクリストを直接更新
+      const taskIndex = this.tasks.findIndex(t => t.id === id);
+      if (taskIndex !== -1) {
+        this.tasks[taskIndex] = updatedTask;
+      }
+
+      this.taskUpdated.emit(updatedTask);
+
+      // タイムラインを即時更新
+      this.updateGanttData();
+    } finally {
+      setTimeout(() => {
+        this.isUpdating = false;
+      }, 500);
+    }
   }
 
   ngAfterViewInit() {
@@ -110,6 +180,7 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       setTimeout(() => this.initGantt(), 0);
     }
     if (changes['tasks']) {
+      console.log('タスク変更検知:', changes['tasks'].currentValue);
       this.updateGanttData();
     }
   }
@@ -125,35 +196,96 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   private updateGanttData() {
     if (!this.tasks?.length) return;
 
+    console.log('タイムライン更新開始:', this.tasks);
+    
     const ganttData = this.tasks.map((task, i) => {
-      const startDate = this.getDateFromTask(task);
-      return {
-        id: task.id || i + 1,
-        text: task.title,
-        start_date: startDate,
-        duration: task.duration || 7,
-        status: task.status || '未着手',
-        progress: task.status === '完了' ? 1 : (task.status === '進行中' ? 0.5 : 0)
-      };
+      try {
+        // 開始日の処理
+        let startDate: Date;
+        if (task.startDate) {
+          if (task.startDate instanceof Date) {
+            startDate = new Date(task.startDate);
+          } else if (task.startDate.seconds) {
+            startDate = new Date(task.startDate.seconds * 1000);
+          } else {
+            startDate = new Date(task.startDate);
+          }
+        } else {
+          // デフォルト値として現在の日付を使用
+          startDate = new Date();
+        }
+
+        // 終了日の処理
+        let endDate: Date;
+        if (task.dueDate) {
+          if (task.dueDate instanceof Date) {
+            endDate = new Date(task.dueDate);
+          } else if (task.dueDate.seconds) {
+            endDate = new Date(task.dueDate.seconds * 1000);
+          } else {
+            endDate = new Date(task.dueDate);
+          }
+        } else {
+          endDate = new Date(startDate);
+          endDate.setDate(startDate.getDate() + (task.duration || 7) - 1);
+        }
+
+        // 時刻を00:00:00に設定
+        startDate.setHours(0, 0, 0, 0);
+        endDate.setHours(0, 0, 0, 0);
+
+        const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+        const ganttTask = {
+          id: task.id || i + 1,
+          text: task.title,
+          start_date: startDate,
+          duration: task.duration || duration,
+          status: task.status || '未着手',
+          progress: task.status === '完了' ? 1 : (task.status === '進行中' ? 0.5 : 0)
+        };
+
+        console.log('Ganttタスクデータ:', ganttTask);
+        console.log('タスクデータ:', task);
+        console.log('開始日:', task.startDate);
+        console.log('変換後の開始日:', startDate);
+        return ganttTask;
+      } catch (error) {
+        console.error('タスクデータ変換エラー:', error, task);
+        return {
+          id: task.id || i + 1,
+          text: task.title || '無題のタスク',
+          start_date: new Date(),
+          duration: 7,
+          status: '未着手',
+          progress: 0
+        };
+      }
     });
 
+    console.log('Ganttデータ更新:', ganttData);
+    gantt.clearAll();
     gantt.parse({ data: ganttData });
   }
 
-  private getDateFromTask(task: any): Date {
+  private getDateFromTask(task: any, field: 'start_date' | 'end_date'): Date {
     let date: Date;
     
-    if (task.startDate) {
-      date = task.startDate instanceof Date ? task.startDate : new Date(task.startDate.seconds * 1000);
-    } else if (task.dueDate) {
-      date = task.dueDate instanceof Date ? task.dueDate : new Date(task.dueDate.seconds * 1000);
+    if (task[field]) {
+      date = task[field] instanceof Date ? task[field] : new Date(task[field]);
+    } else if (field === 'start_date' && task.startDate) {
+      date = task.startDate instanceof Date ? task.startDate : new Date(task.startDate);
+    } else if (field === 'end_date' && task.dueDate) {
+      date = task.dueDate instanceof Date ? task.dueDate : new Date(task.dueDate);
     } else {
       date = new Date();
     }
-
+    
+    // 日本時間に調整（UTC+9）
+    const jstDate = new Date(date.getTime() + (9 * 60 * 60 * 1000));
     // 時刻を00:00:00に設定
-    date.setHours(0, 0, 0, 0);
-    return date;
+    jstDate.setHours(0, 0, 0, 0);
+    return jstDate;
   }
 
   ngOnDestroy() {

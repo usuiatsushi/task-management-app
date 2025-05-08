@@ -75,7 +75,9 @@ export class TaskService implements OnDestroy {
                 assignedTo: data['assignedTo'] || '',
                 createdAt: data['createdAt'],
                 updatedAt: data['updatedAt'],
+                startDate: data['startDate'],
                 dueDate: data['dueDate'],
+                duration: data['duration'],
                 completed: data['completed'] || false
               };
               return task;
@@ -213,7 +215,9 @@ export class TaskService implements OnDestroy {
             assignedTo: data['assignedTo'] || '',
             createdAt: data['createdAt'] instanceof Timestamp ? data['createdAt'] : Timestamp.fromDate(now),
             updatedAt: data['updatedAt'] instanceof Timestamp ? data['updatedAt'] : Timestamp.fromDate(now),
+            startDate: data['startDate'],
             dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
+            duration: data['duration'],
             completed: data['completed'] || false
           };
 
@@ -281,50 +285,63 @@ export class TaskService implements OnDestroy {
 
   async updateTask(taskId: string, updateData: Partial<Task>): Promise<void> {
     try {
-      console.log('Updating task with ID:', taskId);
-      console.log('Update data received:', updateData);
+      console.log('=== タスク更新開始 ===');
+      console.log('更新対象タスクID:', taskId);
+      console.log('受信した更新データ:', JSON.stringify(updateData, null, 2));
 
       const taskDoc = doc(this.firestore, 'tasks', taskId);
       const taskSnapshot = await getDoc(taskDoc);
       const currentTask = taskSnapshot.data() as Task;
+      console.log('現在のタスクデータ:', JSON.stringify(currentTask, null, 2));
       
       // 日付の処理
       const processedData: any = { ...updateData };
 
       // startDateの処理
       if (updateData.startDate) {
+        console.log('startDateの処理開始:', updateData.startDate);
         if (updateData.startDate instanceof Date) {
           processedData.startDate = Timestamp.fromDate(updateData.startDate);
+          console.log('DateからTimestampに変換:', processedData.startDate);
         } else if (updateData.startDate instanceof Timestamp) {
           processedData.startDate = updateData.startDate;
+          console.log('既存のTimestampを使用:', processedData.startDate);
         } else if (typeof updateData.startDate === 'object' && updateData.startDate !== null && 'seconds' in updateData.startDate) {
           const dateObj = updateData.startDate as { seconds: number };
           processedData.startDate = Timestamp.fromMillis(dateObj.seconds * 1000);
+          console.log('オブジェクトからTimestampに変換:', processedData.startDate);
         }
       }
 
       // dueDateの処理
       if (updateData.dueDate) {
+        console.log('dueDateの処理開始:', updateData.dueDate);
         if (updateData.dueDate instanceof Date) {
           processedData.dueDate = Timestamp.fromDate(updateData.dueDate);
+          console.log('DateからTimestampに変換:', processedData.dueDate);
         } else if (updateData.dueDate instanceof Timestamp) {
           processedData.dueDate = updateData.dueDate;
-        } else if (typeof updateData.dueDate === 'object' && 'seconds' in updateData.dueDate) {
-          processedData.dueDate = Timestamp.fromMillis(updateData.dueDate.seconds * 1000);
+          console.log('既存のTimestampを使用:', processedData.dueDate);
+        } else if (typeof updateData.dueDate === 'object' && updateData.dueDate !== null && 'seconds' in updateData.dueDate) {
+          const dateObj = updateData.dueDate as { seconds: number };
+          processedData.dueDate = Timestamp.fromMillis(dateObj.seconds * 1000);
+          console.log('オブジェクトからTimestampに変換:', processedData.dueDate);
         }
       }
 
       // durationの処理
       if (updateData.duration) {
+        console.log('durationの処理開始:', updateData.duration);
         processedData.duration = Number(updateData.duration);
+        console.log('数値に変換:', processedData.duration);
       }
 
       // updatedAtの設定
       processedData.updatedAt = Timestamp.fromDate(new Date());
 
-      console.log('Final update data:', processedData);
+      console.log('最終的な更新データ:', JSON.stringify(processedData, null, 2));
       await updateDoc(taskDoc, processedData);
-      console.log('Update completed successfully');
+      console.log('データベース更新完了');
 
       // カレンダーイベントの更新
       if (currentTask.calendarEventId && (processedData.dueDate || processedData.startDate)) {
@@ -334,15 +351,16 @@ export class TaskService implements OnDestroy {
             ...processedData,
             id: taskId
           };
+          console.log('カレンダーイベント更新データ:', JSON.stringify(updatedTask, null, 2));
           await this.calendarService.updateCalendarEvent(updatedTask);
-          console.log('Calendar event updated successfully');
+          console.log('カレンダーイベント更新完了');
         } catch (error) {
-          console.error('Error updating calendar event:', error);
-          // カレンダー更新の失敗はタスク更新を妨げない
+          console.error('カレンダーイベント更新エラー:', error);
         }
       }
+      console.log('=== タスク更新終了 ===');
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error('タスク更新エラー:', error);
       throw error;
     }
   }
