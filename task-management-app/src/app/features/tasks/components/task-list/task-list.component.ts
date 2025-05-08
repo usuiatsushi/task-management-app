@@ -206,7 +206,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.projectService.loadProjects();
 
     this.route.params.subscribe(params => {
-      const projectId = params['projectId'];
+      const projectId = params['id'];
       console.log('URLのprojectId:', projectId);
       if (projectId) {
         this.projectName = '';
