@@ -5,7 +5,8 @@
     <div class="task-list-container">
       <app-toast-container></app-toast-container>
       <div class="task-list-header">
-        <h1>タスク一覧</h1>
+        <h2 *ngIf="projectName; else loading">{{ projectName }}</h2>
+        <ng-template #loading><span>読み込み中...</span></ng-template>
         <div class="task-list-actions">
           <button mat-raised-button color="primary" (click)="navigateToNewTask()">
             <mat-icon>add</mat-icon>

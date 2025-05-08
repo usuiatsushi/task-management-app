@@ -37,6 +37,8 @@ import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sy
 import { ToastService } from '../../../../shared/services/toast.service';
 import { ToastContainerComponent } from '../../../../shared/components/toast-container/toast-container.component';
 import { ActivatedRoute } from '@angular/router';
+import { ProjectService } from '../../../projects/services/project.service';
+import { Project } from '../../../projects/models/project.model';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -117,6 +119,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   categories: string[] = [];
   categories$: Observable<string[]>;
   tasks: Task[] = [];
+  projectName: string = '';
   private subscription: Subscription | null = null;
 
   // 選択肢の定義
@@ -182,7 +185,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private authService: AuthService,
     private calendarService: CalendarService,
     private toastService: ToastService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private projectService: ProjectService
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -198,11 +202,16 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.route.params.subscribe(params => {
       const projectId = params['projectId'];
       if (projectId) {
+        this.projectService.projects$.subscribe(projects => {
+          const project = projects.find((p: Project) => p.id === projectId);
+          this.projectName = project ? project.name : '';
+        });
         this.taskService.getTasksByProject(projectId).subscribe(tasks => {
           this.tasks = tasks;
           this.dataSource.data = tasks;
         });
       } else {
+        this.projectName = 'すべてのタスク';
         this.taskService.tasks$.subscribe(tasks => {
           this.tasks = tasks;
           this.dataSource.data = tasks;
