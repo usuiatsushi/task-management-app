@@ -43,7 +43,7 @@ export class LoginComponent {
 
   async loginWithGoogle() {
     try {
-      await this.authService.loginWithGoogle();
+      await this.authService.signInWithGoogle();
       this.router.navigate(['/tasks']);
     } catch (error) {
       this.errorMessage = 'Googleログインに失敗しました。時間をおいて再度お試しください。';

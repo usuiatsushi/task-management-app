@@ -80,8 +80,15 @@ export class TaskService implements OnDestroy {
               };
               return task;
             });
-            console.log('Firestore tasks updated:', tasks.length);
-            this.tasksSubject.next(tasks);
+
+            // 現在のタスクと新しいタスクを比較
+            const currentTasks = this.tasksSubject.value;
+            const hasChanges = JSON.stringify(currentTasks) !== JSON.stringify(tasks);
+            
+            if (hasChanges) {
+              console.log('Firestore tasks updated:', tasks.length);
+              this.tasksSubject.next(tasks);
+            }
           });
         },
         (error) => {

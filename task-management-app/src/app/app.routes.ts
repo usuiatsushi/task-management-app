@@ -4,11 +4,14 @@ import { TaskFormComponent } from './features/tasks/components/task-form/task-fo
 import { TaskDetailComponent } from './features/tasks/components/task-detail/task-detail.component';
 import { DashboardComponent } from './features/tasks/components/dashboard/dashboard.component';
 import { AuthGuard } from './core/guards/auth.guard';
+import { AuthService } from './core/services/auth.service';
+import { inject } from '@angular/core';
+import { map } from 'rxjs/operators';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: 'tasks',
+    redirectTo: 'projects',
     pathMatch: 'full'
   },
   {

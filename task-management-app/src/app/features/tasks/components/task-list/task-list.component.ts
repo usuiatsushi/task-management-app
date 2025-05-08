@@ -46,6 +46,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
 import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { GanttComponent } from '../gantt/gantt.component';
+import { take, distinctUntilChanged } from 'rxjs/operators';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -255,13 +256,17 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       const projectId = params['id'];
       if (projectId) {
         this.projectName = '';
-        this.projectService.projects$.subscribe(projects => {
+        this.projectService.projects$.pipe(
+          take(1)  // 最初の1回だけ実行
+        ).subscribe(projects => {
           const project = projects.find((p: Project) => p.id === projectId);
           if (project) {
             this.projectName = project.name;
           }
         });
-        this.taskService.getTasksByProject(projectId).subscribe(tasks => {
+        this.taskService.getTasksByProject(projectId).pipe(
+          take(1)  // 最初の1回だけ実行
+        ).subscribe(tasks => {
           this.tasks = tasks;
           this.dataSource.data = tasks;
         });
@@ -273,7 +278,12 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.setupFilterForm();
 
     // すべてのタスクの購読は1か所だけ
-    this.subscription = this.taskService.tasks$.subscribe(
+    this.subscription = this.taskService.tasks$.pipe(
+      distinctUntilChanged((prev, curr) => {
+        // タスクの配列が実際に変更された場合のみ更新
+        return JSON.stringify(prev) === JSON.stringify(curr);
+      })
+    ).subscribe(
       (tasks) => {
         this.tasks = tasks;
         this.dataSource.data = tasks;

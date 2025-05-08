@@ -19,6 +19,9 @@ export class AuthService {
     this.authState$ = this.afAuth.authState;
     this.afAuth.authState.subscribe(user => {
       this.userSubject.next(user);
+      if (user) {
+        this.router.navigate(['/projects']);
+      }
     });
   }
 
@@ -83,13 +86,16 @@ export class AuthService {
     }
   }
 
-  async loginWithGoogle() {
+  async signInWithGoogle() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await this.afAuth.signInWithPopup(provider);
-      return result.user;
+      if (result.user) {
+        this.router.navigate(['/projects']);
+      }
+      return result;
     } catch (error) {
-      console.error('Googleログインに失敗しました:', error);
+      console.error('Googleログインエラー:', error);
       throw error;
     }
   }
