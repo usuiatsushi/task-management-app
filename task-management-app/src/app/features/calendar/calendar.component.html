@@ -16,6 +16,34 @@
     </div>
   </div>
 
+  <div class="calendar-filters">
+    <mat-form-field appearance="fill" class="filter-field">
+      <mat-label>ステータス</mat-label>
+      <mat-select [(ngModel)]="filterStatus">
+        <mat-option value="">すべて</mat-option>
+        <mat-option value="未着手">未着手</mat-option>
+        <mat-option value="進行中">進行中</mat-option>
+        <mat-option value="完了">完了</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="filter-field">
+      <mat-label>優先度</mat-label>
+      <mat-select [(ngModel)]="filterPriority">
+        <mat-option value="">すべて</mat-option>
+        <mat-option value="高">高</mat-option>
+        <mat-option value="中">中</mat-option>
+        <mat-option value="低">低</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="filter-field">
+      <mat-label>担当者</mat-label>
+      <mat-select [(ngModel)]="filterAssignee">
+        <mat-option value="">すべて</mat-option>
+        <mat-option *ngFor="let assignee of assigneeList" [value]="assignee">{{ assignee }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
   <!-- 月表示 -->
   <ng-container *ngIf="viewMode === 'month'">
     <div class="weekday-header">

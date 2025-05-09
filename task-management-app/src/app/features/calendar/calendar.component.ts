@@ -7,6 +7,9 @@ import { MatCardModule } from '@angular/material/card';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskDetailDialogComponent } from '../tasks/components/task-detail-dialog/task-detail-dialog.component';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 
 function toDate(d: any): Date | null {
   if (!d) return null;
@@ -25,7 +28,10 @@ function toDate(d: any): Date | null {
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    DragDropModule
+    DragDropModule,
+    FormsModule,
+    MatFormFieldModule,
+    MatSelectModule
   ],
   templateUrl: './calendar.component.html',
   styleUrls: ['./calendar.component.css']
@@ -42,10 +48,16 @@ export class CalendarComponent implements OnInit {
   viewMode: 'month' | 'week' | 'day' = 'month';
   selectedDate: Date = new Date();
 
+  filterStatus: string = '';
+  filterPriority: string = '';
+  filterAssignee: string = '';
+  assigneeList: string[] = [];
+
   constructor(private dialog: MatDialog) {}
 
   ngOnInit() {
     this.generateCalendar();
+    this.assigneeList = Array.from(new Set(this.tasks.map(t => t.assignedTo).filter(a => !!a)));
   }
 
   generateCalendar() {
@@ -82,9 +94,13 @@ export class CalendarComponent implements OnInit {
     return this.tasks.filter(task => {
       const taskDate = toDate(task.dueDate);
       if (!taskDate) return false;
-      return taskDate.getDate() === date.getDate() &&
-             taskDate.getMonth() === date.getMonth() &&
-             taskDate.getFullYear() === date.getFullYear();
+      if (taskDate.getDate() !== date.getDate() ||
+          taskDate.getMonth() !== date.getMonth() ||
+          taskDate.getFullYear() !== date.getFullYear()) return false;
+      if (this.filterStatus && task.status !== this.filterStatus) return false;
+      if (this.filterPriority && task.priority !== this.filterPriority) return false;
+      if (this.filterAssignee && task.assignedTo !== this.filterAssignee) return false;
+      return true;
     });
   }
 
@@ -181,11 +197,14 @@ export class CalendarComponent implements OnInit {
     return this.tasks.filter(task => {
       const taskDate = toDate(task.dueDate);
       if (!taskDate) return false;
-      return week.some(date =>
+      if (!week.some(date =>
         taskDate.getDate() === date.getDate() &&
         taskDate.getMonth() === date.getMonth() &&
-        taskDate.getFullYear() === date.getFullYear()
-      );
+        taskDate.getFullYear() === date.getFullYear())) return false;
+      if (this.filterStatus && task.status !== this.filterStatus) return false;
+      if (this.filterPriority && task.priority !== this.filterPriority) return false;
+      if (this.filterAssignee && task.assignedTo !== this.filterAssignee) return false;
+      return true;
     });
   }
 
