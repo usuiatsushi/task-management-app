@@ -4,6 +4,11 @@
     <div class="progress-bar" [style.width.%]="progressPercent"></div>
     <span class="progress-label">{{ progressPercent }}%</span>
   </div>
+  
+  <div class="dashboard-card overdue-card">
+    <h4>期限切れタスク数</h4>
+    <div class="overdue-count">{{ overdueCount }}</div>
+  </div>
 </div>
 
 <div class="dashboard-grid">
@@ -34,6 +39,17 @@
         [data]="barAssigneeData"
         [type]="'bar'"
         [options]="barAssigneeOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>タスク推移</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="lineTaskTrendData"
+        [type]="'line'"
+        [options]="lineTaskTrendOptions">
       </canvas>
     </div>
   </div>

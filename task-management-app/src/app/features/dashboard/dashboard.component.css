@@ -48,3 +48,14 @@
   height: 300px;
 }
 
+.overdue-card {
+  background: #ffeaea;
+  color: #d32f2f;
+  text-align: center;
+}
+
+.overdue-count {
+  font-size: 2rem;
+  font-weight: bold;
+}
+

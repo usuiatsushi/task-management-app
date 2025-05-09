@@ -14,6 +14,7 @@ export class DashboardComponent implements OnChanges {
   @Input() tasks: Task[] = [];
 
   progressPercent = 0;
+  overdueCount = 0;
 
   // ステータス分布（円グラフ）
   pieChartData: ChartData<'pie', number[], string> = {
@@ -77,6 +78,36 @@ export class DashboardComponent implements OnChanges {
     }
   };
 
+  // タスク推移（折れ線グラフ）
+  lineTaskTrendData: ChartData<'line', number[], string> = {
+    labels: [],
+    datasets: [
+      {
+        label: '新規タスク',
+        data: [],
+        borderColor: '#42A5F5',
+        backgroundColor: 'rgba(66,165,245,0.2)',
+        tension: 0.3
+      },
+      {
+        label: '完了タスク',
+        data: [],
+        borderColor: '#66BB6A',
+        backgroundColor: 'rgba(102,187,106,0.2)',
+        tension: 0.3
+      }
+    ]
+  };
+  lineTaskTrendOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const
+      }
+    }
+  };
+
   ngOnChanges() {
     const total = this.tasks.length;
     const completed = this.tasks.filter(t => t.status === '完了').length;
@@ -128,5 +159,62 @@ export class DashboardComponent implements OnChanges {
         }
       ]
     };
+
+    const now = new Date();
+    this.overdueCount = this.tasks.filter(t => {
+      const due = toDate(t.dueDate);
+      return due && due < now && t.status !== '完了';
+    }).length;
+
+    // 折れ線グラフ用データ生成
+    const dateMap: { [date: string]: { created: number; completed: number } } = {};
+    this.tasks.forEach(t => {
+      // 新規タスク（作成日）
+      const createdAt = toDate(t.createdAt);
+      if (createdAt) {
+        const dateStr = createdAt.toISOString().slice(0, 10);
+        if (!dateMap[dateStr]) dateMap[dateStr] = { created: 0, completed: 0 };
+        dateMap[dateStr].created += 1;
+      }
+      // 完了タスク（完了日がupdatedAtで代用されている場合）
+      if (t.status === '完了') {
+        const completedAt = toDate(t.updatedAt);
+        if (completedAt) {
+          const dateStr = completedAt.toISOString().slice(0, 10);
+          if (!dateMap[dateStr]) dateMap[dateStr] = { created: 0, completed: 0 };
+          dateMap[dateStr].completed += 1;
+        }
+      }
+    });
+    // 日付順に並べる
+    const sortedDates = Object.keys(dateMap).sort();
+    this.lineTaskTrendData = {
+      labels: sortedDates,
+      datasets: [
+        {
+          label: '新規タスク',
+          data: sortedDates.map(d => dateMap[d].created),
+          borderColor: '#42A5F5',
+          backgroundColor: 'rgba(66,165,245,0.2)',
+          tension: 0.3
+        },
+        {
+          label: '完了タスク',
+          data: sortedDates.map(d => dateMap[d].completed),
+          borderColor: '#66BB6A',
+          backgroundColor: 'rgba(102,187,106,0.2)',
+          tension: 0.3
+        }
+      ]
+    };
   }
+}
+
+function toDate(d: any): Date | null {
+  if (!d) return null;
+  if (d instanceof Date) return d;
+  if (typeof d === 'string' || typeof d === 'number') return new Date(d);
+  if ('toDate' in d && typeof d.toDate === 'function') return d.toDate();
+  if ('seconds' in d) return new Date(d.seconds * 1000);
+  return null;
 }
