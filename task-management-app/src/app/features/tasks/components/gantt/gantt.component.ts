@@ -185,7 +185,7 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     if (changes['tasks']) {
       console.log('タスク変更検知:', changes['tasks'].currentValue);
       if (this.active) {
-        this.updateGanttData();
+      this.updateGanttData();
       }
     }
   }
@@ -194,9 +194,9 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     if (!this.ganttContainer?.nativeElement) return;
     
     try {
-      gantt.clearAll();
-      gantt.init(this.ganttContainer.nativeElement);
-      this.updateGanttData();
+    gantt.clearAll();
+    gantt.init(this.ganttContainer.nativeElement);
+    this.updateGanttData();
     } catch (error) {
       console.error('ガントチャートの初期化に失敗しました:', error);
     }
