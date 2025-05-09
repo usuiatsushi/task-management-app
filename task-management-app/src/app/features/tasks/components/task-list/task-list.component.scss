@@ -1,14 +1,14 @@
 .task-list-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 8px !important;
+  max-width: 100vw !important;
 }
 
 .task-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 2px !important;
+  padding: 0 !important;
 
   h1 {
     margin: 0;
@@ -23,9 +23,9 @@
   align-items: center;
 
   .selected-count {
-    margin-left: 10px;
+    margin-left: 4px !important;
     color: #666;
-    font-size: 14px;
+    font-size: 11px !important;
   }
 }
 
@@ -487,7 +487,7 @@ mat-form-field {
 
 .task-list-main {
   flex: 1;
-  padding: 32px;
+  padding: 8px !important;
 }
 
 .board-view {
@@ -742,3 +742,109 @@ mat-form-field {
   box-sizing: border-box;
   padding-left: 0 !important;
 } 
+
+.task-list-header,
+.task-list-actions-row {
+  margin-bottom: 2px !important;
+  padding: 0 !important;
+}
+
+.task-list-actions-row button,
+.task-list-actions-row .mat-button,
+.task-list-actions-row .mat-raised-button {
+  min-width: 24px !important;
+  padding: 0 4px !important;
+  font-size: 11px !important;
+  height: 24px !important;
+  line-height: 20px !important;
+}
+
+.selected-count {
+  font-size: 11px !important;
+  margin-left: 4px !important;
+}
+
+.task-list-table th,
+.task-list-table td {
+  padding: 1px 2px !important;
+  font-size: 11px !important;
+  height: 22px !important;
+}
+
+.status-header {
+  font-size: 11px !important;
+  padding: 1px 0 1px 2px !important;
+  margin: 0 0 1px 0 !important;
+}
+
+h2 {
+  font-size: 13px !important;
+  margin: 2px 0 !important;
+}
+
+.mat-table {
+  font-size: 11px !important;
+}
+
+.mat-tab-label, .mat-tab-label-content {
+  min-height: 24px !important;
+  font-size: 11px !important;
+  padding: 0 4px !important;
+}
+
+.task-status-section {
+  margin: 4px 0 0 0 !important;
+  padding: 2px 0 !important;
+  border-radius: 2px !important;
+}
+
+.task-status-section .task-list-table {
+  border-radius: 2px !important;
+  border: 1px solid #eee !important;
+  background: #fafbfc !important;
+  box-shadow: none !important;
+  margin-bottom: 2px !important;
+}
+
+.action-buttons button {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  font-size: 13px !important;
+  padding: 0 !important;
+}
+
+.task-title-link {
+  font-size: 11px !important;
+  padding: 0 !important;
+}
+
+.importance-badge {
+  font-size: 11px !important;
+  padding: 1px 4px !important;
+  border-radius: 8px !important;
+}
+
+@media (max-width: 768px) {
+  .task-list-main {
+    padding: 2px !important;
+  }
+  .task-list-container {
+    padding: 2px !important;
+  }
+}
+
+// タブ全体の高さ・フォントサイズを圧縮
+.mat-tab-group {
+  min-height: 20px !important;
+  margin-bottom: 2px !important;
+}
+.mat-tab-label, .mat-tab-label-content {
+  min-height: 15px !important;
+  font-size: 10px !important;
+  padding: 0 2px !important;
+  line-height: 18px !important;
+}
+.mat-ink-bar {
+  height: 2px !important;
+}
