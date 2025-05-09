@@ -47,7 +47,7 @@ import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/dra
 import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { GanttComponent } from '../gantt/gantt.component';
 import { take, distinctUntilChanged } from 'rxjs/operators';
-import { DashboardComponent } from '../dashboard/dashboard.component';
+import { DashboardComponent } from 'src/app/features/dashboard/dashboard.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {

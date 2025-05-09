@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { TaskListComponent } from './features/tasks/components/task-list/task-list.component';
 import { TaskFormComponent } from './features/tasks/components/task-form/task-form.component';
 import { TaskDetailComponent } from './features/tasks/components/task-detail/task-detail.component';
-import { DashboardComponent } from './features/tasks/components/dashboard/dashboard.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { AuthGuard } from './core/guards/auth.guard';
 import { AuthService } from './core/services/auth.service';
 import { inject } from '@angular/core';
