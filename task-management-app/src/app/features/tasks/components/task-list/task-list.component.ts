@@ -1143,8 +1143,17 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onTabChange(event: any) {
-    this.isTimelineTabActive = event.index === 1;
-    this.isDashboardTabActive = event.index === 2;
+    const previousTimelineState = this.isTimelineTabActive;
+    this.isTimelineTabActive = event.index === 2; // タイムラインタブのインデックスを修正
+    this.isDashboardTabActive = event.index === 3;
+
+    // タイムラインタブが選択された場合、データを再読み込み
+    if (this.isTimelineTabActive) {
+      // タスクデータが空の場合のみ再読み込み
+      if (this.tasks.length === 0) {
+        this.loadTasks();
+      }
+    }
   }
 
   async onGanttTaskUpdate(updatedTask: any) {

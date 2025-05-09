@@ -176,21 +176,30 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['active'] && this.active) {
-      setTimeout(() => this.initGantt(), 0);
+    if (changes['active'] && changes['active'].currentValue) {
+      // タブがアクティブになった時にガントチャートを初期化
+      setTimeout(() => {
+        this.initGantt();
+      }, 0);
     }
     if (changes['tasks']) {
       console.log('タスク変更検知:', changes['tasks'].currentValue);
-      this.updateGanttData();
+      if (this.active) {
+        this.updateGanttData();
+      }
     }
   }
 
   private initGantt() {
     if (!this.ganttContainer?.nativeElement) return;
     
-    gantt.clearAll();
-    gantt.init(this.ganttContainer.nativeElement);
-    this.updateGanttData();
+    try {
+      gantt.clearAll();
+      gantt.init(this.ganttContainer.nativeElement);
+      this.updateGanttData();
+    } catch (error) {
+      console.error('ガントチャートの初期化に失敗しました:', error);
+    }
   }
 
   private updateGanttData() {
