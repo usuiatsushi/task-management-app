@@ -30,7 +30,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, NativeDateAdapter } from '@angular/material/core';
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../models/task.model';
-import { Subscription, Observable } from 'rxjs';
+import { Subscription, Observable, BehaviorSubject, combineLatest } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
@@ -40,9 +40,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../../projects/services/project.service';
 import { Project } from '../../../projects/models/project.model';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { BehaviorSubject } from 'rxjs';
-import { Firestore } from '@angular/fire/firestore';
-import { MatTabsModule } from '@angular/material/tabs';
+import { map } from 'rxjs/operators';
 import { DragDropModule, CdkDragDrop, transferArrayItem } from '@angular/cdk/drag-drop';
 import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { GanttComponent } from '../gantt/gantt.component';
@@ -50,6 +48,8 @@ import { take, distinctUntilChanged } from 'rxjs/operators';
 import { DashboardComponent } from 'src/app/features/dashboard/dashboard.component';
 import { CalendarComponent } from 'src/app/features/calendar/calendar.component';
 import { EisenhowerMatrixComponent } from '../eisenhower-matrix/eisenhower-matrix.component';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTabsModule } from '@angular/material/tabs';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -116,7 +116,8 @@ enum FileType {
     GanttComponent,
     DashboardComponent,
     CalendarComponent,
-    EisenhowerMatrixComponent
+    EisenhowerMatrixComponent,
+    MatButtonToggleModule
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
@@ -230,6 +231,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   isTimelineTabActive = false;
   isDashboardTabActive = false;
 
+  quickFilters: string[] = [];
+  private quickFilters$ = new BehaviorSubject<string[]>([]);
+  filteredTasks$!: Observable<Task[]>;
+  currentUserId: string = '';
+
   constructor(
     private taskService: TaskService,
     private categoryService: CategoryService,
@@ -243,8 +249,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     private calendarService: CalendarService,
     private toastService: ToastService,
     private route: ActivatedRoute,
-    private projectService: ProjectService,
-    private firestore: Firestore
+    private projectService: ProjectService
   ) {
     this.searchControl = new FormControl('');
     this.filterForm = this.fb.group({
@@ -255,7 +260,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.categories$ = this.categoryService.categories$;
   }
-
+  getFilteredTasks(status: string): Observable<Task[]> {
+    return this.filteredTasks$.pipe(
+      map(tasks => tasks.filter(task => task.status === status))
+    );
+  }
   ngOnInit(): void {
     this.projectService.loadProjects();
 
@@ -312,6 +321,16 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       }
     );
+
+    this.authService.getCurrentUser().then(user => {
+      this.currentUserId = user?.uid || '';
+      this.filteredTasks$ = combineLatest([
+        this.taskService.tasks$,
+        this.quickFilters$
+      ]).pipe(
+        map(([tasks, quickFilters]) => this.filterTasks(tasks, quickFilters))
+      );
+    });
   }
 
   ngAfterViewInit(): void {
@@ -1173,5 +1192,51 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('タスクの更新に失敗しました:', error);
       this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
     }
+  }
+
+  clearFilters() {
+    this.quickFilters = [];
+    this.quickFilters$.next([]);
+    this.applyFilters();
+  }
+
+  onQuickFilterChange() {
+    this.quickFilters$.next(this.quickFilters);
+    this.applyFilters();
+  }
+
+  filterTasks(tasks: Task[], quickFilters: string[]): Task[] {
+    let filtered = tasks;
+    if (quickFilters.includes('incomplete')) {
+      filtered = filtered.filter(t => t.status !== '完了');
+    }
+    if (quickFilters.includes('complete')) {
+      filtered = filtered.filter(t => t.status === '完了');
+    }
+    // mineフィルターは非同期不要にするため、ユーザーIDをngOnInitで取得しておく
+    if (quickFilters.includes('mine') && this.currentUserId) {
+      filtered = filtered.filter(t => t.assignedTo === this.currentUserId);
+    }
+    if (quickFilters.includes('thisWeek')) {
+      const now = new Date();
+      const weekEnd = new Date();
+      weekEnd.setDate(now.getDate() + (7 - now.getDay()));
+      filtered = filtered.filter(t => {
+        const due = this.getDateFromTimestamp(t.dueDate);
+        return due >= now && due <= weekEnd;
+      });
+    }
+    if (quickFilters.includes('nextWeek')) {
+      const now = new Date();
+      const weekStart = new Date();
+      weekStart.setDate(now.getDate() + (7 - now.getDay()) + 1);
+      const weekEnd = new Date();
+      weekEnd.setDate(weekStart.getDate() + 6);
+      filtered = filtered.filter(t => {
+        const due = this.getDateFromTimestamp(t.dueDate);
+        return due >= weekStart && due <= weekEnd;
+      });
+    }
+    return filtered;
   }
 } 
