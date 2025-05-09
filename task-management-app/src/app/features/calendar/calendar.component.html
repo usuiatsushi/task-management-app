@@ -1,0 +1,46 @@
+<div class="calendar-container">
+  <div class="calendar-header">
+    <button mat-icon-button (click)="previousMonth()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <h2>{{ currentMonth | date:'yyyy年MM月' }}</h2>
+    <button mat-icon-button (click)="nextMonth()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="weekday-header">
+    <div *ngFor="let day of weekDays" class="weekday">{{ day }}</div>
+  </div>
+
+  <div class="calendar-body">
+    <div *ngFor="let week of weeks" class="week">
+      <div *ngFor="let date of week" 
+           class="day-cell"
+           [class.today]="isToday(date)"
+           [class.other-month]="!isCurrentMonth(date)"
+           cdkDropList
+           (cdkDropListDropped)="onTaskDrop($event, date)">
+        <div class="date-number">{{ date.getDate() }}</div>
+        <div class="task-list">
+          <div *ngFor="let task of getTasksForDate(date)"
+               class="task-card"
+               [class.status-not-started]="task.status === '未着手'"
+               [class.status-in-progress]="task.status === '進行中'"
+               [class.status-completed]="task.status === '完了'"
+               [class.priority-high]="task.priority === '高'"
+               [class.priority-medium]="task.priority === '中'"
+               [class.priority-low]="task.priority === '低'"
+               cdkDrag
+               (click)="openTaskDetail(task)">
+            <div class="task-title">{{ task.title }}</div>
+            <div class="task-meta">
+              <span class="task-status">{{ task.status }}</span>
+              <span class="task-priority">{{ task.priority }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

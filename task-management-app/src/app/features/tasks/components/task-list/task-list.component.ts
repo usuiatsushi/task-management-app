@@ -48,6 +48,7 @@ import { GoogleChartsModule, ChartType } from 'angular-google-charts';
 import { GanttComponent } from '../gantt/gantt.component';
 import { take, distinctUntilChanged } from 'rxjs/operators';
 import { DashboardComponent } from 'src/app/features/dashboard/dashboard.component';
+import { CalendarComponent } from 'src/app/features/calendar/calendar.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -112,7 +113,8 @@ enum FileType {
     DragDropModule,
     GoogleChartsModule,
     GanttComponent,
-    DashboardComponent
+    DashboardComponent,
+    CalendarComponent
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
