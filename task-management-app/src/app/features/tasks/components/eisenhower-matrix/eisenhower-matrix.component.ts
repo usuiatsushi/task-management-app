@@ -25,4 +25,14 @@ export class EisenhowerMatrixComponent {
   get quadrant4() {
     return this.tasks.filter(t => t.priority !== '高' && !t.urgent);
   }
+
+  // Firestore Timestampやオブジェクト型にも対応した日付変換
+  public toDate(d: any): Date | null {
+    if (!d) return null;
+    if (d instanceof Date) return d;
+    if (typeof d === 'string' || typeof d === 'number') return new Date(d);
+    if ('toDate' in d && typeof d.toDate === 'function') return d.toDate();
+    if ('seconds' in d) return new Date(d.seconds * 1000);
+    return null;
+  }
 } 

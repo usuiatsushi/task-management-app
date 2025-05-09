@@ -9,20 +9,88 @@
   min-height: 400px;
 }
 .matrix-cell {
+  padding: 12px;
+  border-radius: 12px;
+  min-height: 220px;
+  background: #f8fafc;
+  border: 2px solid #e3e8ee;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+.task-cards {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.task-card {
   background: #fff;
-  border: 2px solid #90caf9;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px #0001;
+  border: 1px solid #d0d7de;
+  min-width: 220px;
+  max-width: 260px;
+  padding: 12px 14px 10px 14px;
+  margin-bottom: 8px;
   display: flex;
   flex-direction: column;
-  min-height: 180px;
+  transition: box-shadow 0.2s, border 0.2s, transform 0.1s;
+  cursor: pointer;
+}
+.task-card:hover {
+  box-shadow: 0 6px 18px #1976d233;
+  border: 1.5px solid #1976d2;
+  transform: translateY(-2px) scale(1.03);
+}
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.task-title {
+  font-weight: bold;
+  font-size: 1.08em;
+  color: #222;
+  word-break: break-all;
+  margin-bottom: 6px;
+}
+.priority-badge {
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 0.9em;
+  color: #fff;
+  margin-left: 4px;
+}
+.priority-badge.高 { background: #e53935; }
+.priority-badge.中 { background: #fbc02d; color: #333; }
+.priority-badge.低 { background: #43a047; }
+.task-meta {
+  font-size: 0.95em;
+  color: #666;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+.task-meta mat-icon, .task-meta .material-icons {
+  font-size: 1em;
+  vertical-align: middle;
+  margin-right: 2px;
+}
+.task-desc {
+  font-size: 0.97em;
+  color: #444;
+  margin-top: 4px;
+  word-break: break-all;
 }
 .quadrant-title {
   font-weight: bold;
-  margin-bottom: 8px;
-  font-size: 1.1em;
+  font-size: 1.08em;
   color: #1976d2;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 .matrix-cell ul {
   margin: 0;
@@ -35,4 +103,18 @@
 .quadrant1 { background: #ffebee; }
 .quadrant2 { background: #fffde7; }
 .quadrant3 { background: #e3f2fd; }
-.quadrant4 { background: #f3e5f5; } 
+.quadrant4 { background: #f3e5f5; }
+.matrix-cell {
+  overflow-x: auto;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .task-cards {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .task-card {
+    min-width: 90%;
+    max-width: 100%;
+  }
+} 
