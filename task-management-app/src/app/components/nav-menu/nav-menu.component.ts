@@ -44,7 +44,7 @@ export class NavMenuComponent {
 
   showExportMenu = false;
   projects: Project[] = [];
-  showProjectMenu = false;
+  showProjectMenu = true;
 
   constructor(
     private router: Router,
