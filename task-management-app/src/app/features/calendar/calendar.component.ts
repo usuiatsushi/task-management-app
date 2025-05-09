@@ -39,6 +39,9 @@ export class CalendarComponent implements OnInit {
   weeks: Date[][] = [];
   weekDays = ['日', '月', '火', '水', '木', '金', '土'];
 
+  viewMode: 'month' | 'week' | 'day' = 'month';
+  selectedDate: Date = new Date();
+
   constructor(private dialog: MatDialog) {}
 
   ngOnInit() {
@@ -150,5 +153,65 @@ export class CalendarComponent implements OnInit {
       width: '600px',
       data: { task }
     });
+  }
+
+  setViewMode(mode: 'month' | 'week' | 'day') {
+    this.viewMode = mode;
+    if (mode === 'week') {
+      this.selectedDate = new Date(this.currentDate);
+    } else if (mode === 'day') {
+      this.selectedDate = new Date(this.currentDate);
+    }
+    this.generateCalendar();
+  }
+
+  getCurrentWeek(): Date[] {
+    const today = this.selectedDate;
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(startOfWeek);
+      d.setDate(startOfWeek.getDate() + i);
+      return d;
+    });
+  }
+
+  getTasksForWeek(): Task[] {
+    const week = this.getCurrentWeek();
+    return this.tasks.filter(task => {
+      const taskDate = toDate(task.dueDate);
+      if (!taskDate) return false;
+      return week.some(date =>
+        taskDate.getDate() === date.getDate() &&
+        taskDate.getMonth() === date.getMonth() &&
+        taskDate.getFullYear() === date.getFullYear()
+      );
+    });
+  }
+
+  getTasksForDay(): Task[] {
+    return this.getTasksForDate(this.selectedDate);
+  }
+
+  goToPrevious() {
+    if (this.viewMode === 'month') {
+      this.previousMonth();
+    } else if (this.viewMode === 'week') {
+      this.selectedDate.setDate(this.selectedDate.getDate() - 7);
+    } else if (this.viewMode === 'day') {
+      this.selectedDate.setDate(this.selectedDate.getDate() - 1);
+    }
+    this.generateCalendar();
+  }
+
+  goToNext() {
+    if (this.viewMode === 'month') {
+      this.nextMonth();
+    } else if (this.viewMode === 'week') {
+      this.selectedDate.setDate(this.selectedDate.getDate() + 7);
+    } else if (this.viewMode === 'day') {
+      this.selectedDate.setDate(this.selectedDate.getDate() + 1);
+    }
+    this.generateCalendar();
   }
 } 
