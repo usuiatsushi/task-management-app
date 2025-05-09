@@ -44,6 +44,7 @@ export class NavMenuComponent {
 
   showExportMenu = false;
   projects: Project[] = [];
+  showProjectMenu = false;
 
   constructor(
     private router: Router,
@@ -59,6 +60,10 @@ export class NavMenuComponent {
 
   toggleExportMenu(): void {
     this.showExportMenu = !this.showExportMenu;
+  }
+
+  toggleProjectMenu(): void {
+    this.showProjectMenu = !this.showProjectMenu;
   }
 
   navigateTo(path: string): void {

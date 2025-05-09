@@ -34,16 +34,33 @@ mat-icon {
 
 .project-submenu {
   padding-left: 16px;
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
-.project-submenu a {
-  height: 40px;
-  font-size: 14px;
+.project-submenu a[mat-list-item] {
+  height: 48px;
 }
 
 .project-submenu mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
   margin-right: 16px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.expand-icon {
+  margin-left: 0;
+  position: relative;
+  top: 6px;
+  font-size: 24px;
+}
+
+.project-list-item {
+  display: flex;
+  align-items: center;
+}
+
+.project-title {
+  font-size: 16px;
 } 
