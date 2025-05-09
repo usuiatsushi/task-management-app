@@ -54,6 +54,50 @@
       </canvas>
     </div>
   </div>
+
+  <div class="dashboard-card">
+    <h4>カテゴリ別タスク分布</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="categoryChartData"
+        [type]="'pie'"
+        [options]="categoryChartOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>完了率の推移</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="completionRateData"
+        [type]="'line'"
+        [options]="completionRateOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>今週の目標達成率</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="weeklyGoalData"
+        [type]="'doughnut'"
+        [options]="weeklyGoalOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>優先度ごとの完了率</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="priorityCompletionData"
+        [type]="'bar'"
+        [options]="priorityCompletionOptions">
+      </canvas>
+    </div>
+  </div>
 </div>
 
 

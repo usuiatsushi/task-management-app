@@ -108,6 +108,135 @@ export class DashboardComponent implements OnChanges {
     }
   };
 
+  categoryChartData: ChartData<'pie'> | ChartData<'bar'> = {
+    labels: [],
+    datasets: [{ data: [], backgroundColor: [] }]
+  };
+
+  categoryChartOptions: ChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom' as const }
+    }
+  };
+
+  // 完了率の推移（折れ線グラフ）
+  completionRateData: ChartData<'line', number[], string> = {
+    labels: [],
+    datasets: [
+      {
+        label: '完了率',
+        data: [],
+        borderColor: '#66BB6A',
+        backgroundColor: 'rgba(102,187,106,0.2)',
+        tension: 0.3
+      }
+    ]
+  };
+  completionRateOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: {
+          callback: (value) => `${value}%`
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: false
+      }
+    }
+  };
+
+  // 今週の目標達成率（ゲージ）
+  weeklyGoalData: ChartData<'doughnut', number[], string> = {
+    labels: ['達成率', '残り'],
+    datasets: [{
+      data: [0, 100],
+      backgroundColor: ['#66BB6A', '#E0E0E0'],
+      circumference: 180,
+      rotation: -90
+    }]
+  };
+  weeklyGoalOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '80%',
+    plugins: {
+      legend: {
+        display: false
+      }
+    }
+  };
+
+  // 優先度ごとの完了率（積み上げ棒グラフ）
+  priorityCompletionData: ChartData<'bar', number[], string> = {
+    labels: ['低', '中', '高'],
+    datasets: [
+      {
+        label: '完了',
+        data: [0, 0, 0],
+        backgroundColor: '#66BB6A',
+        stack: 'Stack 0'
+      },
+      {
+        label: '未完了',
+        data: [0, 0, 0],
+        backgroundColor: '#EF5350',
+        stack: 'Stack 0'
+      }
+    ]
+  };
+  priorityCompletionOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        stacked: true,
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => `${value}件`
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'bottom' as const,
+        labels: {
+          font: {
+            size: 12
+          },
+          padding: 20
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y;
+            const total = (context.dataset.data as number[]).reduce((a, b) => a + (b || 0), 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value}件 (${percentage}%)`;
+          }
+        }
+      }
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    }
+  };
+
   ngOnChanges() {
     const total = this.tasks.length;
     const completed = this.tasks.filter(t => t.status === '完了').length;
@@ -187,26 +316,181 @@ export class DashboardComponent implements OnChanges {
       }
     });
     // 日付順に並べる
-    const sortedDates = Object.keys(dateMap).sort();
+    const taskTrendDates = Object.keys(dateMap).sort();
     this.lineTaskTrendData = {
-      labels: sortedDates,
+      labels: taskTrendDates,
       datasets: [
         {
           label: '新規タスク',
-          data: sortedDates.map(d => dateMap[d].created),
+          data: taskTrendDates.map(d => dateMap[d].created),
           borderColor: '#42A5F5',
           backgroundColor: 'rgba(66,165,245,0.2)',
           tension: 0.3
         },
         {
           label: '完了タスク',
-          data: sortedDates.map(d => dateMap[d].completed),
+          data: taskTrendDates.map(d => dateMap[d].completed),
           borderColor: '#66BB6A',
           backgroundColor: 'rgba(102,187,106,0.2)',
           tension: 0.3
         }
       ]
     };
+
+    const categoryCounts = this.countByCategory(this.tasks);
+    this.categoryChartData = {
+      labels: Object.keys(categoryCounts),
+      datasets: [{
+        data: Object.values(categoryCounts),
+        backgroundColor: [
+          '#42a5f5', '#66bb6a', '#ffa726', '#ab47bc', '#ec407a', '#ff7043', '#26a69a'
+        ]
+      }]
+    };
+
+    // 完了率の推移データ生成
+    const completionRateMap: { [date: string]: number } = {};
+    this.tasks.forEach(t => {
+      const date = toDate(t.updatedAt);
+      if (date) {
+        const dateStr = date.toISOString().slice(0, 10);
+        if (!completionRateMap[dateStr]) {
+          const tasksOnDate = this.tasks.filter(task => {
+            const taskDate = toDate(task.updatedAt);
+            return taskDate && taskDate.toISOString().slice(0, 10) === dateStr;
+          });
+          const completedOnDate = tasksOnDate.filter(task => task.status === '完了').length;
+          completionRateMap[dateStr] = tasksOnDate.length > 0 
+            ? Math.round((completedOnDate / tasksOnDate.length) * 100) 
+            : 0;
+        }
+      }
+    });
+
+    const completionRateDates = Object.keys(completionRateMap).sort();
+    this.completionRateData = {
+      labels: completionRateDates,
+      datasets: [{
+        label: '完了率',
+        data: completionRateDates.map(d => completionRateMap[d]),
+        borderColor: '#66BB6A',
+        backgroundColor: 'rgba(102,187,106,0.2)',
+        tension: 0.3
+      }]
+    };
+
+    // 今週の目標達成率計算
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+    
+    const weeklyTasks = this.tasks.filter(t => {
+      const taskDate = toDate(t.updatedAt);
+      return taskDate && taskDate >= startOfWeek && taskDate <= endOfWeek;
+    });
+    
+    const weeklyCompleted = weeklyTasks.filter(t => t.status === '完了').length;
+    const weeklyGoalRate = weeklyTasks.length > 0 
+      ? Math.round((weeklyCompleted / weeklyTasks.length) * 100) 
+      : 0;
+
+    this.weeklyGoalData = {
+      labels: ['達成率', '残り'],
+      datasets: [{
+        data: [weeklyGoalRate, 100 - weeklyGoalRate],
+        backgroundColor: ['#66BB6A', '#E0E0E0'],
+        circumference: 180,
+        rotation: -90
+      }]
+    };
+
+    // 優先度ごとの完了率データ生成
+    const priorityData = {
+      '低': { completed: 0, incomplete: 0 },
+      '中': { completed: 0, incomplete: 0 },
+      '高': { completed: 0, incomplete: 0 }
+    };
+
+    this.tasks.forEach(task => {
+      const status = task.status === '完了' ? 'completed' : 'incomplete';
+      priorityData[task.priority][status]++;
+    });
+
+    this.priorityCompletionData = {
+      labels: ['低', '中', '高'],
+      datasets: [
+        {
+          label: '完了',
+          data: [
+            priorityData['低'].completed,
+            priorityData['中'].completed,
+            priorityData['高'].completed
+          ],
+          backgroundColor: '#66BB6A',
+          stack: 'Stack 0'
+        },
+        {
+          label: '未完了',
+          data: [
+            priorityData['低'].incomplete,
+            priorityData['中'].incomplete,
+            priorityData['高'].incomplete
+          ],
+          backgroundColor: '#EF5350',
+          stack: 'Stack 0'
+        }
+      ]
+    };
+
+    // 既存のグラフオプションをカスタマイズ
+    this.pieChartOptions = {
+      ...this.pieChartOptions,
+      plugins: {
+        ...this.pieChartOptions.plugins,
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const label = context.label || '';
+              const value = context.parsed;
+              const total = context.dataset.data.reduce((a: number, b: number | null) => a + (b || 0), 0);
+              const percentage = Math.round((value / total) * 100);
+              return `${label}: ${value}件 (${percentage}%)`;
+            }
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
+    };
+
+    this.barPriorityOptions = {
+      ...this.barPriorityOptions,
+      plugins: {
+        ...this.barPriorityOptions.plugins,
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.parsed.y;
+              return `${value}件`;
+            }
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
+    };
+  }
+
+  private countByCategory(tasks: Task[]): { [category: string]: number } {
+    const counts: { [category: string]: number } = {};
+    for (const t of tasks) {
+      const category = t.category || '未分類';
+      counts[category] = (counts[category] || 0) + 1;
+    }
+    return counts;
   }
 }
 
