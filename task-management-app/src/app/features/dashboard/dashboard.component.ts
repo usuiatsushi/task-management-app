@@ -35,9 +35,9 @@ export class DashboardComponent implements OnChanges {
     chartType: ChartType.ColumnChart,
     dataTable: [
       ['優先度', '件数'],
-      ['Low', 0],
-      ['Medium', 0],
-      ['High', 0]
+      ['低', 0],
+      ['中', 0],
+      ['高', 0]
     ],
     options: {
       title: '優先度分布',
@@ -71,7 +71,7 @@ export class DashboardComponent implements OnChanges {
 
     this.progressPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    // 優先度分布の更新
+    // 優先度分布の更新（日本語ラベルで統一）
     const priorityCounts = this.countByProperty('priority');
     this.priorityChart.dataTable = [
       ['優先度', '件数'],
@@ -79,6 +79,7 @@ export class DashboardComponent implements OnChanges {
       ['中', Number(priorityCounts['中'] || 0)],
       ['高', Number(priorityCounts['高'] || 0)]
     ];
+    console.log(this.priorityChart.dataTable);
 
     // 担当者別タスク数の更新
     const assigneeCounts = this.countByProperty('assignedTo');
