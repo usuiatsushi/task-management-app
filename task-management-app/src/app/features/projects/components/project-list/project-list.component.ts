@@ -9,6 +9,8 @@ import { Router } from '@angular/router';
 import { ProjectService } from '../../services/project.service';
 import { Project } from '../../models/project.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { TaskService } from 'src/app/features/tasks/services/task.service';
+import { Task } from 'src/app/features/tasks/models/task.model';
 
 @Component({
   selector: 'app-project-list',
@@ -26,9 +28,11 @@ import { ConfirmDialogComponent } from '../../../../shared/components/confirm-di
 export class ProjectListComponent implements OnInit {
   displayedColumns: string[] = ['name', 'description', 'tasks', 'actions'];
   projects: Project[] = [];
+  tasks: Task[] = [];
 
   constructor(
     private projectService: ProjectService,
+    private taskService: TaskService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router
@@ -37,6 +41,9 @@ export class ProjectListComponent implements OnInit {
   ngOnInit(): void {
     this.projectService.projects$.subscribe(projects => {
       this.projects = projects;
+    });
+    this.taskService.tasks$.subscribe(tasks => {
+      this.tasks = tasks;
     });
   }
 
@@ -69,5 +76,9 @@ export class ProjectListComponent implements OnInit {
         }
       }
     });
+  }
+
+  getTaskCount(projectId: string): number {
+    return this.tasks.filter(task => task.projectId === projectId).length;
   }
 } 

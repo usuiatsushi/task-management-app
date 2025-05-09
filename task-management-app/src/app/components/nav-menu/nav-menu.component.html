@@ -1,9 +1,9 @@
 <mat-nav-list>
-  <a mat-list-item (click)="toggleProjectMenu()" class="project-list-item">
+  <a mat-list-item (click)="navigateTo('/projects')" class="project-list-item">
     <mat-icon matListItemIcon>folder</mat-icon>
     <span class="project-title">プロジェクト</span>
     <span class="spacer"></span>
-    <mat-icon class="expand-icon">{{ showProjectMenu ? 'expand_less' : 'expand_more' }}</mat-icon>
+    <mat-icon class="expand-icon" (click)="$event.stopPropagation(); toggleProjectMenu();">{{ showProjectMenu ? 'expand_less' : 'expand_more' }}</mat-icon>
   </a>
 
   <div class="project-submenu" *ngIf="showProjectMenu">

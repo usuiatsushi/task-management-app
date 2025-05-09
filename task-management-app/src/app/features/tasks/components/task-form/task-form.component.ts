@@ -264,8 +264,14 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         const now = new Date();
         const startDate = now;
         const duration = 7;
+        // projectIdをルートからも取得し、必ずセット
+        let projectId = this.taskForm.value.projectId;
+        if (!projectId) {
+          projectId = this.route.parent?.snapshot.params['id'] || this.route.snapshot.params['id'] || '';
+        }
         const taskData = {
           ...this.taskForm.value,
+          projectId,
           startDate: startDate,
           duration: duration,
           dueDate: dueDate,
