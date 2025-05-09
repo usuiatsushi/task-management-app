@@ -1,6 +1,6 @@
 export interface AISuggestion {
   category: string;
-  priority: '低' | '中' | '高';
+  importance: '低' | '中' | '高';
   suggestedDueDate: Date;
   relatedTasks: string[];
   actionPlan: string[];

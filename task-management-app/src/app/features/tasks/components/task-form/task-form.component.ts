@@ -85,7 +85,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       description: ['', [Validators.required, this.descriptionValidator.bind(this)]],
       category: ['', Validators.required],
       status: ['未着手', Validators.required],
-      priority: ['中', Validators.required],
+      importance: ['中', Validators.required],
       dueDate: [new Date(), [Validators.required, this.dueDateValidator.bind(this)]],
       assignedTo: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
       newCategoryName: [''],
@@ -475,7 +475,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       description: '説明',
       category: 'カテゴリ',
       status: 'ステータス',
-      priority: '優先度',
+      importance: '重要度',
       dueDate: '期限',
       assignedTo: '担当者'
     };
@@ -494,7 +494,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // タイトルと説明が変更されたときに自動分類と優先度設定を行う
+  // タイトルと説明が変更されたときに自動分類と重要度設定を行う
   onTitleOrDescriptionChange() {
     const title = this.taskForm.get('title')?.value;
     const description = this.taskForm.get('description')?.value;
@@ -505,7 +505,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         title: title || '',
         description: description || '',
         category: '',
-        priority: '中',
+        importance: '中',
         dueDate: new Date(),
         completed: false,
         status: '未着手',
@@ -519,9 +519,9 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       const suggestedCategory = this.aiAssistant.categorizeTask(task);
       this.taskForm.patchValue({ category: suggestedCategory });
 
-      // AIアシスタントによる優先度設定
-      const suggestedPriority = this.aiAssistant.setPriority(task);
-      this.taskForm.patchValue({ priority: suggestedPriority });
+      // AIアシスタントによる重要度設定
+      const suggestedImportance = this.aiAssistant.setImportance(task);
+      this.taskForm.patchValue({ importance: suggestedImportance });
     }
   }
 
@@ -541,7 +541,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
               title: suggestion.title,
               description: suggestion.description,
               category: suggestion.category,
-              priority: suggestion.priority
+              importance: suggestion.importance
             });
           });
         }

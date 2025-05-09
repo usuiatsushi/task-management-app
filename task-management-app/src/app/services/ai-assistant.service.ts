@@ -13,7 +13,7 @@ export class AiAssistantService {
     '学習': ['勉強', '読書', '講座', '資格', 'スキル']
   };
 
-  private readonly priorityKeywords = {
+  private readonly importanceKeywords = {
     '重要かつ緊急': ['緊急', '重要', '必須', '期限切れ', '優先'],
     '重要だが緊急でない': ['計画', '戦略', '改善', '成長', '投資'],
     '緊急だが重要でない': ['依頼', '対応', '確認', '連絡', '報告'],
@@ -39,15 +39,15 @@ export class AiAssistantService {
   }
 
   // Eisenhower Matrixに基づいて優先度を設定
-  setPriority(task: Task): string {
+  setImportance(task: Task): string {
     const title = task.title.toLowerCase();
     const description = task.description?.toLowerCase() || '';
 
-    for (const [priority, keywords] of Object.entries(this.priorityKeywords)) {
+    for (const [importance, keywords] of Object.entries(this.importanceKeywords)) {
       if (keywords.some(keyword => 
         title.includes(keyword) || description.includes(keyword)
       )) {
-        return priority;
+        return importance;
       }
     }
 

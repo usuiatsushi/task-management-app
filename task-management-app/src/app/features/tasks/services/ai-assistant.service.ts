@@ -14,7 +14,7 @@ export class AiAssistantService {
     '学習': ['勉強', '読書', '講座', '資格', 'スキル']
   };
 
-  private readonly priorityKeywords = {
+  private readonly importanceKeywords = {
     '高': ['緊急', '重要', '必須', '期限切れ', '優先'],
     '中': ['計画', '戦略', '改善', '成長', '投資'],
     '低': ['依頼', '対応', '確認', '連絡', '報告']
@@ -25,14 +25,14 @@ export class AiAssistantService {
   async analyzeTask(task: Task): Promise<AISuggestion> {
     // タスクの分析と提案を生成
     const category = await this.suggestCategory(task.title, task.description);
-    const priority = this.calculatePriority(task);
+    const importance = this.calculateImportance(task);
     const dueDate = this.suggestDueDate(task);
     const relatedTasks = await this.findRelatedTasks(task);
     const actionPlan = this.generateActionPlan(task);
 
     return {
       category,
-      priority,
+      importance,
       suggestedDueDate: dueDate,
       relatedTasks,
       actionPlan
@@ -85,8 +85,8 @@ export class AiAssistantService {
     return '技術的課題';
   }
 
-  private calculatePriority(task: Task): '低' | '中' | '高' {
-    // 優先度計算のロジック
+  private calculateImportance(task: Task): '低' | '中' | '高' {
+    // 重要度計算のロジック
     // TODO: より高度な分析を実装
     return '中';
   }
@@ -198,19 +198,17 @@ export class AiAssistantService {
     return 'その他';
   }
 
-  // Eisenhower Matrixに基づいて優先度を設定
-  setPriority(task: Task): '高' | '中' | '低' {
+  // Eisenhower Matrixに基づいて重要度を設定
+  setImportance(task: Task): '高' | '中' | '低' {
     const title = task.title.toLowerCase();
     const description = task.description?.toLowerCase() || '';
-
-    for (const [priority, keywords] of Object.entries(this.priorityKeywords)) {
+    for (const [importance, keywords] of Object.entries(this.importanceKeywords)) {
       if (keywords.some(keyword => 
         title.includes(keyword) || description.includes(keyword)
       )) {
-        return priority as '高' | '中' | '低';
+        return importance as '高' | '中' | '低';
       }
     }
-
     return '中';
   }
 
@@ -228,7 +226,7 @@ export class AiAssistantService {
         title: pattern.title,
         description: pattern.description,
         category: pattern.category,
-        priority: pattern.priority,
+        importance: pattern.importance,
         dueDate: new Date(),
         completed: false,
         status: '未着手',
@@ -246,35 +244,35 @@ export class AiAssistantService {
     title: string;
     description: string;
     category: string;
-    priority: '高' | '中' | '低';
+    importance: '高' | '中' | '低';
   }> {
     const patterns: Array<{
       title: string;
       description: string;
       category: string;
-      priority: '高' | '中' | '低';
+      importance: '高' | '中' | '低';
     }> = [];
     
     // 単純な頻度分析
     const categoryCount = new Map<string, number>();
-    const priorityCount = new Map<string, number>();
+    const importanceCount = new Map<string, number>();
     
     tasks.forEach(task => {
       categoryCount.set(task.category, (categoryCount.get(task.category) || 0) + 1);
-      priorityCount.set(task.priority, (priorityCount.get(task.priority) || 0) + 1);
+      importanceCount.set(task.importance, (importanceCount.get(task.importance) || 0) + 1);
     });
 
-    // 最も頻出するカテゴリと優先度の組み合わせを返す
+    // 最も頻出するカテゴリと重要度の組み合わせを返す
     const mostCommonCategory = [...categoryCount.entries()]
       .sort((a, b) => b[1] - a[1])[0][0];
-    const mostCommonPriority = [...priorityCount.entries()]
+    const mostCommonImportance = [...importanceCount.entries()]
       .sort((a, b) => b[1] - a[1])[0][0] as '高' | '中' | '低';
 
     patterns.push({
       title: '定期的なタスク',
       description: '定期的に発生するタスクを追加',
       category: mostCommonCategory,
-      priority: mostCommonPriority
+      importance: mostCommonImportance
     });
 
     return patterns;

@@ -12,7 +12,7 @@ export interface Task {
   title: string;
   description: string;
   status: '未着手' | '進行中' | '完了';
-  priority: '低' | '中' | '高';
+  importance: '低' | '中' | '高';
   category: string;
   assignedTo: string;
   dueDate: Timestamp | { seconds: number; nanoseconds: number } | Date | string | null;

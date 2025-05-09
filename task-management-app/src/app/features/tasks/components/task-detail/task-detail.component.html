@@ -12,7 +12,7 @@
 
     <div class="task-meta">
       <span class="status" [ngClass]="task.status">{{ task.status }}</span>
-      <span class="priority" [ngClass]="task.priority">{{ task.priority }}</span>
+      <span class="priority" [ngClass]="task.importance">{{ task.importance }}</span>
       <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
     </div>
 

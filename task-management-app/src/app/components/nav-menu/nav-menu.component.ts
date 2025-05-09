@@ -76,12 +76,12 @@ export class NavMenuComponent {
   async exportToCSV(): Promise<void> {
     try {
       const tasks = await this.taskService.getTasks();
-      const headers = ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'];
+      const headers = ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'];
       const rows = tasks.map(task => [
         task.title,
         task.description,
         task.status,
-        task.priority,
+        task.importance,
         task.category,
         task.assignedTo,
         task.dueDate instanceof Date ? task.dueDate.toLocaleDateString() : 
@@ -107,12 +107,12 @@ export class NavMenuComponent {
   async exportToExcel(): Promise<void> {
     try {
       const tasks = await this.taskService.getTasks();
-      const headers = ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'];
+      const headers = ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'];
       const rows = tasks.map(task => [
         task.title,
         task.description,
         task.status,
-        task.priority,
+        task.importance,
         task.category,
         task.assignedTo,
         task.dueDate instanceof Date ? task.dueDate.toLocaleDateString() : 
@@ -153,7 +153,7 @@ export class NavMenuComponent {
     };
 
     const sampleData = [
-      ['タイトル', '説明', 'ステータス', '優先度', 'カテゴリ', '担当者', '期限'],
+      ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'],
       ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '技術的課題', '山田太郎', formatDate(twoDaysAgo)],
       ['タスク2', 'サンプルタスク2の説明', '進行中', '中', '業務フロー', '鈴木花子', formatDate(today)],
       ['タスク3', 'サンプルタスク3の説明', '完了', '低', '新機能・改善提案', '佐藤一郎', formatDate(twoDaysLater)],
@@ -263,7 +263,7 @@ export class NavMenuComponent {
           title: row[headers.indexOf('Name')] || '',
           description: row[headers.indexOf('Notes')] || '',
           status: status,
-          priority: row[headers.indexOf('優先度')] as '低' | '中' | '高' || '中',
+          importance: row[headers.indexOf('重要度')] as '低' | '中' | '高' || '中',
           category: 'Asana',
           assignedTo: row[headers.indexOf('Assignee')] || '',
           dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
@@ -345,7 +345,7 @@ export class NavMenuComponent {
           title: row[titleIndex]?.trim() || '',
           description: row[descriptionIndex]?.trim() || '',
           status: status as '未着手' | '進行中' | '完了',
-          priority: '' as '低' | '中' | '高',
+          importance: '' as '低' | '中' | '高',
           category: 'Trello',
           assignedTo: assignedTo,
           createdAt: Timestamp.fromDate(new Date()),
@@ -401,7 +401,7 @@ export class NavMenuComponent {
             title: values[headers.indexOf('タイトル')] || '',
             description: values[headers.indexOf('説明')] || '',
             status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
-            priority: (values[headers.indexOf('優先度')] as '低' | '中' | '高') || '中',
+            importance: (values[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
             category: values[headers.indexOf('カテゴリ')] || '',
             assignedTo: values[headers.indexOf('担当者')] || '',
             dueDate: values[headers.indexOf('期限')] ? Timestamp.fromDate(new Date(values[headers.indexOf('期限')])) : null,

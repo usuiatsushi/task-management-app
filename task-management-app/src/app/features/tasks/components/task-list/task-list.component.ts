@@ -126,7 +126,7 @@ enum FileType {
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
-  displayedColumns: string[] = ['select', 'title', 'category', 'priority', 'dueDate', 'actions'];
+  displayedColumns: string[] = ['select', 'title', 'category', 'importance', 'dueDate', 'actions'];
   dataSource = new MatTableDataSource<any>();
   loading = false;
   filterForm: FormGroup;
@@ -142,7 +142,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // 選択肢の定義
   statusOptions = ['未着手', '進行中', '完了'];
-  priorityOptions = ['低', '中', '高'];
+  importanceOptions = ['低', '中', '高'];
 
   // 日付フィルター
   filterDates = (d: Date | null): boolean => {
@@ -185,7 +185,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild('categorySelect') categorySelect!: MatSelect;
 
-  priorityOrder = { '高': 3, '中': 2, '低': 1 };
+  importanceOrder = { '高': 3, '中': 2, '低': 1 };
   statusOrder = { '未着手': 1, '進行中': 2, '完了': 3 };
 
   // デフォルトのカテゴリ選択肢
@@ -250,7 +250,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filterForm = this.fb.group({
       category: [''],
       status: [''],
-      priority: [''],
+      importance: [''],
       search: this.searchControl
     });
     this.categories$ = this.categoryService.categories$;
@@ -318,10 +318,10 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dataSource.sort = this.sort;
     this.dataSource.paginator = this.paginator;
 
-    // 優先度・ステータスのカスタムソート
+    // 重要度・ステータスのカスタムソート
     this.dataSource.sortingDataAccessor = (item, property) => {
-      if (property === 'priority') {
-        return this.priorityOrder[item.priority as keyof typeof this.priorityOrder] || 0;
+      if (property === 'importance') {
+        return this.importanceOrder[item.importance as keyof typeof this.importanceOrder] || 0;
       }
       if (property === 'status') {
         return this.statusOrder[item.status as keyof typeof this.statusOrder] || 0;
@@ -378,12 +378,12 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       
       const categoryMatch = !filters.category || data.category === filters.category;
       const statusMatch = !filters.status || data.status === filters.status;
-      const priorityMatch = !filters.priority || data.priority === filters.priority;
+      const importanceMatch = !filters.importance || data.importance === filters.importance;
       const searchMatch = !searchTerm || 
         (data.title && data.title.toLowerCase().includes(searchTerm)) ||
         (data.description && data.description.toLowerCase().includes(searchTerm));
 
-      return categoryMatch && statusMatch && priorityMatch && searchMatch;
+      return categoryMatch && statusMatch && importanceMatch && searchMatch;
     };
   }
 
@@ -413,14 +413,14 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  getPriorityClass(priority: string): string {
-    switch (priority) {
+  getImportanceClass(importance: string): string {
+    switch (importance) {
       case '低':
-        return 'priority-low';
+        return 'importance-low';
       case '中':
-        return 'priority-medium';
+        return 'importance-medium';
       case '高':
-        return 'priority-high';
+        return 'importance-high';
       default:
         return '';
     }
@@ -770,7 +770,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           title: row[headers.indexOf('タイトル')] || '',
           description: row[headers.indexOf('説明')] || '',
           status: (row[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
-          priority: (row[headers.indexOf('優先度')] as '低' | '中' | '高') || '中',
+          importance: (row[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
           category: row[headers.indexOf('カテゴリ')] || '',
           assignedTo: row[headers.indexOf('担当者')] || '',
           dueDate: row[headers.indexOf('期限')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('期限')])) : null,
@@ -919,7 +919,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           title: row[headers.indexOf('Name')] || '',
           description: row[headers.indexOf('Notes')] || '',
           status: status,
-          priority: row[headers.indexOf('優先度')] as '低' | '中' | '高' || '中',
+          importance: row[headers.indexOf('重要度')] as '低' | '中' | '高' || '中',
           category: 'Asana',
           assignedTo: row[headers.indexOf('Assignee')] || '',
           dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
@@ -1008,7 +1008,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           title: row[titleIndex]?.trim() || '',
           description: row[descriptionIndex]?.trim() || '',
           status: status as '未着手' | '進行中' | '完了',
-          priority: '' as '低' | '中' | '高',
+          importance: '' as '低' | '中' | '高',
           category: 'Trello',
           assignedTo: assignedTo,
           createdAt: Timestamp.fromDate(new Date()),
@@ -1084,7 +1084,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
             title: values[headers.indexOf('タイトル')] || '',
             description: values[headers.indexOf('説明')] || '',
             status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
-            priority: (values[headers.indexOf('優先度')] as '低' | '中' | '高') || '中',
+            importance: (values[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
             category: values[headers.indexOf('カテゴリ')] || '',
             assignedTo: values[headers.indexOf('担当者')] || '',
             dueDate: values[headers.indexOf('期限')] ? Timestamp.fromDate(new Date(values[headers.indexOf('期限')])) : null,

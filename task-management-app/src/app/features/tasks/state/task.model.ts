@@ -4,7 +4,7 @@ export interface Task {
   description: string;
   category: string;
   status: '未着手' | '進行中' | '完了';
-  priority: '低' | '中' | '高';
+  importance: '低' | '中' | '高';
   dueDate: Date;
   assignedTo: string;
   createdAt: Date;

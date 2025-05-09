@@ -27,14 +27,14 @@
       </div>
 
       <div class="form-group">
-        <label for="priority">優先度</label>
-        <select id="priority" formControlName="priority" class="form-control">
+        <label for="importance">重要度</label>
+        <select id="importance" formControlName="importance" class="form-control">
           <option value="低">低</option>
           <option value="中">中</option>
           <option value="高">高</option>
         </select>
-        <div *ngIf="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched" class="error-message">
-          優先度は必須です
+        <div *ngIf="taskForm.get('importance')?.invalid && taskForm.get('importance')?.touched" class="error-message">
+          重要度は必須です
         </div>
       </div>
     </div>

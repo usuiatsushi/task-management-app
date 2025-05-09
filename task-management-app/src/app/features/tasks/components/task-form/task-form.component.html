@@ -66,14 +66,14 @@
 
         <div class="form-row">
           <mat-form-field appearance="outline">
-            <mat-label>優先度</mat-label>
-            <mat-select formControlName="priority">
+            <mat-label>重要度</mat-label>
+            <mat-select formControlName="importance">
               <mat-option value="高">高</mat-option>
               <mat-option value="中">中</mat-option>
               <mat-option value="低">低</mat-option>
             </mat-select>
-            <mat-error *ngIf="taskForm.get('priority')?.hasError('required')">
-              {{ getErrorMessage('priority') }}
+            <mat-error *ngIf="taskForm.get('importance')?.hasError('required')">
+              {{ getErrorMessage('importance') }}
             </mat-error>
           </mat-form-field>
         </div>

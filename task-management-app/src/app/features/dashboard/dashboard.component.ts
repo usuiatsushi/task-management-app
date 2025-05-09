@@ -258,9 +258,9 @@ export class DashboardComponent implements OnChanges {
     };
 
     // 優先度分布
-    const low = this.tasks.filter(t => t.priority === '低').length;
-    const medium = this.tasks.filter(t => t.priority === '中').length;
-    const high = this.tasks.filter(t => t.priority === '高').length;
+    const low = this.tasks.filter(t => t.importance === '低').length;
+    const medium = this.tasks.filter(t => t.importance === '中').length;
+    const high = this.tasks.filter(t => t.importance === '高').length;
     this.barPriorityData = {
       labels: ['低', '中', '高'],
       datasets: [
@@ -404,7 +404,7 @@ export class DashboardComponent implements OnChanges {
     };
 
     // 優先度ごとの完了率データ生成
-    const priorityData = {
+    const importanceData = {
       '低': { completed: 0, incomplete: 0 },
       '中': { completed: 0, incomplete: 0 },
       '高': { completed: 0, incomplete: 0 }
@@ -412,7 +412,7 @@ export class DashboardComponent implements OnChanges {
 
     this.tasks.forEach(task => {
       const status = task.status === '完了' ? 'completed' : 'incomplete';
-      priorityData[task.priority][status]++;
+      importanceData[task.importance][status]++;
     });
 
     this.priorityCompletionData = {
@@ -421,9 +421,9 @@ export class DashboardComponent implements OnChanges {
         {
           label: '完了',
           data: [
-            priorityData['低'].completed,
-            priorityData['中'].completed,
-            priorityData['高'].completed
+            importanceData['低'].completed,
+            importanceData['中'].completed,
+            importanceData['高'].completed
           ],
           backgroundColor: '#66BB6A',
           stack: 'Stack 0'
@@ -431,9 +431,9 @@ export class DashboardComponent implements OnChanges {
         {
           label: '未完了',
           data: [
-            priorityData['低'].incomplete,
-            priorityData['中'].incomplete,
-            priorityData['高'].incomplete
+            importanceData['低'].incomplete,
+            importanceData['中'].incomplete,
+            importanceData['高'].incomplete
           ],
           backgroundColor: '#EF5350',
           stack: 'Stack 0'

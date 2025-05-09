@@ -49,7 +49,7 @@ export class CalendarComponent implements OnInit {
   selectedDate: Date = new Date();
 
   filterStatus: string = '';
-  filterPriority: string = '';
+  filterImportance: string = '';
   filterAssignee: string = '';
   assigneeList: string[] = [];
 
@@ -98,7 +98,7 @@ export class CalendarComponent implements OnInit {
           taskDate.getMonth() !== date.getMonth() ||
           taskDate.getFullYear() !== date.getFullYear()) return false;
       if (this.filterStatus && task.status !== this.filterStatus) return false;
-      if (this.filterPriority && task.priority !== this.filterPriority) return false;
+      if (this.filterImportance && task.importance !== this.filterImportance) return false;
       if (this.filterAssignee && task.assignedTo !== this.filterAssignee) return false;
       return true;
     });
@@ -138,8 +138,8 @@ export class CalendarComponent implements OnInit {
     }
   }
 
-  getTaskPriorityClass(task: Task): string {
-    switch (task.priority) {
+  getTaskImportanceClass(task: Task): string {
+    switch (task.importance) {
       case '高':
         return 'high-priority';
       case '中':
@@ -202,7 +202,7 @@ export class CalendarComponent implements OnInit {
         taskDate.getMonth() === date.getMonth() &&
         taskDate.getFullYear() === date.getFullYear())) return false;
       if (this.filterStatus && task.status !== this.filterStatus) return false;
-      if (this.filterPriority && task.priority !== this.filterPriority) return false;
+      if (this.filterImportance && task.importance !== this.filterImportance) return false;
       if (this.filterAssignee && task.assignedTo !== this.filterAssignee) return false;
       return true;
     });
