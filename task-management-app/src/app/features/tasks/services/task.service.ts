@@ -78,7 +78,8 @@ export class TaskService implements OnDestroy {
                 startDate: data['startDate'],
                 dueDate: data['dueDate'],
                 duration: data['duration'],
-                completed: data['completed'] || false
+                completed: data['completed'] || false,
+                urgent: data['urgent'] ?? false
               };
               return task;
             });
@@ -218,7 +219,8 @@ export class TaskService implements OnDestroy {
             startDate: data['startDate'],
             dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
             duration: data['duration'],
-            completed: data['completed'] || false
+            completed: data['completed'] || false,
+            urgent: data['urgent'] ?? false
           };
 
           console.log('Processed task data:', {
@@ -244,7 +246,8 @@ export class TaskService implements OnDestroy {
             createdAt: Timestamp.fromDate(new Date()),
             updatedAt: Timestamp.fromDate(new Date()),
             dueDate: null,
-            completed: false
+            completed: false,
+            urgent: false
           } as Task;
         }
       }));
@@ -405,5 +408,25 @@ export class TaskService implements OnDestroy {
     return this.tasks$.pipe(
       map(tasks => tasks.filter(task => task.projectId === projectId))
     );
+  }
+
+  async addDummyUrgentTask(projectId: string) {
+    const task = {
+      title: 'テストタスク（緊急かつ重要）',
+      description: 'Eisenhower Matrixテスト用',
+      status: '未着手',
+      priority: '高',
+      category: 'テスト',
+      assignedTo: 'テストユーザー',
+      dueDate: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      userId: 'dummy',
+      completed: false,
+      urgent: true,
+      projectId: projectId
+    };
+    const tasksRef = collection(this.firestore, 'tasks');
+    await addDoc(tasksRef, task);
   }
 }

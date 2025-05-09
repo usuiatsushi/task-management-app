@@ -1,6 +1,8 @@
 <h2 *ngIf="projectName; else loading">{{ projectName }}</h2>
 <ng-template #loading><span>読み込み中...</span></ng-template>
 
+<button mat-raised-button color="accent" (click)="addDummyUrgentTask()">テスト用タスク追加</button>
+
 <mat-tab-group (selectedTabChange)="onTabChange($event)">
   <mat-tab label="リスト">
 <div class="task-list-layout">

@@ -1172,4 +1172,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
     }
   }
+
+  async addDummyUrgentTask() {
+    const projectId = this.route.snapshot.params['id'];
+    await this.taskService.addDummyUrgentTask(projectId);
+    this.snackBar.open('テスト用タスクを追加しました', '閉じる', { duration: 2000 });
+    await this.loadTasks();
+  }
 } 
