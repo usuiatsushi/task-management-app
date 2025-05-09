@@ -59,6 +59,10 @@
       </div>
     </div>
 
+    <div class="form-group">
+      <mat-checkbox formControlName="urgent">緊急</mat-checkbox>
+    </div>
+
     <div class="form-actions">
       <button type="button" class="cancel-button" routerLink="../">キャンセル</button>
       <button type="submit" class="save-button" [disabled]="taskForm.invalid || saving">

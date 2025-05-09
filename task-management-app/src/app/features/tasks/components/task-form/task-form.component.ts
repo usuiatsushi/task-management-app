@@ -24,6 +24,7 @@ import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sy
 import { AiAssistantService } from '../../services/ai-assistant.service';
 import { ProjectService } from '../../../projects/services/project.service';
 import { Project } from '../../../projects/models/project.model';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-task-form',
@@ -46,7 +47,8 @@ import { Project } from '../../../projects/models/project.model';
     MatDividerModule,
     MatIconModule,
     MatTooltipModule,
-    MatDialogModule
+    MatDialogModule,
+    MatCheckboxModule
   ],
   providers: [AiAssistantService]
 })
@@ -87,12 +89,14 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       dueDate: [new Date(), [Validators.required, this.dueDateValidator.bind(this)]],
       assignedTo: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
       newCategoryName: [''],
-      projectId: ['']
+      projectId: [''],
+      urgent: [false]
     });
   }
 
   async ngOnInit() {
     this.route.params.subscribe(params => {
+      this.taskId = params['id'] || null;
       const projectId = params['id'];
       if (projectId) {
         this.taskForm.patchValue({ projectId });
@@ -133,6 +137,17 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       console.error('初期化中にエラーが発生しました:', error);
       this.handleError(error);
     }
+
+    // 期限が3日以内ならurgent=true
+    this.taskForm.get('dueDate')?.valueChanges.subscribe(date => {
+      if (!date) return;
+      const due = new Date(date);
+      const now = new Date();
+      const diff = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (diff <= 3) {
+        this.taskForm.get('urgent')?.setValue(true, { emitEvent: false });
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -156,7 +171,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         const task = taskDoc.data() as Task;
         this.taskForm.patchValue({
           ...task,
-          dueDate: this.convertTimestampToDate(task.dueDate)
+          dueDate: this.convertTimestampToDate(task.dueDate),
+          urgent: task.urgent ?? false
         });
       }
     } catch (error) {
@@ -184,7 +200,12 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   }
 
   onCancel() {
-    this.router.navigate(['/tasks']);
+    const projectId = this.taskForm.value.projectId;
+    if (projectId) {
+      this.router.navigate(['/projects', projectId, 'tasks']);
+    } else {
+      this.router.navigate(['/tasks']);
+    }
   }
 
   ngOnDestroy() {

@@ -9,6 +9,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @Component({
   selector: 'app-task-edit',
@@ -20,7 +21,8 @@ import { MatButtonModule } from '@angular/material/button';
     ReactiveFormsModule,
     MatDialogModule,
     MatButtonModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatCheckboxModule
   ]
 })
 export class TaskEditComponent implements OnInit {
@@ -45,12 +47,23 @@ export class TaskEditComponent implements OnInit {
       status: ['未着手', Validators.required],
       priority: ['中', Validators.required],
       dueDate: [new Date(), Validators.required],
-      assignedTo: ['', Validators.required]
+      assignedTo: ['', Validators.required],
+      urgent: [false]
     });
   }
 
   ngOnInit() {
     this.loadTask();
+    // 期限が3日以内ならurgent=true
+    this.taskForm.get('dueDate')?.valueChanges.subscribe(date => {
+      if (!date) return;
+      const due = new Date(date);
+      const now = new Date();
+      const diff = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      if (diff <= 3) {
+        this.taskForm.get('urgent')?.setValue(true, { emitEvent: false });
+      }
+    });
   }
 
   private async loadTask() {
@@ -81,7 +94,8 @@ export class TaskEditComponent implements OnInit {
 
         this.taskForm.patchValue({
           ...this.task,
-          dueDate: formattedDueDate
+          dueDate: formattedDueDate,
+          urgent: this.task.urgent ?? false
         });
       } else {
         throw new Error('タスクが見つかりません');
