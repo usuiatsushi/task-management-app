@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProjectService } from '../../services/project.service';
 import { Project } from '../../models/project.model';
+import { MatCardModule } from '@angular/material/card';
 
 @Component({
   selector: 'app-project-form',
@@ -19,13 +20,15 @@ import { Project } from '../../models/project.model';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatButtonModule
+    MatButtonModule,
+    MatCardModule
   ]
 })
 export class ProjectFormComponent implements OnInit {
   projectForm: FormGroup;
   isEditMode = false;
   projectId: string | null = null;
+taskForm: any;
 
   constructor(
     private fb: FormBuilder,
@@ -81,5 +84,11 @@ export class ProjectFormComponent implements OnInit {
 
   onCancel(): void {
     this.router.navigate(['/projects']);
+  }
+
+  autoResize(event: Event) {
+    const textarea = event.target as HTMLTextAreaElement;
+    textarea.style.height = 'auto'; // 一度リセット
+    textarea.style.height = textarea.scrollHeight + 'px';
   }
 } 

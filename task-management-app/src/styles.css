@@ -7,7 +7,7 @@
 /* 検索フィールドのスタイル */
 .mat-mdc-form-field {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .mat-mdc-form-field .mat-mdc-text-field-wrapper {
@@ -15,7 +15,7 @@
 }
 
 .mat-mdc-form-field .mat-mdc-form-field-flex {
-  align-items: flex-end;
+  align-items: center;
   min-height: 40px;
 }
 
@@ -32,7 +32,7 @@
   padding-top: 0;
   padding-bottom: 0;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .mat-mdc-form-field .mat-mdc-floating-label {
