@@ -1,0 +1,28 @@
+<div class="matrix-container">
+  <div class="matrix-grid">
+    <div class="matrix-cell quadrant1">
+      <div class="quadrant-title">緊急かつ重要<br><span>（今すぐやる）</span></div>
+      <ul>
+        <li *ngFor="let task of quadrant1">{{ task.title }}</li>
+      </ul>
+    </div>
+    <div class="matrix-cell quadrant2">
+      <div class="quadrant-title">重要だが緊急でない<br><span>（計画してやる）</span></div>
+      <ul>
+        <li *ngFor="let task of quadrant2">{{ task.title }}</li>
+      </ul>
+    </div>
+    <div class="matrix-cell quadrant3">
+      <div class="quadrant-title">緊急だが重要でない<br><span>（他人に任せる）</span></div>
+      <ul>
+        <li *ngFor="let task of quadrant3">{{ task.title }}</li>
+      </ul>
+    </div>
+    <div class="matrix-cell quadrant4">
+      <div class="quadrant-title">緊急でも重要でもない<br><span>（やらない/後回し）</span></div>
+      <ul>
+        <li *ngFor="let task of quadrant4">{{ task.title }}</li>
+      </ul>
+    </div>
+  </div>
+</div> 

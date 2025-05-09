@@ -26,4 +26,5 @@ export interface Task {
   projectId?: string;
   startDate?: Timestamp | Date | string | null;
   duration?: number;
+  urgent?: boolean;
 } 

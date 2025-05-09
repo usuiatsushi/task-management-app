@@ -1,0 +1,38 @@
+.matrix-container {
+  padding: 24px;
+}
+.matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  min-height: 400px;
+}
+.matrix-cell {
+  background: #fff;
+  border: 2px solid #90caf9;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
+}
+.quadrant-title {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 1.1em;
+  color: #1976d2;
+}
+.matrix-cell ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.matrix-cell li {
+  margin-bottom: 4px;
+  font-size: 1em;
+}
+.quadrant1 { background: #ffebee; }
+.quadrant2 { background: #fffde7; }
+.quadrant3 { background: #e3f2fd; }
+.quadrant4 { background: #f3e5f5; } 
