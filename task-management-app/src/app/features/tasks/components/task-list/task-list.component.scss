@@ -788,8 +788,8 @@ h2 {
 }
 
 .mat-tab-label, .mat-tab-label-content {
-  min-height: 24px !important;
-  font-size: 11px !important;
+  min-height: 15px !important;
+  font-size: 8px !important;
   padding: 0 4px !important;
 }
 
@@ -835,17 +835,40 @@ h2 {
   }
 }
 
-// タブ全体の高さ・フォントサイズを圧縮
-.mat-tab-group {
-  min-height: 20px !important;
-  margin-bottom: 2px !important;
+::ng-deep .mat-mdc-tab-header,
+::ng-deep .mat-mdc-tab-label-container,
+::ng-deep .mat-mdc-tab-list {
+  min-height: 28px !important;
+  height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
 }
-.mat-tab-label, .mat-tab-label-content {
-  min-height: 15px !important;
-  font-size: 10px !important;
-  padding: 0 2px !important;
-  line-height: 18px !important;
+
+::ng-deep .mat-mdc-tab-label,
+::ng-deep .mat-mdc-tab-label-content {
+  min-height: 28px !important;
+  height: 28px !important;
+  font-size: 12px !important;
+  padding: 0 6px !important;
+  line-height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
 }
-.mat-ink-bar {
+
+::ng-deep .mat-mdc-tab-label {
+  display: flex !important;
+  align-items: center !important;
+}
+
+::ng-deep .mat-mdc-ink-bar {
   height: 2px !important;
+}
+
+::ng-deep .mat-mdc-tab-label-content {
+  width: 100%;
+  text-align: center;
 }

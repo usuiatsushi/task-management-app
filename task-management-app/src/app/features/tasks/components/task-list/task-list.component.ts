@@ -30,7 +30,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_FORMATS, MAT_DATE_LOCALE, DateAdapter, NativeDateAdapter } from '@angular/material/core';
 import { Timestamp } from 'firebase/firestore';
 import { Task } from '../../models/task.model';
-import { Subscription, Observable, BehaviorSubject, combineLatest } from 'rxjs';
+import { Subscription, Observable, BehaviorSubject, combineLatest, of } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { CalendarService } from '../../services/calendar.service';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
@@ -233,7 +233,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quickFilters: string[] = [];
   private quickFilters$ = new BehaviorSubject<string[]>([]);
-  filteredTasks$!: Observable<Task[]>;
+  filteredTasks$: Observable<Task[]> = of([]);
   currentUserId: string = '';
 
   constructor(
@@ -261,6 +261,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.categories$ = this.categoryService.categories$;
   }
   getFilteredTasks(status: string): Observable<Task[]> {
+    if (!this.filteredTasks$) {
+      return of([]);
+    }
     return this.filteredTasks$.pipe(
       map(tasks => tasks.filter(task => task.status === status))
     );
