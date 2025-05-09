@@ -49,6 +49,7 @@ import { GanttComponent } from '../gantt/gantt.component';
 import { take, distinctUntilChanged } from 'rxjs/operators';
 import { DashboardComponent } from 'src/app/features/dashboard/dashboard.component';
 import { CalendarComponent } from 'src/app/features/calendar/calendar.component';
+import { EisenhowerMatrixComponent } from '../eisenhower-matrix/eisenhower-matrix.component';
 
 @Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
@@ -114,7 +115,8 @@ enum FileType {
     GoogleChartsModule,
     GanttComponent,
     DashboardComponent,
-    CalendarComponent
+    CalendarComponent,
+    EisenhowerMatrixComponent
   ],
   providers: [
     { provide: MAT_DATE_FORMATS, useValue: MY_FORMATS },
