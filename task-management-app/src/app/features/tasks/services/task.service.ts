@@ -412,24 +412,4 @@ export class TaskService implements OnDestroy {
       map(tasks => tasks.filter(task => task.projectId === projectId))
     );
   }
-
-  async addDummyUrgentTask(projectId: string) {
-    const task = {
-      title: 'テストタスク（緊急かつ重要）',
-      description: 'Eisenhower Matrixテスト用',
-      status: '未着手',
-      importance: '高',
-      category: 'テスト',
-      assignedTo: 'テストユーザー',
-      dueDate: Timestamp.now(),
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-      userId: 'dummy',
-      completed: false,
-      urgent: true,
-      projectId: projectId
-    };
-    const tasksRef = collection(this.firestore, 'tasks');
-    await addDoc(tasksRef, task);
-  }
 }
