@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges } from '@angular/core';
 import { Task } from 'src/app/features/tasks/models/task.model';
 import { NgChartsModule } from 'ng2-charts';
-import { ChartData } from 'chart.js';
+import { ChartData, ChartOptions } from 'chart.js';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,13 +19,13 @@ export class DashboardComponent implements OnChanges {
     labels: ['未着手', '進行中', '完了'],
     datasets: [
       {
-        data: [1, 2, 3], // ←ここに件数を入れる
+        data: [1, 2, 3],
         backgroundColor: ['#42A5F5', '#FFA726', '#66BB6A']
       }
     ]
   };
 
-  pieChartOptions = {
+  pieChartOptions: ChartOptions<'pie'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {

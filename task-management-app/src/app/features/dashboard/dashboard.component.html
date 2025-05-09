@@ -6,13 +6,18 @@
   </div>
 </div>
 
-
-<div class="responsive-chart-container">
-  <canvas baseChart
-    [data]="pieChartData"
-    [type]="'pie'"
-    [options]="pieChartOptions">
-  </canvas>
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <h4>ステータス分布</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="pieChartData"
+        [type]="'pie'"
+        [options]="pieChartOptions">
+      </canvas>
+    </div>
+  </div>
+  <!-- ここに他のグラフや統計カードを追加できます -->
 </div>
 
 
