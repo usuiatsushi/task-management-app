@@ -17,7 +17,26 @@
       </canvas>
     </div>
   </div>
-  <!-- ここに他のグラフや統計カードを追加できます -->
+  <div class="dashboard-card">
+    <h4>優先度分布</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="barPriorityData"
+        [type]="'bar'"
+        [options]="barPriorityOptions">
+      </canvas>
+    </div>
+  </div>
+  <div class="dashboard-card">
+    <h4>担当者別タスク数</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="barAssigneeData"
+        [type]="'bar'"
+        [options]="barAssigneeOptions">
+      </canvas>
+    </div>
+  </div>
 </div>
 
 
