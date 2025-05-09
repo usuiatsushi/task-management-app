@@ -88,6 +88,7 @@
 .task-list-table {
   width: 100%;
   overflow-x: auto;
+  margin-bottom: 2px !important;
 
   table {
     width: 100%;
@@ -249,8 +250,8 @@
 .task-status-sections {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
-  margin-top: 2rem;
+  gap: 8px !important;
+  margin-top: 2px !important;
 }
 
 .task-status-section {
