@@ -26,3 +26,25 @@
   font-weight: bold;
   line-height: 32px;
 }
+
+.dashboard-grid {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 16px;
+  min-width: 350px;
+  flex: 1 1 350px;
+}
+
+.responsive-chart-container {
+  width: 100%;
+  max-width: 600px;
+  height: 50vw;
+  min-height: 300px;
+}
