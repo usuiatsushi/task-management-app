@@ -44,6 +44,7 @@ export class ProjectListComponent implements OnInit {
     });
     this.taskService.tasks$.subscribe(tasks => {
       this.tasks = tasks;
+      console.log('全タスク:', this.tasks);
     });
   }
 
@@ -79,6 +80,14 @@ export class ProjectListComponent implements OnInit {
   }
 
   getTaskCount(projectId: string): number {
-    return this.tasks.filter(task => task.projectId === projectId).length;
+    const filtered = this.tasks.filter(task => String(task.projectId) === String(projectId));
+    this.tasks.forEach(task => {
+      console.log(
+        '[DEBUG] projectId:', projectId, 'typeof:', typeof projectId,
+        '| task.projectId:', task.projectId, 'typeof:', typeof task.projectId
+      );
+    });
+    console.log('projectId:', projectId, 'filtered tasks:', filtered);
+    return filtered.length;
   }
 } 

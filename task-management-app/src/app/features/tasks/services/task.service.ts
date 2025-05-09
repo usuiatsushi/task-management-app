@@ -79,7 +79,8 @@ export class TaskService implements OnDestroy {
                 dueDate: data['dueDate'],
                 duration: data['duration'],
                 completed: data['completed'] || false,
-                urgent: data['urgent'] ?? false
+                urgent: data['urgent'] ?? false,
+                projectId: data['projectId'] || ''
               };
               return task;
             });
@@ -220,7 +221,8 @@ export class TaskService implements OnDestroy {
             dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
             duration: data['duration'],
             completed: data['completed'] || false,
-            urgent: data['urgent'] ?? false
+            urgent: data['urgent'] ?? false,
+            projectId: data['projectId'] || ''
           };
 
           console.log('Processed task data:', {
@@ -247,7 +249,8 @@ export class TaskService implements OnDestroy {
             updatedAt: Timestamp.fromDate(new Date()),
             dueDate: null,
             completed: false,
-            urgent: false
+            urgent: false,
+            projectId: errorData['projectId'] || ''
           } as Task;
         }
       }));
