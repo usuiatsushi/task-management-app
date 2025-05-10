@@ -91,6 +91,30 @@
   overflow-x: auto;
   margin-bottom: 2px !important;
 
+  ::ng-deep {
+    .mat-mdc-row {
+      height: 20px !important;
+      min-height: 20px !important;
+    }
+
+    .mat-mdc-header-row {
+      height: 20px !important;
+      min-height: 20px !important;
+    }
+
+    .mat-mdc-cell {
+      height: 20px !important;
+      min-height: 20px !important;
+      padding: 0 2px !important;
+    }
+
+    .mat-mdc-header-cell {
+      height: 20px !important;
+      min-height: 20px !important;
+      padding: 0 2px !important;
+    }
+  }
+
   table {
     width: 100%;
     table-layout: fixed;
@@ -779,7 +803,8 @@ mat-form-field {
 .task-list-table td {
   padding: 1px 2px !important;
   font-size: 13px !important;
-  height: 28px !important;
+  height: 20px !important;
+  line-height: 20px !important;
 }
 
 .status-header {
