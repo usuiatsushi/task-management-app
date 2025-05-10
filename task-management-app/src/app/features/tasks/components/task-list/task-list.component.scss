@@ -9,6 +9,7 @@
   align-items: center;
   margin-bottom: 2px !important;
   padding: 0 !important;
+  width: 100%;
 
   h1 {
     margin: 0;
@@ -750,11 +751,20 @@ mat-form-field {
   padding: 0 !important;
 }
 
+.task-list-actions-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 2px !important;
+  padding: 0 !important;
+  margin-left: auto;
+}
+
 .task-list-actions-row button,
 .task-list-actions-row .mat-button,
 .task-list-actions-row .mat-raised-button {
-  min-width: 24px !important;
-  padding: 0 4px !important;
+  min-width: 28px !important;
+  padding: 0 8px !important;
   font-size: 11px !important;
   height: 24px !important;
   line-height: 20px !important;
