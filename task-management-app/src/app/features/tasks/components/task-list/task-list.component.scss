@@ -641,9 +641,10 @@ mat-form-field {
 .cdk-drag-placeholder,
 .cdk-drag-preview,
 .cdk-drag-animating {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.13) !important;
+  border-radius: 2px !important;
+  border: 1px solid #ddd !important;
 }
 
 // Materialフォームの装飾をリセット
