@@ -548,22 +548,25 @@ mat-form-field {
 .board-tasks {
   flex: 1 1 auto;
   overflow-y: visible;
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   min-height: 32px;
-  padding: 12px 4px 12px 4px;
+  padding: 1px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .board-task-card {
-  margin-bottom: 12px;
+  margin: 0;
   background: #fff !important;
   color: #222;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.08) !important;
-  padding: 12px 12px 8px 12px;
-  border: 1px solid #222 !important;
+  border-radius: 2px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.04) !important;
+  padding: 1px 2px;
+  border: 1px solid #ddd !important;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
   transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
   cursor: grab;
   position: relative;
@@ -573,28 +576,44 @@ mat-form-field {
 .board-task-card:focus-within,
 .board-task-card:active {
   border-color: #1976d2 !important;
-  border-width: 1px !important;
-  box-shadow: 0 8px 16px rgba(25, 118, 210, 0.15), 0 1px 4px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 2px 4px rgba(25, 118, 210, 0.1) !important;
   z-index: 3;
 }
 
 .board-task-title {
-  font-weight: 600;
-  font-size: 0.9em;
-  margin-bottom: 2px;
+  font-weight: 500;
+  font-size: 0.75em;
+  margin: 0;
+  line-height: 1;
 }
 
 .board-task-meta {
-  font-size: 0.8em;
+  font-size: 0.65em;
   color: #666;
-  margin-bottom: 2px;
+  margin: 0;
+  line-height: 1;
 }
 
 .board-task-actions {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   justify-content: flex-end;
-  margin-top: 2px;
+  margin-top: 0;
+}
+
+.board-task-actions button {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  padding: 0 !important;
+  line-height: 24px !important;
+}
+
+.board-task-actions button mat-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
 }
 
 .board-column .mat-stroked-button {
@@ -683,7 +702,7 @@ mat-form-field {
   background: #fff !important;
   border-radius: 18px !important;
   padding: 28px 24px 20px 32px;
-  margin-bottom: 36px;
+  margin-bottom: 4px !important;
   display: flex;
   flex-direction: column;
   gap: 14px;
