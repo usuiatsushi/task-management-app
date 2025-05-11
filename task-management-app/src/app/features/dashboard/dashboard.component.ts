@@ -22,7 +22,10 @@ export class DashboardComponent implements OnChanges {
     datasets: [
       {
         data: [1, 2, 3],
-        backgroundColor: ['#42A5F5', '#FFA726', '#66BB6A']
+        backgroundColor: ['#64b5f6', '#ffb74d', '#81c784'],
+        borderColor: '#fff',
+        borderWidth: 2,
+        hoverOffset: 8
       }
     ]
   };
@@ -31,8 +34,27 @@ export class DashboardComponent implements OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom' as const
+        position: 'bottom' as const,
+        labels: {
+          font: { size: 14 },
+          color: '#333'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || '';
+            const value = context.parsed;
+            const total = context.dataset.data.reduce((a: number, b: number | null) => a + (b || 0), 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value}件 (${percentage}%)`;
+          }
+        }
       }
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
     }
   };
 
@@ -252,7 +274,10 @@ export class DashboardComponent implements OnChanges {
             this.tasks.filter(t => t.status === '進行中').length,
             this.tasks.filter(t => t.status === '完了').length
           ],
-          backgroundColor: ['#42A5F5', '#FFA726', '#66BB6A']
+          backgroundColor: ['#64b5f6', '#ffb74d', '#81c784'],
+          borderColor: '#fff',
+          borderWidth: 2,
+          hoverOffset: 8
         }
       ]
     };
