@@ -1,14 +1,14 @@
 <div class="dashboard-section flex-row">
-  <div>
+  <div class="progress-section">
     <h3>進捗率</h3>
     <div class="progress-bar-container">
       <div class="progress-bar" [style.width.%]="progressPercent"></div>
       <span class="progress-label">{{ progressPercent }}%</span>
     </div>
   </div>
-  <div class="dashboard-card overdue-card overdue-inline-card">
-    <h4>期限切れタスク数</h4>
-    <div class="overdue-count">{{ overdueCount }}</div>
+  <div class="dashboard-card overdue-card overdue-inline-card overdue-flex">
+    <span>期限切れタスク数</span>
+    <span class="overdue-count">{{ overdueCount }}</span>
   </div>
 </div>
 

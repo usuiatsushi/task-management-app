@@ -1,14 +1,22 @@
 .dashboard-section {
-  margin-bottom: 32px;
+  margin-bottom: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .progress-bar-container {
   position: relative;
   background: #eee;
   border-radius: 8px;
-  height: 32px;
-  width: 400px;
-  margin-bottom: 16px;
+  height: 20px;
+  width: 220px;
+  margin-bottom: 8px;
 }
 
 .progress-bar {
@@ -24,28 +32,39 @@
   top: 0;
   transform: translateX(-50%);
   font-weight: bold;
-  line-height: 32px;
+  font-size: 0.95em;
+  line-height: 20px;
 }
 
 .dashboard-grid {
   display: flex;
-  gap: 24px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .dashboard-card {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  padding: 16px;
-  min-width: 350px;
+  padding: 4px;
+  min-width: 120px;
+  max-width: 300px;
   flex: 1 1 350px;
+  font-size: 0.9em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 .responsive-chart-container {
   width: 100%;
-  max-width: 300px;
-  height: 300px;
+  max-width: 260px;
+  height: 260px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .overdue-card {
@@ -55,23 +74,45 @@
 }
 
 .overdue-count {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: bold;
 }
 
 .flex-row {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 12px;
 }
 
 .overdue-inline-card {
   margin-bottom: 0;
-  min-width: 220px;
-  max-width: 300px;
-  height: 80px;
+  min-width: 120px;
+  max-width: 180px;
+  height: 48px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.overdue-flex {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-direction: row !important;
+}
+
+.overdue-flex .overdue-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.dashboard-card h4,
+.progress-bar-container,
+.progress-label {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
