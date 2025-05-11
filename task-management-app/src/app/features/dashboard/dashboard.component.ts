@@ -27,7 +27,7 @@ export class DashboardComponent implements OnChanges {
           '#ffb74d', // グラデーション風（明るいオレンジ）
           '#81c784'  // グラデーション風（明るい緑）
         ],
-        borderColor: '#fff',
+        borderColor: 'rgba(0,0,0,0)',
         borderWidth: 4,
         hoverOffset: 12
       }
@@ -185,16 +185,26 @@ export class DashboardComponent implements OnChanges {
       {
         label: '新規タスク',
         data: [],
-        borderColor: '#42A5F5',
-        backgroundColor: 'rgba(66,165,245,0.2)',
-        tension: 0.3
+        borderColor: '#64b5f6',
+        backgroundColor: 'rgba(100,181,246,0.15)',
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointBackgroundColor: '#64b5f6',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
       },
       {
         label: '完了タスク',
         data: [],
-        borderColor: '#66BB6A',
-        backgroundColor: 'rgba(102,187,106,0.2)',
-        tension: 0.3
+        borderColor: '#81c784',
+        backgroundColor: 'rgba(129,199,132,0.15)',
+        tension: 0.4,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointBackgroundColor: '#81c784',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
       }
     ]
   };
@@ -203,20 +213,86 @@ export class DashboardComponent implements OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top' as const
+        position: 'bottom',
+        labels: {
+          font: { size: 14, weight: 'bold' },
+          color: '#222',
+          usePointStyle: true,
+          padding: 20
+        }
+      },
+      tooltip: {
+        callbacks: {
+          title: (items) => items[0]?.label || '',
+          label: (context) => `${context.dataset.label}: ${context.parsed.y}件`
+        }
       }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: { size: 13, weight: 'bold' }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0,0,0,0.06)'
+        },
+        ticks: {
+          font: { size: 13, weight: 'bold' }
+        }
+      }
+    },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutQuart'
     }
   };
 
-  categoryChartData: ChartData<'pie'> | ChartData<'bar'> = {
+  categoryChartData: ChartData<'pie'> = {
     labels: [],
-    datasets: [{ data: [], backgroundColor: [] }]
+    datasets: [{
+      data: [],
+      backgroundColor: [
+        '#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#ffd54f', '#4dd0e1', '#e57373'
+      ],
+      borderColor: 'rgba(0,0,0,0)',
+      borderWidth: 3,
+      hoverOffset: 10
+    }]
   };
 
-  categoryChartOptions: ChartOptions = {
+  categoryChartOptions: ChartOptions<'pie'> = {
     responsive: true,
     plugins: {
-      legend: { position: 'bottom' as const }
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: { size: 11, weight: 'bold' },
+          color: '#222',
+          usePointStyle: true,
+          padding: 16
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const label = context.label || '';
+            const value = context.parsed;
+            const total = context.dataset.data.reduce((a: number, b: number | null) => a + (b || 0), 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value}件 (${percentage}%)`;
+          }
+        }
+      }
+    },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutElastic'
     }
   };
 
@@ -357,7 +433,7 @@ export class DashboardComponent implements OnChanges {
             '#ffb74d',
             '#81c784'
           ],
-          borderColor: '#fff',
+          borderColor: 'rgba(0,0,0,0)',
           borderWidth: 4,
           hoverOffset: 12
         }
@@ -435,16 +511,26 @@ export class DashboardComponent implements OnChanges {
         {
           label: '新規タスク',
           data: taskTrendDates.map(d => dateMap[d].created),
-          borderColor: '#42A5F5',
-          backgroundColor: 'rgba(66,165,245,0.2)',
-          tension: 0.3
+          borderColor: '#64b5f6',
+          backgroundColor: 'rgba(100,181,246,0.15)',
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 5,
+          pointBackgroundColor: '#64b5f6',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
         },
         {
           label: '完了タスク',
           data: taskTrendDates.map(d => dateMap[d].completed),
-          borderColor: '#66BB6A',
-          backgroundColor: 'rgba(102,187,106,0.2)',
-          tension: 0.3
+          borderColor: '#81c784',
+          backgroundColor: 'rgba(129,199,132,0.15)',
+          tension: 0.4,
+          borderWidth: 3,
+          pointRadius: 5,
+          pointBackgroundColor: '#81c784',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
         }
       ]
     };
@@ -454,9 +540,12 @@ export class DashboardComponent implements OnChanges {
       labels: Object.keys(categoryCounts),
       datasets: [{
         data: Object.values(categoryCounts),
-        backgroundColor: [
-          '#42a5f5', '#66bb6a', '#ffa726', '#ab47bc', '#ec407a', '#ff7043', '#26a69a'
-        ]
+        backgroundColor: Object.keys(categoryCounts).map((_, i) => [
+          '#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#ffd54f', '#4dd0e1', '#e57373'
+        ][i % 7]),
+        borderColor: 'rgba(0,0,0,0)',
+        borderWidth: 3,
+        hoverOffset: 10
       }]
     };
 
