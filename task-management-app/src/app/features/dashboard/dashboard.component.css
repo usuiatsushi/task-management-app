@@ -60,8 +60,8 @@
 
 .responsive-chart-container {
   width: 100%;
-  max-width: 260px;
-  height: 260px;
+  max-width: 280px;
+  height: 280px;
   display: flex;
   justify-content: center;
   align-items: center;

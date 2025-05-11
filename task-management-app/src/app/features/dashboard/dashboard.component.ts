@@ -22,10 +22,14 @@ export class DashboardComponent implements OnChanges {
     datasets: [
       {
         data: [1, 2, 3],
-        backgroundColor: ['#64b5f6', '#ffb74d', '#81c784'],
+        backgroundColor: [
+          '#64b5f6', // グラデーション風（明るい青）
+          '#ffb74d', // グラデーション風（明るいオレンジ）
+          '#81c784'  // グラデーション風（明るい緑）
+        ],
         borderColor: '#fff',
-        borderWidth: 2,
-        hoverOffset: 8
+        borderWidth: 4,
+        hoverOffset: 12
       }
     ]
   };
@@ -34,10 +38,12 @@ export class DashboardComponent implements OnChanges {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'bottom' as const,
+        position: 'bottom',
         labels: {
-          font: { size: 14 },
-          color: '#333'
+          font: { size: 11, weight: 'bold' },
+          color: '#222',
+          usePointStyle: true,
+          padding: 16
         }
       },
       tooltip: {
@@ -53,19 +59,21 @@ export class DashboardComponent implements OnChanges {
       }
     },
     animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart'
+      duration: 1400,
+      easing: 'easeOutElastic'
     }
   };
 
-  // 優先度分布（棒グラフ）
+  // 重要度分布（棒グラフ）
   barPriorityData: ChartData<'bar', number[], string> = {
     labels: ['低', '中', '高'],
     datasets: [
       {
-        label: '優先度',
+        label: '重要度',
         data: [0, 0, 0],
-        backgroundColor: ['#66BB6A', '#FFA726', '#EF5350']
+        backgroundColor: ['#64b5f6', '#ffb74d', '#ef5350'],
+        barPercentage: 0.7,
+        categoryPercentage: 0.6
       }
     ]
   };
@@ -75,7 +83,40 @@ export class DashboardComponent implements OnChanges {
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed.y;
+            const total = Number((context.dataset.data as (number | null)[]).reduce((a, b) => (typeof a === 'number' ? a : 0) + (typeof b === 'number' ? b : 0), 0));
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            return `${value}件 (${percentage}%)`;
+          }
+        }
       }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: { size: 15, weight: 'bold' }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0,0,0,0.06)'
+        },
+        ticks: {
+          font: { size: 15, weight: 'bold' }
+        }
+      }
+    },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutQuart'
     }
   };
 
@@ -86,7 +127,11 @@ export class DashboardComponent implements OnChanges {
       {
         label: '担当者',
         data: [],
-        backgroundColor: '#42A5F5'
+        backgroundColor: [
+          '#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#ffd54f', '#4dd0e1', '#e57373'
+        ], // 担当者ごとに色分け
+        barPercentage: 0.7,
+        categoryPercentage: 0.6
       }
     ]
   };
@@ -96,7 +141,40 @@ export class DashboardComponent implements OnChanges {
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed.y;
+            const total = Number((context.dataset.data as (number | null)[]).reduce((a, b) => (typeof a === 'number' ? a : 0) + (typeof b === 'number' ? b : 0), 0));
+            const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+            return `${value}件 (${percentage}%)`;
+          }
+        }
       }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: { size: 15, weight: 'bold' }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0,0,0,0.06)'
+        },
+        ticks: {
+          font: { size: 15, weight: 'bold' }
+        }
+      }
+    },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutQuart'
     }
   };
 
@@ -195,7 +273,7 @@ export class DashboardComponent implements OnChanges {
     }
   };
 
-  // 優先度ごとの完了率（積み上げ棒グラフ）
+  // 重要度ごとの完了率（積み上げ棒グラフ）
   priorityCompletionData: ChartData<'bar', number[], string> = {
     labels: ['低', '中', '高'],
     datasets: [
@@ -274,15 +352,19 @@ export class DashboardComponent implements OnChanges {
             this.tasks.filter(t => t.status === '進行中').length,
             this.tasks.filter(t => t.status === '完了').length
           ],
-          backgroundColor: ['#64b5f6', '#ffb74d', '#81c784'],
+          backgroundColor: [
+            '#64b5f6',
+            '#ffb74d',
+            '#81c784'
+          ],
           borderColor: '#fff',
-          borderWidth: 2,
-          hoverOffset: 8
+          borderWidth: 4,
+          hoverOffset: 12
         }
       ]
     };
 
-    // 優先度分布
+    // 重要度分布
     const low = this.tasks.filter(t => t.importance === '低').length;
     const medium = this.tasks.filter(t => t.importance === '中').length;
     const high = this.tasks.filter(t => t.importance === '高').length;
@@ -290,9 +372,11 @@ export class DashboardComponent implements OnChanges {
       labels: ['低', '中', '高'],
       datasets: [
         {
-          label: '優先度',
+          label: '重要度',
           data: [low, medium, high],
-          backgroundColor: ['#66BB6A', '#FFA726', '#EF5350']
+          backgroundColor: ['#64b5f6', '#ffb74d', '#ef5350'],
+          barPercentage: 0.7,
+          categoryPercentage: 0.6
         }
       ]
     };
@@ -303,13 +387,16 @@ export class DashboardComponent implements OnChanges {
       const name = t.assignedTo || '未割り当て';
       assigneeMap[name] = (assigneeMap[name] || 0) + 1;
     });
+    const assigneeColors = ['#64b5f6', '#ffb74d', '#81c784', '#ba68c8', '#ffd54f', '#4dd0e1', '#e57373'];
     this.barAssigneeData = {
       labels: Object.keys(assigneeMap),
       datasets: [
         {
           label: '担当者',
           data: Object.values(assigneeMap),
-          backgroundColor: '#42A5F5'
+          backgroundColor: Object.keys(assigneeMap).map((_, i) => assigneeColors[i % assigneeColors.length]),
+          barPercentage: 0.7,
+          categoryPercentage: 0.6
         }
       ]
     };
@@ -428,7 +515,7 @@ export class DashboardComponent implements OnChanges {
       }]
     };
 
-    // 優先度ごとの完了率データ生成
+    // 重要度ごとの完了率データ生成
     const importanceData = {
       '低': { completed: 0, incomplete: 0 },
       '中': { completed: 0, incomplete: 0 },
