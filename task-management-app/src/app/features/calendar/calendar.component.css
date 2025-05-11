@@ -193,3 +193,23 @@
   color: #388e3c;
   border-left: 3px solid #388e3c;
 }
+
+.calendar-more-tasks {
+  background: #eeeeee !important;
+  color: #616161 !important;
+  border-left: 3px solid #bdbdbd !important;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.85em;
+  padding: 1px 2px;
+  border-radius: 4px;
+  margin-bottom: 1px;
+  min-height: 12px;
+  line-height: normal;
+}
+
+.calendar-more-tasks:hover {
+  background: #e0e0e0 !important;
+}
