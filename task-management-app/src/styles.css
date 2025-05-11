@@ -216,7 +216,7 @@ body > .cdk-drag-preview.board-task-card .board-task-actions button mat-icon {
   line-height: 16px !important;
 }
 
-.gantt-bar-complete .gantt_task_content { background: #43a047 !important; }
-.gantt-bar-progress .gantt_task_content { background: #1976d2 !important; }
-.gantt-bar-default .gantt_task_content { background: #bdbdbd !important; }
+.gantt-bar-complete .gantt_task_content { background: #81c784 !important; }
+.gantt-bar-progress .gantt_task_content { background: #ffb74d !important; }
+.gantt-bar-default .gantt_task_content { background: #64b5f6 !important; }
 
