@@ -216,31 +216,7 @@ body > .cdk-drag-preview.board-task-card .board-task-actions button mat-icon {
   line-height: 16px !important;
 }
 
-.gantt-bar-progress .gantt_task_content {
-  background: linear-gradient(
-    to right,
-    #64b5f6 0%,
-    #ffd54f 50%,
-    #81c784 100%
-  ) !important;
-  border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10) !important;
-  border: 1px solid #b0bec5 !important;
-  color: #222 !important;
-}
-.gantt-bar-default .gantt_task_content {
-  background: #64b5f6 !important;
-  border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10) !important;
-  border: 1px solid #b0bec5 !important;
-  color: #222 !important;
-}
-
-.gantt-bar-complete .gantt_task_content {
-  background: #81c784 !important;
-  border-radius: 6px !important;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.10) !important;
-  border: 1px solid #b0bec5 !important;
-  color: #222 !important;
-}
+.gantt-bar-complete .gantt_task_content { background: #43a047 !important; }
+.gantt-bar-progress .gantt_task_content { background: #1976d2 !important; }
+.gantt-bar-default .gantt_task_content { background: #bdbdbd !important; }
 

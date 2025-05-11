@@ -12,9 +12,9 @@
   min-height: 400px;
 }
 
-.gantt-bar-complete .gantt_task_content { background: #81c784 !important; }
-.gantt-bar-progress .gantt_task_content { background: #ffd54f !important; }
-.gantt-bar-default .gantt_task_content { background: #64b5f6 !important; }
+.gantt-bar-complete .gantt_task_content { background: #43a047 !important; }
+.gantt-bar-progress .gantt_task_content { background: #1976d2 !important; }
+.gantt-bar-default .gantt_task_content { background: #bdbdbd !important; }
 .gantt-weekend { background: #fbe9e7 !important; }
 .gantt-today { background: #fff59d !important; }
 :host ::ng-deep .gantt_task_content {
