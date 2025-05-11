@@ -1,14 +1,18 @@
 <div class="dashboard-section flex-row">
-  <div class="progress-section">
-    <h3>進捗率</h3>
-    <div class="progress-bar-container">
-      <div class="progress-bar" [style.width.%]="progressPercent"></div>
-      <span class="progress-label">{{ progressPercent }}%</span>
+  <div class="dashboard-card progress-card-better">
+    <span class="progress-label-better">
+      <mat-icon class="progress-icon">trending_up</mat-icon>
+      進捗率
+    </span>
+    <div class="progress-bar-container-better">
+      <div class="progress-bar-better" [style.width.%]="progressPercent"></div>
+      <span class="progress-label-value-strong">{{ progressPercent }}%</span>
     </div>
   </div>
-  <div class="dashboard-card overdue-card overdue-inline-card overdue-flex">
-    <span>期限切れタスク数</span>
-    <span class="overdue-count">{{ overdueCount }}</span>
+  <div class="dashboard-card overdue-card overdue-inline-card overdue-flex overdue-better">
+    <mat-icon class="overdue-icon">warning</mat-icon>
+    <span class="overdue-label">期限切れタスク数</span>
+    <span class="overdue-count-badge">{{ overdueCount }}</span>
   </div>
 </div>
 
@@ -73,28 +77,6 @@
         [data]="completionRateData"
         [type]="'line'"
         [options]="completionRateOptions">
-      </canvas>
-    </div>
-  </div>
-
-  <div class="dashboard-card">
-    <h4>今週の目標達成率</h4>
-    <div class="responsive-chart-container">
-      <canvas baseChart
-        [data]="weeklyGoalData"
-        [type]="'doughnut'"
-        [options]="weeklyGoalOptions">
-      </canvas>
-    </div>
-  </div>
-
-  <div class="dashboard-card">
-    <h4>重要度ごとの完了率</h4>
-    <div class="responsive-chart-container">
-      <canvas baseChart
-        [data]="priorityCompletionData"
-        [type]="'bar'"
-        [options]="priorityCompletionOptions">
       </canvas>
     </div>
   </div>

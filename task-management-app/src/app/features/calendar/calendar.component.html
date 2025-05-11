@@ -16,34 +16,6 @@
     </div>
   </div>
 
-  <div class="calendar-filters">
-    <mat-form-field appearance="fill" class="filter-field">
-      <mat-label>ステータス</mat-label>
-      <mat-select [(ngModel)]="filterStatus">
-        <mat-option value="">すべて</mat-option>
-        <mat-option value="未着手">未着手</mat-option>
-        <mat-option value="進行中">進行中</mat-option>
-        <mat-option value="完了">完了</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field appearance="fill" class="filter-field">
-      <mat-label>重要度</mat-label>
-      <mat-select [(ngModel)]="filterImportance">
-        <mat-option value="">すべて</mat-option>
-        <mat-option value="高">高</mat-option>
-        <mat-option value="中">中</mat-option>
-        <mat-option value="低">低</mat-option>
-      </mat-select>
-    </mat-form-field>
-    <mat-form-field appearance="fill" class="filter-field">
-      <mat-label>担当者</mat-label>
-      <mat-select [(ngModel)]="filterAssignee">
-        <mat-option value="">すべて</mat-option>
-        <mat-option *ngFor="let assignee of assigneeList" [value]="assignee">{{ assignee }}</mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
-
   <!-- 月表示 -->
   <ng-container *ngIf="viewMode === 'month'">
     <div class="weekday-header">
@@ -59,22 +31,38 @@
              (cdkDropListDropped)="onTaskDrop($event, date)">
           <div class="date-number">{{ date.getDate() }}</div>
           <div class="task-list">
-            <div *ngFor="let task of getTasksForDate(date)"
-                 class="task-card"
-                 [class.status-not-started]="task.status === '未着手'"
-                 [class.status-in-progress]="task.status === '進行中'"
-                 [class.status-completed]="task.status === '完了'"
-                 [class.priority-high]="task.importance === '高'"
-                 [class.priority-medium]="task.importance === '中'"
-                 [class.priority-low]="task.importance === '低'"
-                 cdkDrag
-                 (click)="openTaskDetail(task)">
-              <div class="task-title">{{ task.title }}</div>
-              <div class="task-meta">
-                <span class="task-status">{{ task.status }}</span>
-                <span class="task-priority">{{ task.importance }}</span>
+            <ng-container *ngIf="getTasksForDate(date).length > 2; else showAll">
+              <div
+                class="task-card"
+                [class.status-not-started]="getTasksForDate(date)[0].status === '未着手'"
+                [class.status-in-progress]="getTasksForDate(date)[0].status === '進行中'"
+                [class.status-completed]="getTasksForDate(date)[0].status === '完了'"
+                [class.priority-high]="getTasksForDate(date)[0].importance === '高'"
+                [class.priority-medium]="getTasksForDate(date)[0].importance === '中'"
+                [class.priority-low]="getTasksForDate(date)[0].importance === '低'"
+                cdkDrag
+                (click)="openTaskDetail(getTasksForDate(date)[0])"
+              >
+                <div class="task-title">{{ getTasksForDate(date)[0].title }}</div>
               </div>
-            </div>
+              <div class="task-card task-card-others">
+                他{{ getTasksForDate(date).length - 1 }}件
+              </div>
+            </ng-container>
+            <ng-template #showAll>
+              <div *ngFor="let task of getTasksForDate(date)"
+                class="task-card"
+                [class.status-not-started]="task.status === '未着手'"
+                [class.status-in-progress]="task.status === '進行中'"
+                [class.status-completed]="task.status === '完了'"
+                [class.priority-high]="task.importance === '高'"
+                [class.priority-medium]="task.importance === '中'"
+                [class.priority-low]="task.importance === '低'"
+                cdkDrag
+                (click)="openTaskDetail(task)">
+                <div class="task-title">{{ task.title }}</div>
+              </div>
+            </ng-template>
           </div>
         </div>
       </div>

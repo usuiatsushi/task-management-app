@@ -2,11 +2,12 @@ import { Component, Input, OnChanges } from '@angular/core';
 import { Task } from 'src/app/features/tasks/models/task.model';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgChartsModule],
+  imports: [NgChartsModule, MatIconModule],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -187,7 +188,7 @@ export class DashboardComponent implements OnChanges {
         data: [],
         borderColor: '#64b5f6',
         backgroundColor: 'rgba(100,181,246,0.15)',
-        tension: 0.4,
+        tension: 0,
         borderWidth: 3,
         pointRadius: 5,
         pointBackgroundColor: '#64b5f6',
@@ -199,7 +200,7 @@ export class DashboardComponent implements OnChanges {
         data: [],
         borderColor: '#81c784',
         backgroundColor: 'rgba(129,199,132,0.15)',
-        tension: 0.4,
+        tension: 0,
         borderWidth: 3,
         pointRadius: 5,
         pointBackgroundColor: '#81c784',
@@ -299,15 +300,18 @@ export class DashboardComponent implements OnChanges {
   // 完了率の推移（折れ線グラフ）
   completionRateData: ChartData<'line', number[], string> = {
     labels: [],
-    datasets: [
-      {
-        label: '完了率',
-        data: [],
-        borderColor: '#66BB6A',
-        backgroundColor: 'rgba(102,187,106,0.2)',
-        tension: 0.3
-      }
-    ]
+    datasets: [{
+      label: '完了率',
+      data: [],
+      borderColor: '#81c784',
+      backgroundColor: 'rgba(129,199,132,0.15)',
+      tension: 0,
+      borderWidth: 3,
+      pointRadius: 5,
+      pointBackgroundColor: '#81c784',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2
+    }]
   };
   completionRateOptions: ChartOptions<'line'> = {
     responsive: true,
@@ -316,15 +320,37 @@ export class DashboardComponent implements OnChanges {
       y: {
         beginAtZero: true,
         max: 100,
+        grid: {
+          color: 'rgba(0,0,0,0.06)'
+        },
         ticks: {
-          callback: (value) => `${value}%`
+          callback: (value) => `${value}%`,
+          font: { size: 13, weight: 'bold' }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: { size: 13, weight: 'bold' }
         }
       }
     },
     plugins: {
       legend: {
         display: false
+      },
+      tooltip: {
+        callbacks: {
+          title: (items) => items[0]?.label || '',
+          label: (context) => `完了率: ${context.parsed.y}%`
+        }
       }
+    },
+    animation: {
+      duration: 1200,
+      easing: 'easeOutQuart'
     }
   };
 
@@ -513,7 +539,7 @@ export class DashboardComponent implements OnChanges {
           data: taskTrendDates.map(d => dateMap[d].created),
           borderColor: '#64b5f6',
           backgroundColor: 'rgba(100,181,246,0.15)',
-          tension: 0.4,
+          tension: 0,
           borderWidth: 3,
           pointRadius: 5,
           pointBackgroundColor: '#64b5f6',
@@ -525,7 +551,7 @@ export class DashboardComponent implements OnChanges {
           data: taskTrendDates.map(d => dateMap[d].completed),
           borderColor: '#81c784',
           backgroundColor: 'rgba(129,199,132,0.15)',
-          tension: 0.4,
+          tension: 0,
           borderWidth: 3,
           pointRadius: 5,
           pointBackgroundColor: '#81c784',
@@ -549,34 +575,45 @@ export class DashboardComponent implements OnChanges {
       }]
     };
 
-    // 完了率の推移データ生成
-    const completionRateMap: { [date: string]: number } = {};
+    // 完了率の推移データ生成（累積完了率）
+    // すべてのタスクのcreatedAt・updatedAtから日付リストを作成
+    const allDatesSet = new Set<string>();
     this.tasks.forEach(t => {
-      const date = toDate(t.updatedAt);
-      if (date) {
-        const dateStr = date.toISOString().slice(0, 10);
-        if (!completionRateMap[dateStr]) {
-          const tasksOnDate = this.tasks.filter(task => {
-            const taskDate = toDate(task.updatedAt);
-            return taskDate && taskDate.toISOString().slice(0, 10) === dateStr;
-          });
-          const completedOnDate = tasksOnDate.filter(task => task.status === '完了').length;
-          completionRateMap[dateStr] = tasksOnDate.length > 0 
-            ? Math.round((completedOnDate / tasksOnDate.length) * 100) 
-            : 0;
-        }
-      }
+      const created = toDate(t.createdAt);
+      const updated = toDate(t.updatedAt);
+      if (created) allDatesSet.add(created.toISOString().slice(0, 10));
+      if (updated) allDatesSet.add(updated.toISOString().slice(0, 10));
     });
-
+    const allDates = Array.from(allDatesSet).sort();
+    const completionRateMap: { [date: string]: number } = {};
+    allDates.forEach(dateStr => {
+      const dateObj = new Date(dateStr);
+      const tasksUntilDate = this.tasks.filter(t => {
+        const created = toDate(t.createdAt);
+        return created && created <= dateObj;
+      });
+      const completedUntilDate = tasksUntilDate.filter(t => {
+        const updated = toDate(t.updatedAt);
+        return t.status === '完了' && updated && updated <= dateObj;
+      }).length;
+      completionRateMap[dateStr] = tasksUntilDate.length > 0
+        ? Math.round((completedUntilDate / tasksUntilDate.length) * 100)
+        : 0;
+    });
     const completionRateDates = Object.keys(completionRateMap).sort();
     this.completionRateData = {
       labels: completionRateDates,
       datasets: [{
         label: '完了率',
         data: completionRateDates.map(d => completionRateMap[d]),
-        borderColor: '#66BB6A',
-        backgroundColor: 'rgba(102,187,106,0.2)',
-        tension: 0.3
+        borderColor: '#81c784',
+        backgroundColor: 'rgba(129,199,132,0.15)',
+        tension: 0,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointBackgroundColor: '#81c784',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
       }]
     };
 

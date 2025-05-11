@@ -116,12 +116,12 @@ export class CalendarComponent implements OnInit {
   }
 
   previousMonth() {
-    this.currentMonth.setMonth(this.currentMonth.getMonth() - 1);
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
     this.generateCalendar();
   }
 
   nextMonth() {
-    this.currentMonth.setMonth(this.currentMonth.getMonth() + 1);
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
     this.generateCalendar();
   }
 
@@ -216,9 +216,9 @@ export class CalendarComponent implements OnInit {
     if (this.viewMode === 'month') {
       this.previousMonth();
     } else if (this.viewMode === 'week') {
-      this.selectedDate.setDate(this.selectedDate.getDate() - 7);
+      this.selectedDate = new Date(this.selectedDate.getFullYear(), this.selectedDate.getMonth(), this.selectedDate.getDate() - 7);
     } else if (this.viewMode === 'day') {
-      this.selectedDate.setDate(this.selectedDate.getDate() - 1);
+      this.selectedDate = new Date(this.selectedDate.getFullYear(), this.selectedDate.getMonth(), this.selectedDate.getDate() - 1);
     }
     this.generateCalendar();
   }
@@ -227,9 +227,9 @@ export class CalendarComponent implements OnInit {
     if (this.viewMode === 'month') {
       this.nextMonth();
     } else if (this.viewMode === 'week') {
-      this.selectedDate.setDate(this.selectedDate.getDate() + 7);
+      this.selectedDate = new Date(this.selectedDate.getFullYear(), this.selectedDate.getMonth(), this.selectedDate.getDate() + 7);
     } else if (this.viewMode === 'day') {
-      this.selectedDate.setDate(this.selectedDate.getDate() + 1);
+      this.selectedDate = new Date(this.selectedDate.getFullYear(), this.selectedDate.getMonth(), this.selectedDate.getDate() + 1);
     }
     this.generateCalendar();
   }
