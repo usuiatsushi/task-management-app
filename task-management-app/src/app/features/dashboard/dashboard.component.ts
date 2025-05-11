@@ -593,8 +593,8 @@ export class DashboardComponent implements OnChanges {
         return created && created <= dateObj;
       });
       const completedUntilDate = tasksUntilDate.filter(t => {
-        const updated = toDate(t.updatedAt);
-        return t.status === '完了' && updated && updated <= dateObj;
+        const completed = toDate(t.completedAt) || toDate(t.updatedAt) || toDate(t.createdAt);
+        return t.status === '完了' && completed && completed <= dateObj;
       }).length;
       completionRateMap[dateStr] = tasksUntilDate.length > 0
         ? Math.round((completedUntilDate / tasksUntilDate.length) * 100)

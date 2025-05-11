@@ -27,5 +27,6 @@ export interface Task {
   startDate?: Timestamp | Date | string | null;
   duration?: number;
   urgent?: boolean;
+  completedAt?: Timestamp | Date | string | null;
    // 一括付与済み
 } 

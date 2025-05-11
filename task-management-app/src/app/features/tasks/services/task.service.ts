@@ -342,6 +342,17 @@ export class TaskService implements OnDestroy {
         console.log('数値に変換:', processedData.duration);
       }
 
+      // completedAtの処理
+      if (typeof updateData.status !== 'undefined') {
+        if (updateData.status === '完了' && currentTask.status !== '完了') {
+          // 完了になった瞬間のみセット
+          processedData.completedAt = Timestamp.fromDate(new Date());
+        } else if (updateData.status !== '完了' && currentTask.status === '完了') {
+          // 完了→未完了に戻した場合はリセット
+          processedData.completedAt = null;
+        }
+      }
+
       // updatedAtの設定
       processedData.updatedAt = Timestamp.fromDate(new Date());
 

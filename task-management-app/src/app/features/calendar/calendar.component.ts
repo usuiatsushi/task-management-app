@@ -10,6 +10,7 @@ import { TaskDetailDialogComponent } from '../tasks/components/task-detail-dialo
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MoreTasksDialogComponent } from './more-tasks-dialog.component';
 
 function toDate(d: any): Date | null {
   if (!d) return null;
@@ -232,5 +233,13 @@ export class CalendarComponent implements OnInit {
       this.selectedDate = new Date(this.selectedDate.getFullYear(), this.selectedDate.getMonth(), this.selectedDate.getDate() + 1);
     }
     this.generateCalendar();
+  }
+
+  openMoreTasksDialog(date: Date) {
+    const tasks = this.getTasksForDate(date).slice(1); // 2件目以降
+    this.dialog.open(MoreTasksDialogComponent, {
+      width: '400px',
+      data: { tasks }
+    });
   }
 } 
