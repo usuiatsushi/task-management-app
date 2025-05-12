@@ -1,20 +1,42 @@
-<mat-nav-list>
-  <a mat-list-item (click)="navigateTo('/projects')" class="project-list-item">
-    <mat-icon matListItemIcon>folder</mat-icon>
-    <span class="project-title">プロジェクト</span>
-    <span class="spacer"></span>
-    <mat-icon class="expand-icon" (click)="$event.stopPropagation(); toggleProjectMenu();">{{ showProjectMenu ? 'expand_less' : 'expand_more' }}</mat-icon>
-  </a>
+<div class="nav-menu" [class.menu-closed]="!isMenuOpen">
 
-  <div class="project-submenu" *ngIf="showProjectMenu">
-    <a mat-list-item *ngFor="let project of projects" (click)="navigateToProject(project.id)">
-      <mat-icon matListItemIcon>folder_open</mat-icon>
-      <span matListItemTitle>{{ project.name }}</span>
+  <div class="menu-list">
+    <a *ngFor="let item of menuItems"
+       class="menu-item"
+       [routerLink]="item.path"
+       routerLinkActive="active"
+       (click)="navigateTo(item.path)">
+      <mat-icon>{{item.icon}}</mat-icon>
+      <span>{{item.label}}</span>
     </a>
+
+    <mat-divider class="menu-divider"></mat-divider>
+
+    <div class="project-section">
+      <div class="menu-item" (click)="toggleProjectMenu()">
+        <mat-icon>folder</mat-icon>
+        <span>プロジェクト</span>
+        <mat-icon class="expand-icon">{{showProjectMenu ? 'expand_less' : 'expand_more'}}</mat-icon>
+      </div>
+
+      <div class="project-menu" *ngIf="showProjectMenu">
+        <a *ngFor="let project of projects"
+           class="project-menu-item"
+           (click)="navigateToProject(project.id)">
+          <mat-icon>folder_open</mat-icon>
+          <span>{{project.name}}</span>
+        </a>
+
+        <a class="project-menu-item" (click)="navigateToNewProject($event)">
+          <mat-icon>create_new_folder</mat-icon>
+          <span>新規プロジェクト</span>
+        </a>
+      </div>
+    </div>
   </div>
-  
-  <a mat-list-item (click)="logout()">
-    <mat-icon matListItemIcon>logout</mat-icon>
-    <span matListItemTitle>ログアウト</span>
-  </a>
-</mat-nav-list> 
+
+  <button class="logout-button" (click)="logout()">
+    <mat-icon>exit_to_app</mat-icon>
+    <span>ログアウト</span>
+  </button>
+</div> 
