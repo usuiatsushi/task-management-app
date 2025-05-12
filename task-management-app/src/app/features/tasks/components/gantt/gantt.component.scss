@@ -22,3 +22,12 @@
   font-size: 15px;
   color: #333;
 }
+
+/* タスクバー両端の円（resize/progress handles等）を非表示にする */
+:host ::ng-deep .gantt_task_progress_drag,
+:host ::ng-deep .gantt_task_resize,
+:host ::ng-deep .gantt_link_point,
+:host ::ng-deep .gantt_task_start_date,
+:host ::ng-deep .gantt_task_end_date {
+  display: none !important;
+}
