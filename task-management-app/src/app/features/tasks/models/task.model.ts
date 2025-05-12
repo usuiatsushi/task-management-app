@@ -28,5 +28,9 @@ export interface Task {
   duration?: number;
   urgent?: boolean;
   completedAt?: Timestamp | Date | string | null;
+  assignee?: {
+    id: string;
+    name: string;
+  };
    // 一括付与済み
 } 

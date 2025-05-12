@@ -1,19 +1,34 @@
 <div class="task-detail-container" *ngIf="!loading">
   <div *ngIf="task" class="task-detail">
     <div class="task-header">
-      <h1>{{ task.title }}</h1>
-      <div class="task-actions">
-        <button class="edit-button" [routerLink]="['/tasks', task.id, 'edit']">編集</button>
-        <button class="delete-button" (click)="deleteTask()" [disabled]="deleting">
-          {{ deleting ? '削除中...' : '削除' }}
-        </button>
+      <div class="task-title-section">
+        <h1>{{ task.title }}</h1>
+        <div class="task-meta">
+          <span class="task-id">#{{ task.id }}</span>
+          <span class="task-status" [ngClass]="task.status">
+            {{ getStatusLabel(task.status) }}
+          </span>
+          <span class="task-priority" [ngClass]="task.importance">
+            {{ getPriorityLabel(task.importance) }}
+          </span>
+          <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+        </div>
       </div>
-    </div>
-
-    <div class="task-meta">
-      <span class="status" [ngClass]="task.status">{{ task.status }}</span>
-      <span class="priority" [ngClass]="task.importance">{{ task.importance }}</span>
-      <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+      <div class="task-actions">
+        <button mat-icon-button [matMenuTriggerFor]="menu">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="editTask()">
+            <mat-icon>edit</mat-icon>
+            <span>編集</span>
+          </button>
+          <button mat-menu-item (click)="deleteTask()">
+            <mat-icon>delete</mat-icon>
+            <span>削除</span>
+          </button>
+        </mat-menu>
+      </div>
     </div>
 
     <div class="progress-section">
@@ -21,16 +36,14 @@
         <h3>進捗状況</h3>
         <span class="progress-percentage">{{ task.progress ?? getProgressPercentage() }}%</span>
       </div>
-      <!-- 未着手・完了：バーのみ -->
       <ng-container *ngIf="task.status !== '進行中'; else sliderBlock">
-      <mat-progress-bar
-        [mode]="'determinate'"
+        <mat-progress-bar
+          [mode]="'determinate'"
           [value]="task.progress ?? getProgressPercentage()"
-        [color]="getProgressColor()"
-        class="progress-bar">
-      </mat-progress-bar>
+          [color]="getProgressColor()"
+          class="progress-bar">
+        </mat-progress-bar>
       </ng-container>
-      <!-- 進行中：スライダー -->
       <ng-template #sliderBlock>
         <div class="progress-slider">
           <div class="slider-inner">
@@ -48,47 +61,40 @@
     </div>
 
     <div class="task-content">
-      <div class="task-section">
-        <h2>詳細</h2>
-        <p>{{ task.description }}</p>
+      <div class="main-content">
+        <div class="task-description">
+          <h2>説明</h2>
+          <p>{{ task.description || '説明はありません' }}</p>
+        </div>
+
+        <div class="task-details">
+          <div class="detail-row">
+            <div class="detail-item">
+              <span class="label">担当者:</span>
+              <span class="value">{{ task.assignee?.name || '未割り当て' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">作成日:</span>
+              <span class="value">{{ task.createdAt | date:'yyyy/MM/dd' }}</span>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-item">
+              <span class="label">更新日:</span>
+              <span class="value">{{ task.updatedAt | date:'yyyy/MM/dd' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="comment-section">
+          <app-comment-section [taskId]="task.id"></app-comment-section>
+        </div>
       </div>
 
-      <div class="task-section">
-        <h2>カテゴリ</h2>
-        <p>{{ task.category }}</p>
-      </div>
-
-      <div class="task-section">
-        <h2>担当者</h2>
-        <p>{{ task.assignedTo }}</p>
-      </div>
-
-      <div class="task-section">
-        <h2>作成日時</h2>
-        <p>{{ task.createdAt | date:'yyyy/MM/dd HH:mm' }}</p>
-      </div>
-
-      <div class="task-section">
-        <h2>更新日時</h2>
-        <p>{{ task.updatedAt | date:'yyyy/MM/dd HH:mm' }}</p>
-      </div>
-
-      <div class="subtasks-section">
-        <h2>対応計画 & アクション管理</h2>
-        <ul>
-          <li *ngFor="let sub of task.subTasks">
-            <input type="checkbox" [(ngModel)]="sub.done" (change)="updateSubTask(sub)">
-            {{ sub.title }}（担当: {{ sub.assignee }}）
-            <button (click)="removeSubTask(sub)">削除</button>
-          </li>
-        </ul>
-        <input [(ngModel)]="newSubTaskTitle" placeholder="サブタスク名">
-        <input [(ngModel)]="newSubTaskAssignee" placeholder="担当者">
-        <button (click)="addSubTask()">追加</button>
-      </div>
-
-      <div class="comments-section">
-        <app-comment-section [taskId]="task.id"></app-comment-section>
+      <div class="side-content">
+        <div class="stakeholder-section">
+          <app-stakeholder-matrix [taskId]="task.id"></app-stakeholder-matrix>
+        </div>
       </div>
     </div>
   </div>

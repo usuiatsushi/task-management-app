@@ -1,172 +1,182 @@
 .task-detail-container {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f5;
+}
 
-  .task-detail {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 
-    .task-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-
-      h1 {
-        margin: 0;
-        color: #333;
-      }
-
-      .task-actions {
-        display: flex;
-        gap: 10px;
-
-        button {
-          padding: 8px 16px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: background 0.2s;
-
-          &.edit-button {
-            background: #2196f3;
-            color: white;
-
-            &:hover {
-              background: #1976d2;
-            }
-          }
-
-          &.delete-button {
-            background: #f44336;
-            color: white;
-
-            &:hover {
-              background: #d32f2f;
-            }
-          }
-        }
-      }
+  .task-title-section {
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #333;
     }
 
     .task-meta {
       display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
 
-      span {
-        padding: 4px 8px;
+      .task-id {
+        color: #666;
+      }
+
+      .task-status, .task-priority, .due-date {
+        padding: 0.25rem 0.5rem;
         border-radius: 4px;
-        font-size: 0.9em;
-
-        &.status {
-          &.未着手 { background: #f5f5f5; color: #757575; }
-          &.進行中 { background: #e3f2fd; color: #1976d2; }
-          &.完了 { background: #e8f5e9; color: #2e7d32; }
-        }
-
-        &.priority {
-          &.高 { background: #ffebee; color: #c62828; }
-          &.中 { background: #fff3e0; color: #ef6c00; }
-          &.低 { background: #e8f5e9; color: #2e7d32; }
-        }
-
-        &.due-date {
-          color: #666;
-        }
-      }
-    }
-
-    .progress-section {
-      width: 100%;
-      margin: 0 auto;
-      margin-bottom: 20px;
-      padding: 16px;
-      background: #f5f5f5;
-      border-radius: 4px;
-      box-sizing: border-box;
-
-      .progress-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-
-        h3 {
-          margin: 0;
-          font-size: 1em;
-          color: #333;
-        }
-
-        .progress-percentage {
-          font-weight: 500;
-          color: #666;
-        }
+        font-size: 0.875rem;
       }
 
-      .progress-bar {
-        height: 8px;
-        border-radius: 4px;
+      .task-status {
+        &.todo { background: #f5f5f5; color: #757575; }
+        &.in_progress { background: #e3f2fd; color: #1976d2; }
+        &.done { background: #e8f5e9; color: #2e7d32; }
       }
 
-      .progress-slider {
-        width: 100%;
-        .slider-inner {
-          width: calc(100% - 24px);
-          margin-right: 24px;
-        }
-        mat-slider {
-          width: 100% !important;
-          min-width: 300px;
-          max-width: 100%;
-          display: block;
-        }
+      .task-priority {
+        &.high { background: #ffebee; color: #c62828; }
+        &.medium { background: #fff3e0; color: #ef6c00; }
+        &.low { background: #e8f5e9; color: #2e7d32; }
       }
-    }
 
-    .task-content {
-      .task-section {
-        margin-bottom: 20px;
-
-        h2 {
-          margin: 0 0 10px 0;
-          color: #333;
-          font-size: 1.2em;
-        }
-
-        p {
-          margin: 0;
-          color: #666;
-          line-height: 1.5;
-        }
+      .due-date {
+        background: #f5f5f5;
+        color: #666;
       }
     }
   }
+}
 
-  .not-found {
-    text-align: center;
-    padding: 40px;
+.progress-section {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
 
-    h2 {
-      margin-bottom: 20px;
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
       color: #333;
     }
 
-    button {
-      padding: 10px 20px;
-      background: #2196f3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.2s;
+    .progress-percentage {
+      color: #666;
+      font-weight: 500;
+    }
+  }
 
-      &:hover {
-        background: #1976d2;
+  .progress-bar {
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .progress-slider {
+    .slider-inner {
+      padding: 0 1rem;
+    }
+  }
+}
+
+.task-content {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1rem;
+  height: calc(100vh - 250px);
+  overflow: hidden;
+
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    padding-right: 1rem;
+
+    .task-description {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+      h2 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+        color: #333;
       }
+
+      p {
+        margin: 0;
+        color: #666;
+        line-height: 1.5;
+      }
+    }
+
+    .task-details {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+      .detail-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .detail-item {
+          .label {
+            color: #666;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+          }
+
+          .value {
+            color: #333;
+          }
+        }
+      }
+    }
+
+    .comment-section {
+      flex: 1;
+      min-height: 200px;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  }
+
+  .side-content {
+    overflow-y: auto;
+
+    .stakeholder-section {
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
   }
 }
@@ -177,7 +187,47 @@
   color: #666;
 }
 
+.not-found {
+  text-align: center;
+  padding: 40px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+
+  h2 {
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    background: #2196f3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #1976d2;
+    }
+  }
+}
+
 .comments-section {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+
+  h2 {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: #333;
+  }
+}
+
+.stakeholder-section {
   margin-top: 2rem;
   padding: 1rem;
   background-color: #f5f5f5;

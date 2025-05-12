@@ -16,6 +16,10 @@ import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { interval } from 'rxjs';
 import { CommentSectionComponent } from '../comment-section/comment-section.component';
+import { StakeholderMatrixComponent } from '../stakeholder-matrix/stakeholder-matrix.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 
 @Component({
   selector: 'app-task-detail',
@@ -31,7 +35,11 @@ import { CommentSectionComponent } from '../comment-section/comment-section.comp
     MatSliderModule,
     FormsModule,
     ReactiveFormsModule,
-    CommentSectionComponent
+    CommentSectionComponent,
+    StakeholderMatrixComponent,
+    MatButtonModule,
+    MatIconModule,
+    MatMenuModule
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
@@ -233,6 +241,30 @@ export class TaskDetailComponent implements OnInit {
         horizontalPosition: 'right',
         verticalPosition: 'bottom'
       });
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    const statusMap: { [key: string]: string } = {
+      'todo': '未着手',
+      'in_progress': '進行中',
+      'done': '完了'
+    };
+    return statusMap[status] || status;
+  }
+
+  getPriorityLabel(priority: string): string {
+    const priorityMap: { [key: string]: string } = {
+      'high': '高',
+      'medium': '中',
+      'low': '低'
+    };
+    return priorityMap[priority] || priority;
+  }
+
+  editTask() {
+    if (this.task) {
+      this.router.navigate(['/tasks', this.task.id, 'edit']);
     }
   }
 } 
