@@ -9,28 +9,11 @@
         <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>タイトル</mat-label>
-            <input matInput formControlName="title" 
-                   (input)="onTitleOrDescriptionChange()"
-                   placeholder="タスクのタイトルを入力">
+            <input matInput formControlName="title" placeholder="タスクのタイトルを入力">
             <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
               {{ getErrorMessage('title') }}
             </mat-error>
           </mat-form-field>
-        </div>
-
-        <div class="form-row">
-          <mat-form-field appearance="outline">
-            <mat-label>説明</mat-label>
-            <textarea matInput formControlName="description" 
-                      (input)="onTitleOrDescriptionChange()"
-                      placeholder="タスクの詳細を入力"></textarea>
-            <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
-              {{ getErrorMessage('description') }}
-            </mat-error>
-          </mat-form-field>
-        </div>
-
-        <div class="category-section">
           <mat-form-field appearance="outline">
             <mat-label>カテゴリ</mat-label>
             <mat-select formControlName="category">
@@ -42,28 +25,25 @@
               {{ getErrorMessage('category') }}
             </mat-error>
           </mat-form-field>
-
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>説明</mat-label>
+            <textarea matInput formControlName="description" placeholder="タスクの詳細を入力"></textarea>
+            <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
+              {{ getErrorMessage('description') }}
+            </mat-error>
+          </mat-form-field>
           <div class="new-category-form">
             <mat-form-field appearance="outline" class="new-category-input">
               <mat-label>新しいカテゴリ</mat-label>
               <input matInput formControlName="newCategoryName" placeholder="カテゴリ名を入力">
             </mat-form-field>
             <button mat-button color="primary" (click)="addNewCategory()" [disabled]="!taskForm.get('newCategoryName')?.value">
-              + 追加
+              +追加
             </button>
           </div>
         </div>
-
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>ステータス</mat-label>
-          <mat-select formControlName="status">
-            <mat-option value="未着手">未着手</mat-option>
-            <mat-option value="進行中">進行中</mat-option>
-            <mat-option value="完了">完了</mat-option>
-          </mat-select>
-          <mat-error>{{ getErrorMessage('status') }}</mat-error>
-        </mat-form-field>
-
         <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>重要度</mat-label>
@@ -76,30 +56,39 @@
               {{ getErrorMessage('importance') }}
             </mat-error>
           </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>期限日</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="dueDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
         </div>
-
-        <mat-form-field appearance="outline" class="form-field">
-          <mat-label>期限日</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="dueDate">
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-
-        <mat-checkbox formControlName="urgent">緊急</mat-checkbox>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>担当者</mat-label>
-          <input matInput formControlName="assignedTo" placeholder="担当者名を入力">
-          <mat-error *ngIf="taskForm.get('assignedTo')?.hasError('required')">
-            担当者は必須です
-          </mat-error>
-        </mat-form-field>
-
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>担当者</mat-label>
+            <input matInput formControlName="assignedTo" placeholder="担当者名を入力">
+            <mat-error *ngIf="taskForm.get('assignedTo')?.hasError('required')">
+              担当者は必須です
+            </mat-error>
+          </mat-form-field>
+          <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+            <mat-checkbox formControlName="urgent">緊急</mat-checkbox>
+            <mat-form-field appearance="outline">
+              <mat-label>ステータス</mat-label>
+              <mat-select formControlName="status">
+                <mat-option value="未着手">未着手</mat-option>
+                <mat-option value="進行中">進行中</mat-option>
+                <mat-option value="完了">完了</mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('status') }}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
         <div class="button-container">
-          <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="!taskForm.valid || loading">
+          <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading">
             {{ isEditMode ? '更新' : '作成' }}
           </button>
-          <button mat-button (click)="onCancel()" [disabled]="loading">キャンセル</button>
+          <button mat-button type="button" (click)="onCancel()" [disabled]="loading">キャンセル</button>
         </div>
       </form>
     </mat-card-content>
