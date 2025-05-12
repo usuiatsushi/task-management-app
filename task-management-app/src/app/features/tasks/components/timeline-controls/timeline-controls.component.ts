@@ -79,8 +79,11 @@ export class TimelineControlsComponent {
   private currentEnd: Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
   onPreviousMonth(): void {
-    const start = new Date(this.currentStart.getFullYear(), this.currentStart.getMonth() - 1, 1);
-    const end = new Date(this.currentStart.getFullYear(), this.currentStart.getMonth(), 0);
+    const diffMonths = -1;
+    const start = new Date(this.currentStart);
+    const end = new Date(this.currentEnd);
+    start.setMonth(start.getMonth() + diffMonths);
+    end.setMonth(end.getMonth() + diffMonths);
     this.currentStart = start;
     this.currentEnd = end;
     this.dateRangeChange.emit({ start, end });
@@ -136,8 +139,11 @@ export class TimelineControlsComponent {
   }
 
   onNextMonth(): void {
-    const start = new Date(this.currentStart.getFullYear(), this.currentStart.getMonth() + 1, 1);
-    const end = new Date(this.currentStart.getFullYear(), this.currentStart.getMonth() + 2, 0);
+    const diffMonths = 1;
+    const start = new Date(this.currentStart);
+    const end = new Date(this.currentEnd);
+    start.setMonth(start.getMonth() + diffMonths);
+    end.setMonth(end.getMonth() + diffMonths);
     this.currentStart = start;
     this.currentEnd = end;
     this.dateRangeChange.emit({ start, end });

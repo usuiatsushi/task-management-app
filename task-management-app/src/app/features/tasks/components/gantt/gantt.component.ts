@@ -21,8 +21,50 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   public startDate: Date | null = null;
   public endDate: Date | null = null;
 
+  private keydownHandler = (event: KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowLeft':
+        this.shiftTimeline(-1);
+        event.preventDefault();
+        break;
+      case 'ArrowRight':
+        this.shiftTimeline(1);
+        event.preventDefault();
+        break;
+      case 'ArrowUp':
+        this.shiftTimeline(-7);
+        event.preventDefault();
+        break;
+      case 'ArrowDown':
+        this.shiftTimeline(7);
+        event.preventDefault();
+        break;
+    }
+  };
+
   ngOnInit() {
     this.configureGantt();
+
+    gantt.attachEvent('onTaskDrag', (id: string, mode: string, task: any, original: any) => {
+      const taskStart = (task.start_date instanceof Date) ? task.start_date : new Date(task.start_date);
+      const taskEnd = (task.end_date instanceof Date) ? task.end_date : new Date(task.end_date);
+      const rangeStart = (gantt.config.start_date instanceof Date) ? gantt.config.start_date : new Date(gantt.config.start_date);
+      const rangeEnd = (gantt.config.end_date instanceof Date) ? gantt.config.end_date : new Date(gantt.config.end_date);
+
+      // 右端が表示範囲の最終日の2日前「以降」
+      const rangeEndMinus2 = new Date(rangeEnd);
+      rangeEndMinus2.setDate(rangeEnd.getDate() - 2);
+      if (mode === 'resize' && taskEnd.getTime() > rangeEndMinus2.getTime()) {
+        this.shiftTimeline(1);
+      }
+      // 左端が表示範囲の最初の日の2日後「以前」
+      const rangeStartPlus2 = new Date(rangeStart);
+      rangeStartPlus2.setDate(rangeStart.getDate() + 2);
+      if (mode === 'resize' && taskStart.getTime() < rangeStartPlus2.getTime()) {
+        this.shiftTimeline(-1);
+      }
+      return true;
+    });
   }
 
   private configureGantt() {
@@ -40,6 +82,7 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     const today = new Date();
     this.startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
     this.endDate = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), this.startDate.getDate() + 30);
+
     gantt.config.start_date = this.startDate;
     gantt.config.end_date = this.endDate;
 
@@ -175,6 +218,11 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     if (this.active) {
       this.initGantt();
     }
+    // キーボード操作対応
+    if (this.ganttContainer?.nativeElement) {
+      this.ganttContainer.nativeElement.setAttribute('tabindex', '0');
+      this.ganttContainer.nativeElement.addEventListener('keydown', this.keydownHandler);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -300,6 +348,9 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   }
 
   ngOnDestroy() {
+    if (this.ganttContainer?.nativeElement) {
+      this.ganttContainer.nativeElement.removeEventListener('keydown', this.keydownHandler);
+    }
     gantt.clearAll();
   }
 
@@ -310,5 +361,17 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     gantt.config.start_date = this.startDate;
     gantt.config.end_date = this.endDate;
     this.updateGanttData();
+  }
+
+  private shiftTimeline(days: number) {
+    const start = new Date(this.startDate!);
+    const end = new Date(this.endDate!);
+    start.setDate(start.getDate() + days);
+    end.setDate(end.getDate() + days);
+    this.startDate = start;
+    this.endDate = end;
+    gantt.config.start_date = start;
+    gantt.config.end_date = end;
+    gantt.render();
   }
 }
