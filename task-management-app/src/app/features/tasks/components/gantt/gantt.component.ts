@@ -54,13 +54,13 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       // 右端が表示範囲の最終日の2日前「以降」
       const rangeEndMinus2 = new Date(rangeEnd);
       rangeEndMinus2.setDate(rangeEnd.getDate() - 2);
-      if (mode === 'resize' && taskEnd.getTime() > rangeEndMinus2.getTime()) {
+      if ((mode === 'resize' || mode === 'move') && taskEnd.getTime() > rangeEndMinus2.getTime()) {
         this.shiftTimeline(1);
       }
       // 左端が表示範囲の最初の日の2日後「以前」
       const rangeStartPlus2 = new Date(rangeStart);
       rangeStartPlus2.setDate(rangeStart.getDate() + 2);
-      if (mode === 'resize' && taskStart.getTime() < rangeStartPlus2.getTime()) {
+      if ((mode === 'resize' || mode === 'move') && taskStart.getTime() < rangeStartPlus2.getTime()) {
         this.shiftTimeline(-1);
       }
       return true;
