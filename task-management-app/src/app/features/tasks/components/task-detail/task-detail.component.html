@@ -4,7 +4,6 @@
       <div class="task-title-section">
         <h1>{{ task.title }}</h1>
         <div class="task-meta">
-          <span class="task-id">#{{ task.id }}</span>
           <span class="task-status" [ngClass]="task.status">
             {{ getStatusLabel(task.status) }}
           </span>
