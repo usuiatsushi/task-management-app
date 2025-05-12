@@ -26,6 +26,18 @@
             <mat-icon>delete</mat-icon>
             一括削除
           </button>
+          <!-- プロジェクト内でのみ表示 -->
+          <ng-container *ngIf="projectName">
+            <button mat-raised-button color="primary" (click)="exportTasks()">
+              <mat-icon>download</mat-icon>
+              エクスポート
+            </button>
+            <button mat-raised-button color="primary" (click)="fileInput.click()">
+              <mat-icon>upload</mat-icon>
+              インポート
+            </button>
+            <input #fileInput type="file" accept=".csv" (change)="onFileSelected($event)" style="display: none">
+          </ng-container>
           <span class="selected-count" *ngIf="selectedTasks.length > 0">
             {{ selectedTasks.length }}件選択中
           </span>

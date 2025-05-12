@@ -12,33 +12,7 @@
       <span matListItemTitle>{{ project.name }}</span>
     </a>
   </div>
-
-  <a mat-list-item (click)="toggleExportMenu()">
-    <mat-icon matListItemIcon>file_download</mat-icon>
-    <span matListItemTitle>エクスポート</span>
-  </a>
-
-  <div class="export-submenu" *ngIf="showExportMenu">
-    <a mat-list-item (click)="exportToCSV()">
-      <mat-icon matListItemIcon>description</mat-icon>
-      <span matListItemTitle>CSVエクスポート</span>
-    </a>
-    <a mat-list-item (click)="exportToExcel()">
-      <mat-icon matListItemIcon>table_chart</mat-icon>
-      <span matListItemTitle>Excelエクスポート</span>
-    </a>
-    <a mat-list-item (click)="downloadSampleCSV()">
-      <mat-icon matListItemIcon>download</mat-icon>
-      <span matListItemTitle>サンプルCSV</span>
-    </a>
-  </div>
-
-  <a mat-list-item (click)="fileInput.click()">
-    <mat-icon matListItemIcon>file_upload</mat-icon>
-    <span matListItemTitle>CSVインポート</span>
-  </a>
-  <input #fileInput type="file" accept=".csv" (change)="onFileSelected($event)" style="display: none">
-
+  
   <a mat-list-item (click)="logout()">
     <mat-icon matListItemIcon>logout</mat-icon>
     <span matListItemTitle>ログアウト</span>

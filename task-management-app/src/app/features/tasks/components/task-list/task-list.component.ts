@@ -798,7 +798,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // 日付バリデーションの共通関数
   private isDueDateBeforeStartDate(startDate: Date, dueDate: Date): boolean {
-    console.log('isDueDateBeforeStartDate called');
     const toYMD = (date: Date) => {
       const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       console.log('Converting to UTC:', {
@@ -807,30 +806,29 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       return utcDate;
     };
-
     const startDateYMD = toYMD(startDate);
     const dueDateYMD = toYMD(dueDate);
-
     console.log('Comparing dates:', {
       startDate: startDateYMD.toISOString(),
       dueDate: dueDateYMD.toISOString(),
       isBefore: dueDateYMD.getTime() < startDateYMD.getTime()
     });
-
     return dueDateYMD.getTime() < startDateYMD.getTime();
   }
 
   // 日付の妥当性チェックとバリデーション
   private validateTaskDates(startDate: Date | null, dueDate: Date | null, title: string): { isValid: boolean; error?: { title: string; reason: string } } {
-    console.log('validateTaskDates called');
+    console.log('Validating dates for task:', {
+      title,
+      startDate: startDate?.toISOString(),
+      dueDate: dueDate?.toISOString()
+    });
     const isValidStart = startDate instanceof Date && !isNaN(startDate.getTime());
     const isValidDue = dueDate instanceof Date && !isNaN(dueDate.getTime());
-
     if (!isValidStart || !isValidDue) {
       console.log('Invalid dates:', { isValidStart, isValidDue });
       return { isValid: false };
     }
-
     if (this.isDueDateBeforeStartDate(startDate, dueDate)) {
       console.log('Due date is before start date');
       return {
@@ -838,130 +836,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         error: { title, reason: '開始日より前の期限' }
       };
     }
-
     console.log('Dates are valid');
     return { isValid: true };
-  }
-
-  // タスクID生成関数
-  private generateTaskId(): string {
-    return Math.random().toString(36).substring(2, 15);
-  }
-
-  public async onImportCSV(event: Event): Promise<void> {
-    console.log('onImportCSV called');
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) {
-      this.snackBar.open('ファイルが選択されていません', '閉じる', { duration: 3000 });
-      return;
-    }
-
-    const file = input.files[0];
-    if (!file.name.endsWith('.csv')) {
-      this.snackBar.open('CSVファイルを選択してください', '閉じる', { duration: 3000 });
-      return;
-    }
-
-    try {
-      this.loading = true;
-      const text = await file.text();
-      
-      const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
-      if (rows.length < 2) {
-        this.snackBar.open('CSVファイルが空です', '閉じる', { duration: 3000 });
-        return;
-      }
-
-      const headers = rows[0];
-      console.log('onImportCSV headers:', headers);
-      const data = rows.slice(1);
-      const errorTasks: { title: string; reason: string }[] = [];
-      const importDate = new Date();
-      
-      console.log('onImportCSV data:', data);
-      const tasks = data.map((row, i) => {
-        const title = row[headers.indexOf('タイトル')] || '';
-        if (!title.trim()) return null;
-
-        const startDateStr = row[headers.indexOf('開始日')] || row[headers.indexOf('startDate')];
-        const dueDateStr = row[headers.indexOf('期限')];
-        console.log(`onImportCSV row ${i + 1}:`, row);
-        console.log(`onImportCSV row ${i + 1} startDateStr:`, startDateStr, 'dueDateStr:', dueDateStr);
-        
-        const startDate = startDateStr ? new Date(startDateStr) : importDate;
-        const dueDate = dueDateStr ? new Date(dueDateStr) : null;
-
-        console.log('onImportCSV Processing task:', {
-          title,
-          startDate: startDate.toISOString(),
-          dueDate: dueDate?.toISOString(),
-          importDate: importDate.toISOString()
-        });
-
-        const validation = this.validateTaskDates(startDate, dueDate, title);
-        console.log('onImportCSV Validation result:', validation);
-        if (!validation.isValid) {
-          if (validation.error) {
-            console.log('onImportCSV Validation failed:', validation.error);
-            errorTasks.push(validation.error);
-          }
-          return null;
-        }
-
-        const taskData: Omit<Task, 'id'> = {
-          title: title,
-          description: row[headers.indexOf('説明')] || '',
-          status: (row[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
-          importance: (row[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
-          category: row[headers.indexOf('カテゴリ')] || '',
-          assignedTo: row[headers.indexOf('担当者')] || '',
-          dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
-          userId: 'user1',
-          createdAt: Timestamp.fromDate(new Date()),
-          updatedAt: Timestamp.fromDate(new Date()),
-          completed: row[headers.indexOf('完了')] === '完了' || false,
-          startDate: startDate,
-          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
-        };
-        return taskData;
-      }).filter(task => task !== null);
-
-      console.log('onImportCSV Import summary:', {
-        totalTasks: tasks.length,
-        errorTasks: errorTasks.length,
-        errors: errorTasks
-      });
-
-      if (tasks.length === 0) {
-        this.snackBar.open('有効なタスクデータが見つかりません', '閉じる', { duration: 3000 });
-        return;
-      }
-
-      let successCount = 0;
-      for (const task of tasks) {
-        try {
-          await this.taskService.createTask(task);
-          successCount++;
-        } catch (error) {
-          console.error('タスクの作成に失敗しました:', error);
-        }
-      }
-
-      if (errorTasks.length > 0) {
-        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正のためインポートされませんでした`, '閉じる', { duration: 7000 });
-      }
-      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
-      
-      await this.loadTasks();
-      
-    } catch (error) {
-      console.error('CSVのインポートに失敗しました:', error);
-      this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
-    } finally {
-      this.loading = false;
-      input.value = '';
-      input.dispatchEvent(new Event('change'));
-    }
   }
 
   // ファイルタイプを判定するメソッド
@@ -986,11 +862,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     return FileType.UNKNOWN;
   }
 
-  onFileSelected(event: Event) {
-    console.log('onFileSelected called');
+  onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) {
-      this.snackBar.open('ファイルが選択されていません', '閉じる', { duration: 3000 });
       return;
     }
 
@@ -1004,23 +878,18 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async processFile(file: File): Promise<void> {
-    console.log('processFile called');
     try {
       const content = await file.text();
       const fileType = this.detectFileType(file, content);
-      console.log('processFile: fileType =', fileType);
       
       switch (fileType) {
         case FileType.ASANA:
-          console.log('processFile: calling importAsanaCSV');
           await this.importAsanaCSV(file);
           break;
         case FileType.TRELLO:
-          console.log('processFile: calling importTrelloCSV');
           await this.importTrelloCSV(file);
           break;
         case FileType.SAMPLE:
-          console.log('processFile: calling importSampleCSV');
           await this.importSampleCSV(file);
           break;
         default:
@@ -1032,28 +901,15 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // カテゴリを追加するメソッド
-  private addCategory(category: string): void {
-    if (!this.categories.includes(category)) {
-      this.categories.push(category);
-      this.categoryService.addCategory(category);
-    }
-  }
-
   async importAsanaCSV(file: File): Promise<void> {
-    console.log('importAsanaCSV called');
     try {
-      this.loading = true;
       const text = await file.text();
       const rows = text.split('\n').map(row => row.split(','));
       const headers = rows[0];
-      this.addCategory('Asana');
 
       const errorTasks: { title: string; reason: string }[] = [];
       const tasks = rows.slice(1).map(row => {
-        const title = row[headers.indexOf('Name')] || '';
-        if (!title.trim()) return null;
-
+        // Asanaのステータスを変換
         const asanaStatus = row[headers.indexOf('Section/Column')] || '';
         let status: '未着手' | '進行中' | '完了';
         switch (asanaStatus) {
@@ -1070,21 +926,31 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
             status = '未着手';
         }
 
+        // 日付の取得とバリデーション
         const startDateStr = row[headers.indexOf('Start Date')] || row[headers.indexOf('開始日')];
         const dueDateStr = row[headers.indexOf('Due Date')];
+        
+        console.log(`Asana import - Task: ${row[headers.indexOf('Name')]}`);
+        console.log(`Start date string: ${startDateStr}`);
+        console.log(`Due date string: ${dueDateStr}`);
         
         const startDate = startDateStr ? new Date(startDateStr) : new Date();
         const dueDate = dueDateStr ? new Date(dueDateStr) : null;
 
-        const validation = this.validateTaskDates(startDate, dueDate, title);
+        console.log(`Parsed dates - Start: ${startDate.toISOString()}, Due: ${dueDate?.toISOString()}`);
+
+        const validation = this.validateTaskDates(startDate, dueDate, row[headers.indexOf('Name')]);
+        console.log(`Validation result for ${row[headers.indexOf('Name')]}:`, validation);
+        
         if (!validation.isValid) {
           if (validation.error) {
+            console.log(`Validation error for ${row[headers.indexOf('Name')]}:`, validation.error);
             errorTasks.push(validation.error);
           }
         }
 
         const taskData: Omit<Task, 'id'> = {
-          title: title,
+          title: row[headers.indexOf('Name')] || '',
           description: row[headers.indexOf('Notes')] || '',
           status: status,
           importance: row[headers.indexOf('重要度')] as '低' | '中' | '高' || '中',
@@ -1099,44 +965,46 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
         };
         return taskData;
-      }).filter(task => task !== null);
+      });
+
+      console.log('Asana import - Error tasks:', errorTasks);
+      console.log('Asana import - Total tasks to import:', tasks.length);
 
       let successCount = 0;
       for (const task of tasks) {
         try {
-          await this.taskService.createTask(task as Task);
+          await this.taskService.createTask(task);
           successCount++;
         } catch (error) {
           console.error('Error creating task:', error);
-          this.snackBar.open(`タスクの作成に失敗しました: ${(task as any).title}`, '閉じる', {
+          this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
             duration: 3000
           });
         }
       }
 
       if (errorTasks.length > 0) {
-        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 7000 });
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
+        setTimeout(() => {
+          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+        }, 9000);
+      } else {
+        this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
       }
-      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
-      await this.loadTasks();
     } catch (error) {
       console.error('Error importing Asana CSV:', error);
       this.snackBar.open('Asana CSVのインポートに失敗しました', '閉じる', {
         duration: 3000
       });
-    } finally {
-      this.loading = false;
     }
   }
 
   async importTrelloCSV(file: File): Promise<void> {
     console.log('importTrelloCSV called');
     try {
-      this.loading = true;
       const text = await file.text();
       const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
       const headers = rows[0];
-      this.addCategory('Trello');
 
       const errorTasks: { title: string; reason: string }[] = [];
       const tasks = rows.slice(1).map(row => {
@@ -1221,108 +1089,93 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       if (errorTasks.length > 0) {
-        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 7000 });
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
+        setTimeout(() => {
+          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+        }, 9000);
+      } else {
+        this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
       }
-      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
-      await this.loadTasks();
     } catch (error) {
       console.error('Error importing Trello CSV:', error);
       this.snackBar.open('Trello CSVのインポートに失敗しました', '閉じる', {
         duration: 3000
       });
-    } finally {
-      this.loading = false;
     }
   }
 
   async importSampleCSV(file: File): Promise<void> {
     console.log('importSampleCSV called');
     try {
-      const reader = new FileReader();
-      const tasks: Task[] = [];
+      const text = await file.text();
+      const lines = text.split('\n');
+      const headers = lines[0].split(',').map(header => header.trim());
       const errorTasks: { title: string; reason: string }[] = [];
       const importDate = new Date();
-      const self = this;
-      console.log('setting reader.onload');
-
-      reader.onload = async (e) => {
-        console.log('onload fired');
-        const text = e.target?.result as string;
-        const lines = text.split('\n');
-        const headers = lines[0].split(',').map(header => header.trim());
-        console.log('headers:', headers);
-        console.log('index of 開始日:', headers.indexOf('開始日'));
-        console.log('index of 期限:', headers.indexOf('期限'));
-
-        for (let i = 1; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
-
-          const values = lines[i].split(',').map(value => value.trim());
-          const title = values[headers.indexOf('タイトル')] || '';
-          if (!title.trim()) continue;
-
-          const startDateStr = values[headers.indexOf('開始日')] || values[headers.indexOf('startDate')];
-          const dueDateStr = values[headers.indexOf('期限')];
-          console.log(`row ${i}:`, values);
-          console.log(`row ${i} startDateStr:`, startDateStr, 'dueDateStr:', dueDateStr);
-          
-          // 開始日が指定されていない場合はインポート日を使用
-          const startDate = startDateStr ? new Date(startDateStr) : importDate;
-          const dueDate = dueDateStr ? new Date(dueDateStr) : null;
-
-          console.log('Processing task:', {
-            title,
-            startDate: startDate.toISOString(),
-            dueDate: dueDate?.toISOString(),
-            importDate: importDate.toISOString()
-          });
-
-          const validation = self.validateTaskDates(startDate, dueDate, title);
-          console.log('Validation result:', validation);
-          if (!validation.isValid) {
-            if (validation.error) {
-              console.log('Validation failed:', validation.error);
-              errorTasks.push(validation.error);
-            }
-            continue;
-          }
-
-          const task: Task = {
-            id: self.generateTaskId(),
-            title: title,
-            description: values[headers.indexOf('説明')] || '',
-            status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
-            importance: (values[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
-            category: values[headers.indexOf('カテゴリ')] || '',
-            assignedTo: values[headers.indexOf('担当者')] || '',
-            dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
-            createdAt: Timestamp.fromDate(new Date()),
-            updatedAt: Timestamp.fromDate(new Date()),
-            userId: 'user1',
-            completed: values[headers.indexOf('完了')] === '完了' || false,
-            startDate: startDate,
-            duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
-          };
-          tasks.push(task);
-        }
-
-        console.log('Import summary:', {
-          totalTasks: tasks.length,
-          errorTasks: errorTasks.length,
-          errors: errorTasks
+      const tasks = [];
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const values = lines[i].split(',').map(value => value.trim());
+        const title = values[headers.indexOf('タイトル')] || '';
+        if (!title.trim()) continue;
+        const startDateStr = values[headers.indexOf('開始日')] || values[headers.indexOf('startDate')];
+        const dueDateStr = values[headers.indexOf('期限')];
+        console.log(`row ${i}:`, values);
+        console.log(`row ${i} startDateStr:`, startDateStr, 'dueDateStr:', dueDateStr);
+        const startDate = startDateStr ? new Date(startDateStr) : importDate;
+        const dueDate = dueDateStr ? new Date(dueDateStr) : null;
+        console.log('Processing task:', {
+          title,
+          startDate: startDate.toISOString(),
+          dueDate: dueDate?.toISOString(),
+          importDate: importDate.toISOString()
         });
-
-        for (const task of tasks) {
-          await self.taskService.createTask(task);
+        const validation = this.validateTaskDates(startDate, dueDate, title);
+        console.log('Validation result:', validation);
+        if (!validation.isValid && validation.error) {
+          console.log('Validation failed:', validation.error);
+          errorTasks.push(validation.error);
         }
-        if (errorTasks.length > 0) {
-          self.snackBar.open(`${errorTasks.length}件のタスクで日付不正のためインポートされませんでした`, '閉じる', { duration: 7000 });
+        // バリデーションに関係なく全てpush
+        const task: Omit<Task, 'id'> = {
+          title: title,
+          description: values[headers.indexOf('説明')] || '',
+          status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
+          importance: (values[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
+          category: values[headers.indexOf('カテゴリ')] || '',
+          assignedTo: values[headers.indexOf('担当者')] || '',
+          dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
+          userId: 'user1',
+          createdAt: Timestamp.fromDate(new Date()),
+          updatedAt: Timestamp.fromDate(new Date()),
+          completed: values[headers.indexOf('完了')] === '完了' || false,
+          startDate: startDate,
+          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
+        };
+        tasks.push(task);
+      }
+      console.log('Import summary:', {
+        totalTasks: tasks.length,
+        errorTasks: errorTasks.length,
+        errors: errorTasks
+      });
+      let successCount = 0;
+      for (const task of tasks) {
+        try {
+          await this.taskService.createTask(task);
+          successCount++;
+        } catch (error) {
+          console.error('タスクの作成に失敗しました:', error);
         }
-        self.snackBar.open('タスクをインポートしました', '閉じる', { duration: 3000 });
-        self.loadTasks();
-      };
-
-      reader.readAsText(file);
+      }
+      if (errorTasks.length > 0) {
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
+        setTimeout(() => {
+          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+        }, 9000);
+      } else {
+        this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      }
     } catch (error) {
       console.error('CSVインポートエラー:', error);
       this.snackBar.open('CSVのインポートに失敗しました', '閉じる', { duration: 3000 });
@@ -1463,4 +1316,137 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     // 開始日より前の期限の場合は赤字表示
     return dueDate.getTime() < startDate.getTime();
   }
+  
+
+  exportTasks(): void {
+    const tasks = this.tasks.map(task => ({
+      タイトル: task.title,
+      説明: task.description || '',
+      ステータス: task.status,
+      重要度: task.importance,
+      カテゴリ: task.category || '',
+      担当者: task.assignedTo || '',
+      開始日: task.startDate ? this.getDateFromTimestamp(task.startDate).toISOString().split('T')[0] : '',
+      期限: task.dueDate ? this.getDateFromTimestamp(task.dueDate).toISOString().split('T')[0] : '',
+      完了: task.completed ? '完了' : ''
+    }));
+
+    const csvContent = this.convertToCSV(tasks);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `tasks_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  private convertToCSV(data: any[]): string {
+    const headers = Object.keys(data[0]);
+    const rows = data.map(obj => headers.map(header => obj[header]));
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  }
+  
+  async exportToCSV(): Promise<void> {
+    try {
+      const tasks = await this.taskService.getTasks();
+      const headers = ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'];
+      const rows = tasks.map(task => [
+        task.title,
+        task.description,
+        task.status,
+        task.importance,
+        task.category,
+        task.assignedTo,
+        task.dueDate instanceof Date ? task.dueDate.toLocaleDateString() : 
+          (typeof task.dueDate === 'object' && task.dueDate && 'seconds' in task.dueDate) ? 
+            new Date(task.dueDate.seconds * 1000).toLocaleDateString() : ''
+      ]);
+      const csvContent = [headers, ...rows].map(e => e.join(',')).join('\n');
+      const bom = '\uFEFF';
+      const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tasks.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+      this.snackBar.open('CSVファイルをエクスポートしました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('CSVのエクスポートに失敗しました:', error);
+      this.snackBar.open('CSVのエクスポートに失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  async exportToExcel(): Promise<void> {
+    try {
+      const tasks = await this.taskService.getTasks();
+      const headers = ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'];
+      const rows = tasks.map(task => [
+        task.title,
+        task.description,
+        task.status,
+        task.importance,
+        task.category,
+        task.assignedTo,
+        task.dueDate instanceof Date ? task.dueDate.toLocaleDateString() : 
+          (typeof task.dueDate === 'object' && task.dueDate && 'seconds' in task.dueDate) ? 
+            new Date(task.dueDate.seconds * 1000).toLocaleDateString() : ''
+      ]);
+      const worksheetData = [headers, ...rows];
+      const xlsx = await import('xlsx');
+      const worksheet = xlsx.utils.aoa_to_sheet(worksheetData);
+      const workbook = xlsx.utils.book_new();
+      xlsx.utils.book_append_sheet(workbook, worksheet, 'Tasks');
+      const excelBuffer = xlsx.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'tasks.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+      this.snackBar.open('Excelファイルをエクスポートしました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('Excelのエクスポートに失敗しました:', error);
+      this.snackBar.open('Excelのエクスポートに失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  downloadSampleCSV(): void {
+    const today = new Date();
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(today.getDate() - 2);
+    const twoDaysLater = new Date(today);
+    twoDaysLater.setDate(today.getDate() + 2);
+    const oneWeekLater = new Date(today);
+    oneWeekLater.setDate(today.getDate() + 7);
+
+    const formatDate = (date: Date) => {
+      return date.toISOString().split('T')[0];
+    };
+
+    const sampleData = [
+      ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'],
+      ['タスク1', 'サンプルタスク1の説明', '未着手', '高', '技術的課題', '山田太郎', formatDate(twoDaysAgo)],
+      ['タスク2', 'サンプルタスク2の説明', '進行中', '中', '業務フロー', '鈴木花子', formatDate(today)],
+      ['タスク3', 'サンプルタスク3の説明', '完了', '低', '新機能・改善提案', '佐藤一郎', formatDate(twoDaysLater)],
+      ['タスク4', 'サンプルタスク4の説明', '未着手', '高', 'バグ修正', '田中次郎', formatDate(oneWeekLater)],
+    ];
+
+    const csvContent = sampleData.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'sample_tasks.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.snackBar.open('サンプルCSVファイルをダウンロードしました', '閉じる', { duration: 3000 });
+  }
+
 } 
