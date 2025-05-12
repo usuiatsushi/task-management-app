@@ -567,6 +567,9 @@ mat-form-field {
   animation: none !important;
   cursor: grab;
   position: relative;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .board-task-card:hover,
@@ -634,62 +637,37 @@ mat-form-field {
   border-radius: 4px;
 }
 
-// ドラッグ時の装飾を消す（display: noneやopacity: 0は削除）
+// ドラッグ時の装飾を消す
 .cdk-drag-placeholder,
 .cdk-drag-preview,
 .cdk-drag-animating {
   background: #fff !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-}
-
-// Materialフォームの装飾をリセット
-.board-task-card ::ng-deep .mat-form-field-wrapper,
-.board-task-card ::ng-deep .mat-form-field-flex,
-.board-task-card ::ng-deep .mat-form-field-infix {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-// カード内の左端に余白や装飾が出る場合のリセット
-.board-task-card > *:first-child {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  background: transparent !important;
-  border: none !important;
-}
-
-.board-task-card, 
-.board-task-card * {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-
-.board-task-card button,
-.board-task-card .mdc-button,
-.board-task-card .mat-mdc-button-base {
-  background: transparent !important;
-  box-shadow: none !important;
-  border: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  transition: none !important;
+  animation: none !important;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .cdk-drag {
   background: transparent !important;
   box-shadow: none !important;
   border: none !important;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .cdk-drag-preview {
   transition: none !important;
   animation: none !important;
-  will-change: unset !important;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   pointer-events: none !important;
+  opacity: 0.8;
 }
 
 .board-column .board-task-card {
