@@ -65,6 +65,14 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       }
       return true;
     });
+
+    gantt.attachEvent('onBeforeTaskDrag', (id: string, mode: string, e: any) => {
+      const task = gantt.getTask(id);
+      if (task.status === '完了') {
+        return false;
+      }
+      return true;
+    });
   }
 
   private configureGantt() {
@@ -255,9 +263,15 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   private updateGanttData() {
     if (!this.tasks?.length) return;
 
-    console.log('タイムライン更新開始:', this.tasks);
+    // ステータス順にソート（未着手→進行中→完了）
+    const statusOrder: { [key: string]: number } = { '未着手': 1, '進行中': 2, '完了': 3 };
+    const sortedTasks = [...this.tasks].sort((a, b) => {
+      return (statusOrder[a.status as string] || 99) - (statusOrder[b.status as string] || 99);
+    });
+
+    console.log('タイムライン更新開始:', sortedTasks);
     
-    const ganttData = this.tasks.map((task, i) => {
+    const ganttData = sortedTasks.map((task, i) => {
       try {
         // 開始日の処理
         let startDate: Date;
