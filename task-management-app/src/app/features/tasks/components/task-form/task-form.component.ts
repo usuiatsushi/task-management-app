@@ -256,25 +256,34 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     if (this.taskForm.valid) {
       try {
         this.loading = true;
-        // dueDateを23:59に設定
+        // startDateとdueDateのバリデーション
         const date: Date = this.taskForm.value.dueDate;
         const dueDate = new Date(date);
         dueDate.setHours(23, 59, 0, 0);
-
         const now = new Date();
-        const startDate = now;
-        const duration = 7;
+        const startDate = now; // 新規作成時
+        if (dueDate < startDate) {
+          this.snackBar.open('開始日より前の期限は選択できません', '閉じる', {
+            duration: 5000,
+            panelClass: ['warning-snackbar']
+          });
+          this.loading = false;
+          return;
+        }
+
         // projectIdをルートからも取得し、必ずセット
         let projectId = this.taskForm.value.projectId;
         if (!projectId) {
           projectId = this.route.parent?.snapshot.params['id'] || this.route.snapshot.params['id'] || '';
         }
+
         const taskData = {
           ...this.taskForm.value,
           projectId,
-          startDate: startDate,
-          duration: duration,
+          startDate,
+          duration: Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))),
           dueDate: dueDate,
+          createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()
         };
 
@@ -291,9 +300,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
           const taskRef = doc(this.firestore, 'tasks', this.taskId);
           const currentTask = await getDoc(taskRef);
           const currentTaskData = currentTask.data() as Task;
-          
           await updateDoc(taskRef, taskData);
-          
           if (shouldSyncWithCalendar) {
             if (currentTaskData.calendarEventId) {
               try {

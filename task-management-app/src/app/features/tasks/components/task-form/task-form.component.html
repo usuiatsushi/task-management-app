@@ -2,12 +2,6 @@
   <mat-card>
     <mat-card-header style="display: flex; align-items: center; justify-content: space-between;">
       <mat-card-title>{{ isEditMode ? 'タスクの編集' : '新規タスクの作成' }}</mat-card-title>
-      <div class="header-button-container" style="display: flex; gap: 8px;">
-        <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading" form="taskForm">
-          {{ isEditMode ? '更新' : '作成' }}
-        </button>
-        <button mat-button type="button" (click)="onCancel()" [disabled]="loading">キャンセル</button>
-      </div>
     </mat-card-header>
 
     <mat-card-content>
@@ -90,8 +84,11 @@
             </mat-form-field>
           </div>
         </div>
-        <div class="button-container">
-          <!-- ヘッダーに移動したため削除 -->
+        <div class="form-row" style="justify-content: flex-end; display: flex; gap: 8px; margin-top: 0;">
+          <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading">
+            {{ isEditMode ? '更新' : '作成' }}
+          </button>
+          <button mat-button type="button" (click)="onCancel()" [disabled]="loading">キャンセル</button>
         </div>
       </form>
     </mat-card-content>

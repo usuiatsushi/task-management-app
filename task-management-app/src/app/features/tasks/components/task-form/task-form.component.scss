@@ -430,4 +430,11 @@ mat-error {
   font-size: 0.95em;
   padding: 4px 0;
   margin-top: 4px;
+}
+
+.form-row button[mat-raised-button],
+.form-row button[mat-button] {
+  min-width: 30px !important;
+  padding: 0 8px !important;
+  font-size: 0.95em !important;
 } 
