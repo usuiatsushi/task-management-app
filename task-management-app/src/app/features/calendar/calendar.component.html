@@ -26,9 +26,7 @@
         <div *ngFor="let date of week" 
              class="day-cell"
              [class.today]="isToday(date)"
-             [class.other-month]="!isCurrentMonth(date)"
-             cdkDropList
-             (cdkDropListDropped)="onTaskDrop($event, date)">
+             [class.other-month]="!isCurrentMonth(date)">
           <div class="date-number">{{ date.getDate() }}</div>
           <div class="task-list">
             <ng-container *ngIf="getTasksForDate(date).length > 2; else showAll">
@@ -40,7 +38,6 @@
                 [class.priority-high]="getTasksForDate(date)[0].importance === '高'"
                 [class.priority-medium]="getTasksForDate(date)[0].importance === '中'"
                 [class.priority-low]="getTasksForDate(date)[0].importance === '低'"
-                cdkDrag
                 (click)="openTaskDetail(getTasksForDate(date)[0])"
               >
                 <div class="task-title">{{ getTasksForDate(date)[0].title }}</div>
@@ -50,17 +47,16 @@
               </div>
             </ng-container>
             <ng-template #showAll>
-              <div *ngFor="let task of getTasksForDate(date)"
-                class="task-card"
-                [class.status-not-started]="task.status === '未着手'"
-                [class.status-in-progress]="task.status === '進行中'"
-                [class.status-completed]="task.status === '完了'"
-                [class.priority-high]="task.importance === '高'"
-                [class.priority-medium]="task.importance === '中'"
-                [class.priority-low]="task.importance === '低'"
-                cdkDrag
-                (click)="openTaskDetail(task)">
-                <div class="task-title">{{ task.title }}</div>
+            <div *ngFor="let task of getTasksForDate(date)"
+                 class="task-card"
+                 [class.status-not-started]="task.status === '未着手'"
+                 [class.status-in-progress]="task.status === '進行中'"
+                 [class.status-completed]="task.status === '完了'"
+                 [class.priority-high]="task.importance === '高'"
+                 [class.priority-medium]="task.importance === '中'"
+                 [class.priority-low]="task.importance === '低'"
+                 (click)="openTaskDetail(task)">
+              <div class="task-title">{{ task.title }}</div>
               </div>
             </ng-template>
           </div>
@@ -78,9 +74,7 @@
       <div class="week">
         <div *ngFor="let date of getCurrentWeek()" 
              class="day-cell"
-             [class.today]="isToday(date)"
-             cdkDropList
-             (cdkDropListDropped)="onTaskDrop($event, date)">
+             [class.today]="isToday(date)">
           <div class="date-number">{{ date.getDate() }}</div>
           <div class="task-list">
             <div *ngFor="let task of getTasksForDate(date)"
@@ -91,7 +85,6 @@
                  [class.priority-high]="task.importance === '高'"
                  [class.priority-medium]="task.importance === '中'"
                  [class.priority-low]="task.importance === '低'"
-                 cdkDrag
                  (click)="openTaskDetail(task)">
               <div class="task-title">{{ task.title }}</div>
               <div class="task-meta">
@@ -118,7 +111,6 @@
              [class.priority-high]="task.importance === '高'"
              [class.priority-medium]="task.importance === '中'"
              [class.priority-low]="task.importance === '低'"
-             cdkDrag
              (click)="openTaskDetail(task)">
           <div class="task-title">{{ task.title }}</div>
           <div class="task-meta">

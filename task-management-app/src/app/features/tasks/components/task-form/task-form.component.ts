@@ -82,7 +82,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
-      description: ['', [Validators.required, this.descriptionValidator.bind(this)]],
+      description: ['', [this.descriptionValidator.bind(this)]],
       category: ['', Validators.required],
       status: ['未着手', Validators.required],
       importance: ['中', Validators.required],

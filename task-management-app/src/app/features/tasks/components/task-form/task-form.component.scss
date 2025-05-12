@@ -3,15 +3,15 @@
 .task-form-container {
   max-width: 900px;
   margin: 0 auto 4px auto;
-  padding: 2px 2px;
-  border-radius: 16px;
+  padding: 4px 4px;
+  border-radius: 12px;
   background: #f8f9fb;
   box-shadow: 0 2px 12px #0001;
 
   mat-card {
     max-width: 900px;
     margin: 0 auto;
-    padding: 16px;
+    padding: 8px !important;
 
     mat-card-header {
       margin-bottom: 24px;
@@ -30,9 +30,9 @@
   }
 
   .task-form {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 10px;
   }
 
   .button-container {
@@ -131,24 +131,28 @@
       &.mat-mdc-form-field-type-mat-select,
       &.mat-mdc-form-field-type-mat-native-select {
         .mat-mdc-text-field-wrapper {
-          height: 56px;
+          height: 36px !important;
           
           .mat-mdc-form-field-flex {
-            height: 56px;
+            height: 36px !important;
+            min-height: 36px !important;
             padding: 0 12px;
             align-items: center;
           }
 
           .mat-mdc-form-field-infix {
-            padding: 0;
-            height: 56px;
+            height: 36px !important;
+            min-height: 36px !important;
+            padding: 0 !important;
             display: flex;
             align-items: center;
           }
 
           input.mat-mdc-input-element {
             margin: 0;
-            height: 100%;
+            height: 100% !important;
+            min-height: 36px !important;
+            padding: 0 8px !important;
             line-height: normal;
           }
         }
@@ -257,12 +261,80 @@
         color: white;
       }
     }
+
+    .mdc-text-field,
+    .mdc-notched-outline,
+    .mat-mdc-form-field-infix,
+    .mat-mdc-form-field-flex,
+    .mat-mdc-text-field-wrapper {
+      min-height: 0 !important;
+      height: 32px !important;
+      line-height: 32px !important;
+      box-sizing: border-box !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value {
+      min-height: 0 !important;
+      height: 32px !important;
+      line-height: 32px !important;
+      padding: 0 8px !important;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box !important;
+    }
+
+    .mdc-line-ripple {
+      display: none !important;
+      height: 0 !important;
+    }
+
+    .mat-mdc-form-field-infix,
+    .mat-mdc-form-field-flex,
+    .mat-mdc-text-field-wrapper,
+    .mdc-text-field,
+    .mdc-text-field--outlined {
+      min-height: 0 !important;
+      height: 28px !important;
+      line-height: 28px !important;
+      font-size: 0.95em !important;
+      box-sizing: border-box !important;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    .mat-mdc-input-element,
+    .mat-mdc-select-value {
+      min-height: 0 !important;
+      height: 28px !important;
+      line-height: 28px !important;
+      font-size: 0.95em !important;
+      padding: 0 6px !important;
+    }
+
+    .mat-mdc-select-trigger {
+      min-height: 28px !important;
+      height: 28px !important;
+      font-size: 0.95em !important;
+      align-items: center !important;
+      display: flex !important;
+      padding: 0 6px !important;
+    }
+
+    mat-form-field {
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+    }
+
+    mat-checkbox {
+      margin-right: 4px;
+      transform: scale(0.9);
+    }
   }
 }
 
 .form-row {
-  display: flex;
-  gap: 12px;
+  display: contents;
 }
 
 .form-group, .form-row > * {
@@ -351,4 +423,11 @@ mat-error {
   height: 24px;
   line-height: 24px;
   vertical-align: middle;
+}
+
+.button-container button {
+  min-width: 64px;
+  font-size: 0.95em;
+  padding: 4px 0;
+  margin-top: 4px;
 } 

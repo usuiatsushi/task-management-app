@@ -1,7 +1,13 @@
 <div class="task-form-container">
   <mat-card>
-    <mat-card-header>
+    <mat-card-header style="display: flex; align-items: center; justify-content: space-between;">
       <mat-card-title>{{ isEditMode ? 'タスクの編集' : '新規タスクの作成' }}</mat-card-title>
+      <div class="header-button-container" style="display: flex; gap: 8px;">
+        <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading" form="taskForm">
+          {{ isEditMode ? '更新' : '作成' }}
+        </button>
+        <button mat-button type="button" (click)="onCancel()" [disabled]="loading">キャンセル</button>
+      </div>
     </mat-card-header>
 
     <mat-card-content>
@@ -46,24 +52,11 @@
         </div>
         <div class="form-row">
           <mat-form-field appearance="outline">
-            <mat-label>重要度</mat-label>
-            <mat-select formControlName="importance">
-              <mat-option value="高">高</mat-option>
-              <mat-option value="中">中</mat-option>
-              <mat-option value="低">低</mat-option>
-            </mat-select>
-            <mat-error *ngIf="taskForm.get('importance')?.hasError('required')">
-              {{ getErrorMessage('importance') }}
-            </mat-error>
-          </mat-form-field>
-          <mat-form-field appearance="outline">
             <mat-label>期限日</mat-label>
             <input matInput [matDatepicker]="picker" formControlName="dueDate">
             <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
             <mat-datepicker #picker></mat-datepicker>
           </mat-form-field>
-        </div>
-        <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>担当者</mat-label>
             <input matInput formControlName="assignedTo" placeholder="担当者名を入力">
@@ -71,9 +64,22 @@
               担当者は必須です
             </mat-error>
           </mat-form-field>
-          <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+        </div>
+        <div class="form-row">
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
             <mat-checkbox formControlName="urgent">緊急</mat-checkbox>
-            <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" style="flex: 1;">
+              <mat-label>重要度</mat-label>
+              <mat-select formControlName="importance">
+                <mat-option value="高">高</mat-option>
+                <mat-option value="中">中</mat-option>
+                <mat-option value="低">低</mat-option>
+              </mat-select>
+              <mat-error *ngIf="taskForm.get('importance')?.hasError('required')">
+                {{ getErrorMessage('importance') }}
+              </mat-error>
+            </mat-form-field>
+            <mat-form-field appearance="outline" style="flex: 1;">
               <mat-label>ステータス</mat-label>
               <mat-select formControlName="status">
                 <mat-option value="未着手">未着手</mat-option>
@@ -85,10 +91,7 @@
           </div>
         </div>
         <div class="button-container">
-          <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading">
-            {{ isEditMode ? '更新' : '作成' }}
-          </button>
-          <button mat-button type="button" (click)="onCancel()" [disabled]="loading">キャンセル</button>
+          <!-- ヘッダーに移動したため削除 -->
         </div>
       </form>
     </mat-card-content>

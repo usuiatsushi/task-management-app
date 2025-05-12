@@ -4,7 +4,6 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { MatDialog } from '@angular/material/dialog';
 import { TaskDetailDialogComponent } from '../tasks/components/task-detail-dialog/task-detail-dialog.component';
 import { FormsModule } from '@angular/forms';
@@ -29,7 +28,6 @@ function toDate(d: any): Date | null {
     MatButtonModule,
     MatIconModule,
     MatCardModule,
-    DragDropModule,
     FormsModule,
     MatFormFieldModule,
     MatSelectModule
@@ -149,19 +147,6 @@ export class CalendarComponent implements OnInit {
         return 'low-priority';
       default:
         return '';
-    }
-  }
-
-  onTaskDrop(event: CdkDragDrop<Task[]>, targetDate: Date) {
-    const task = event.item.data;
-    const newDueDate = new Date(targetDate);
-    newDueDate.setHours(0, 0, 0, 0);
-
-    if (this.onTaskUpdate) {
-      this.onTaskUpdate({
-        ...task,
-        dueDate: newDueDate
-      });
     }
   }
 

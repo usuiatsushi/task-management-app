@@ -301,8 +301,8 @@ export class DashboardComponent implements OnChanges {
   completionRateData: ChartData<'line', number[], string> = {
     labels: [],
     datasets: [{
-      label: '完了率',
-      data: [],
+        label: '完了率',
+        data: [],
       borderColor: '#81c784',
       backgroundColor: 'rgba(129,199,132,0.15)',
       tension: 0,
@@ -591,14 +591,14 @@ export class DashboardComponent implements OnChanges {
       const tasksUntilDate = this.tasks.filter(t => {
         const created = toDate(t.createdAt);
         return created && created <= dateObj;
-      });
+          });
       const completedUntilDate = tasksUntilDate.filter(t => {
         const completed = toDate(t.completedAt) || toDate(t.updatedAt) || toDate(t.createdAt);
         return t.status === '完了' && completed && completed <= dateObj;
       }).length;
       completionRateMap[dateStr] = tasksUntilDate.length > 0
         ? Math.round((completedUntilDate / tasksUntilDate.length) * 100)
-        : 0;
+            : 0;
     });
     const completionRateDates = Object.keys(completionRateMap).sort();
     this.completionRateData = {
