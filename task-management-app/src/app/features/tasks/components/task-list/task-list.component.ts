@@ -139,7 +139,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   categories: string[] = [];
   categories$: Observable<string[]>;
   tasks: Task[] = [];
-  projectName: string = '';
+  projectId: string | null = null;
+  projectName: string | null = null;
   private subscription: Subscription | null = null;
 
   // 選択肢の定義
@@ -316,18 +317,14 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
   ngOnInit(): void {
-    this.projectService.loadProjects();
-
-    this.route.params.pipe(
-      take(1),
-      distinctUntilChanged()
-    ).subscribe(async params => {
-      const projectId = params['id'];
-      if (projectId) {
-        const project = await this.projectService.getProject(projectId);
-        this.projectName = project?.name || '';
+    this.route.params.subscribe(params => {
+      this.projectId = params['id'];
+      if (this.projectId) {
+        this.loadProjectName();
       }
     });
+
+    this.projectService.loadProjects();
 
     this.taskService.tasks$.pipe(
       distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
@@ -882,6 +879,11 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       const content = await file.text();
       const fileType = this.detectFileType(file, content);
       
+      if (!this.projectId) {
+        this.snackBar.open('プロジェクトが選択されていません', '閉じる', { duration: 3000 });
+        return;
+      }
+      
       switch (fileType) {
         case FileType.ASANA:
           await this.importAsanaCSV(file);
@@ -898,6 +900,14 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error) {
       console.error('ファイルの処理に失敗しました:', error);
       this.snackBar.open('ファイルの処理に失敗しました', '閉じる', { duration: 3000 });
+    }
+  }
+
+  private async loadProjectName(): Promise<void> {
+    if (!this.projectId) return;
+    const project = await this.projectService.getProject(this.projectId);
+    if (project) {
+      this.projectName = project.name;
     }
   }
 
@@ -962,7 +972,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           updatedAt: Timestamp.fromDate(new Date()),
           completed: row[headers.indexOf('完了')] === '完了' || false,
           startDate: startDate,
-          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
+          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1,
+          projectId: this.projectId || undefined
         };
         return taskData;
       });
@@ -986,7 +997,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       if (errorTasks.length > 0) {
         this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
         setTimeout(() => {
-          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
         }, 9000);
       } else {
         this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
@@ -1058,7 +1069,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           title: title,
           description: row[headers.indexOf('Card Description')]?.trim() || '',
           status: status,
-          importance: '中' as '低' | '中' | '高', // デフォルト値を設定
+          importance: '中' as '低' | '中' | '高',
           category: 'Trello',
           assignedTo: assignedTo,
           createdAt: Timestamp.fromDate(new Date()),
@@ -1067,7 +1078,8 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
           completed: row[headers.indexOf('完了')] === '完了' || false,
           startDate: startDate,
-          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
+          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1,
+          projectId: this.projectId || undefined
         } as const;
         return taskData;
       }).filter(task => task !== null);
@@ -1091,7 +1103,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       if (errorTasks.length > 0) {
         this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
         setTimeout(() => {
-          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
         }, 9000);
       } else {
         this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
@@ -1108,67 +1120,68 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('importSampleCSV called');
     try {
       const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(header => header.trim());
+        const lines = text.split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
       const errorTasks: { title: string; reason: string }[] = [];
       const importDate = new Date();
       const tasks = [];
-      for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
-        const values = lines[i].split(',').map(value => value.trim());
-        const title = values[headers.indexOf('タイトル')] || '';
-        if (!title.trim()) continue;
-        const startDateStr = values[headers.indexOf('開始日')] || values[headers.indexOf('startDate')];
-        const dueDateStr = values[headers.indexOf('期限')];
-        console.log(`row ${i}:`, values);
-        console.log(`row ${i} startDateStr:`, startDateStr, 'dueDateStr:', dueDateStr);
-        const startDate = startDateStr ? new Date(startDateStr) : importDate;
-        const dueDate = dueDateStr ? new Date(dueDateStr) : null;
-        console.log('Processing task:', {
-          title,
-          startDate: startDate.toISOString(),
-          dueDate: dueDate?.toISOString(),
-          importDate: importDate.toISOString()
-        });
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i].trim()) continue;
+          const values = lines[i].split(',').map(value => value.trim());
+          const title = values[headers.indexOf('タイトル')] || '';
+          if (!title.trim()) continue;
+          const startDateStr = values[headers.indexOf('開始日')] || values[headers.indexOf('startDate')];
+          const dueDateStr = values[headers.indexOf('期限')];
+          console.log(`row ${i}:`, values);
+          console.log(`row ${i} startDateStr:`, startDateStr, 'dueDateStr:', dueDateStr);
+          const startDate = startDateStr ? new Date(startDateStr) : importDate;
+          const dueDate = dueDateStr ? new Date(dueDateStr) : null;
+          console.log('Processing task:', {
+            title,
+            startDate: startDate.toISOString(),
+            dueDate: dueDate?.toISOString(),
+            importDate: importDate.toISOString()
+          });
         const validation = this.validateTaskDates(startDate, dueDate, title);
-        console.log('Validation result:', validation);
+          console.log('Validation result:', validation);
         if (!validation.isValid && validation.error) {
-          console.log('Validation failed:', validation.error);
-          errorTasks.push(validation.error);
-        }
+              console.log('Validation failed:', validation.error);
+              errorTasks.push(validation.error);
+            }
         // バリデーションに関係なく全てpush
         const task: Omit<Task, 'id'> = {
-          title: title,
-          description: values[headers.indexOf('説明')] || '',
-          status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
-          importance: (values[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
-          category: values[headers.indexOf('カテゴリ')] || '',
-          assignedTo: values[headers.indexOf('担当者')] || '',
-          dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
+            title: title,
+            description: values[headers.indexOf('説明')] || '',
+            status: (values[headers.indexOf('ステータス')] as '未着手' | '進行中' | '完了') || '未着手',
+            importance: (values[headers.indexOf('重要度')] as '低' | '中' | '高') || '中',
+            category: values[headers.indexOf('カテゴリ')] || '',
+            assignedTo: values[headers.indexOf('担当者')] || '',
+            dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
           userId: 'user1',
-          createdAt: Timestamp.fromDate(new Date()),
-          updatedAt: Timestamp.fromDate(new Date()),
-          completed: values[headers.indexOf('完了')] === '完了' || false,
-          startDate: startDate,
-          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
-        };
-        tasks.push(task);
-      }
-      console.log('Import summary:', {
-        totalTasks: tasks.length,
-        errorTasks: errorTasks.length,
-        errors: errorTasks
-      });
+            createdAt: Timestamp.fromDate(new Date()),
+            updatedAt: Timestamp.fromDate(new Date()),
+            completed: values[headers.indexOf('完了')] === '完了' || false,
+            startDate: startDate,
+            duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1,
+            projectId: this.projectId || undefined
+          };
+          tasks.push(task);
+        }
+        console.log('Import summary:', {
+          totalTasks: tasks.length,
+          errorTasks: errorTasks.length,
+          errors: errorTasks
+        });
       let successCount = 0;
-      for (const task of tasks) {
+        for (const task of tasks) {
         try {
           await this.taskService.createTask(task);
           successCount++;
         } catch (error) {
           console.error('タスクの作成に失敗しました:', error);
         }
-      }
-      if (errorTasks.length > 0) {
+        }
+        if (errorTasks.length > 0) {
         this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
         setTimeout(() => {
           this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });

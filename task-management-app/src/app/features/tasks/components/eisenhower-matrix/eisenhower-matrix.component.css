@@ -37,6 +37,7 @@
   flex-direction: column;
   transition: box-shadow 0.2s, border 0.2s, transform 0.1s;
   cursor: pointer;
+  overflow: hidden;
 }
 .task-card:hover {
   box-shadow: 0 6px 18px #1976d233;
@@ -55,6 +56,10 @@
   color: #222;
   word-break: break-all;
   margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .priority-badge {
   border-radius: 8px;

@@ -10,7 +10,6 @@
       <app-toast-container></app-toast-container>
       <div class="task-list-header">
         <div class="task-list-actions-row">
-          <!-- フィルターボタン -->
           <button mat-button [matMenuTriggerFor]="filterMenu">
             <mat-icon>menu</mat-icon> フィルター
           </button>
@@ -26,13 +25,12 @@
             <mat-icon>delete</mat-icon>
             一括削除
           </button>
-          <!-- プロジェクト内でのみ表示 -->
           <ng-container *ngIf="projectName">
-            <button mat-raised-button color="primary" (click)="exportTasks()">
+            <button mat-button (click)="exportTasks()">
               <mat-icon>download</mat-icon>
               エクスポート
             </button>
-            <button mat-raised-button color="primary" (click)="fileInput.click()">
+            <button mat-button (click)="fileInput.click()">
               <mat-icon>upload</mat-icon>
               インポート
             </button>

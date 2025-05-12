@@ -12,18 +12,23 @@ import { CommonModule } from '@angular/common';
 export class EisenhowerMatrixComponent {
   @Input() tasks: Task[] = [];
 
+  // 完了タスクを除外したタスクリストを取得
+  private get incompleteTasks(): Task[] {
+    return this.tasks.filter(task => task.status !== '完了');
+  }
+
   // 重要度: 高＝importance: '高'、緊急度: urgent
   get quadrant1() {
-    return this.tasks.filter(t => t.importance === '高' && t.urgent);
+    return this.incompleteTasks.filter(t => t.importance === '高' && t.urgent);
   }
   get quadrant2() {
-    return this.tasks.filter(t => t.importance === '高' && !t.urgent);
+    return this.incompleteTasks.filter(t => t.importance === '高' && !t.urgent);
   }
   get quadrant3() {
-    return this.tasks.filter(t => t.importance !== '高' && t.urgent);
+    return this.incompleteTasks.filter(t => t.importance !== '高' && t.urgent);
   }
   get quadrant4() {
-    return this.tasks.filter(t => t.importance !== '高' && !t.urgent);
+    return this.incompleteTasks.filter(t => t.importance !== '高' && !t.urgent);
   }
 
   // Firestore Timestampやオブジェクト型にも対応した日付変換
