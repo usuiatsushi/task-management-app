@@ -245,6 +245,7 @@ export class NavMenuComponent {
       const rows = text.split('\n').map(row => row.split(','));
       const headers = rows[0];
 
+      const errorTasks: { title: string; reason: string }[] = [];
       const tasks = rows.slice(1).map(row => {
         // Asanaのステータスを変換
         const asanaStatus = row[headers.indexOf('Section/Column')] || '';
@@ -263,6 +264,29 @@ export class NavMenuComponent {
             status = '未着手';
         }
 
+        // 日付の取得とバリデーション
+        const startDateStr = row[headers.indexOf('Start Date')] || row[headers.indexOf('開始日')];
+        const dueDateStr = row[headers.indexOf('Due Date')];
+        
+        console.log(`Asana import - Task: ${row[headers.indexOf('Name')]}`);
+        console.log(`Start date string: ${startDateStr}`);
+        console.log(`Due date string: ${dueDateStr}`);
+        
+        const startDate = startDateStr ? new Date(startDateStr) : new Date();
+        const dueDate = dueDateStr ? new Date(dueDateStr) : null;
+
+        console.log(`Parsed dates - Start: ${startDate.toISOString()}, Due: ${dueDate?.toISOString()}`);
+
+        const validation = this.validateTaskDates(startDate, dueDate, row[headers.indexOf('Name')]);
+        console.log(`Validation result for ${row[headers.indexOf('Name')]}:`, validation);
+        
+        if (!validation.isValid) {
+          if (validation.error) {
+            console.log(`Validation error for ${row[headers.indexOf('Name')]}:`, validation.error);
+            errorTasks.push(validation.error);
+          }
+        }
+
         const taskData: Omit<Task, 'id'> = {
           title: row[headers.indexOf('Name')] || '',
           description: row[headers.indexOf('Notes')] || '',
@@ -270,14 +294,19 @@ export class NavMenuComponent {
           importance: row[headers.indexOf('重要度')] as '低' | '中' | '高' || '中',
           category: 'Asana',
           assignedTo: row[headers.indexOf('Assignee')] || '',
-          dueDate: row[headers.indexOf('Due Date')]?.trim() ? Timestamp.fromDate(new Date(row[headers.indexOf('Due Date')])) : null,
+          dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
           userId: '',
           createdAt: Timestamp.fromDate(new Date()),
           updatedAt: Timestamp.fromDate(new Date()),
-          completed: row[headers.indexOf('完了')] === '完了' || false
+          completed: row[headers.indexOf('完了')] === '完了' || false,
+          startDate: startDate,
+          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
         };
         return taskData;
       });
+
+      console.log('Asana import - Error tasks:', errorTasks);
+      console.log('Asana import - Total tasks to import:', tasks.length);
 
       let successCount = 0;
       for (const task of tasks) {
@@ -292,9 +321,14 @@ export class NavMenuComponent {
         }
       }
 
-      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', {
-        duration: 3000
-      });
+      if (errorTasks.length > 0) {
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
+        setTimeout(() => {
+          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+        }, 9000);
+      } else {
+        this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      }
     } catch (error) {
       console.error('Error importing Asana CSV:', error);
       this.snackBar.open('Asana CSVのインポートに失敗しました', '閉じる', {
@@ -304,27 +338,18 @@ export class NavMenuComponent {
   }
 
   async importTrelloCSV(file: File): Promise<void> {
+    console.log('importTrelloCSV called');
     try {
       const text = await file.text();
       const rows = text.split('\n').map(row => row.split(',').map(cell => cell.trim()));
       const headers = rows[0];
-      
-      // ヘッダーのインデックスを取得
-      const titleIndex = headers.indexOf('Card Name');
-      const descriptionIndex = headers.indexOf('Card Description');
-      const statusIndex = headers.indexOf('List Name');
-      const dueDateIndex = headers.indexOf('Due Date');
-      const assigneeIndex = headers.indexOf('Members');
-      const assigneeNameIndex = headers.indexOf('Member Names');
 
+      const errorTasks: { title: string; reason: string }[] = [];
       const tasks = rows.slice(1).map(row => {
-        // タイトルが空の場合はスキップ
-        if (!row[titleIndex]?.trim()) {
-          return null;
-        }
+        const title = row[headers.indexOf('Card Name')]?.trim() || '';
+        if (!title) return null;
 
-        // Trelloのステータスをアプリケーションのステータスに変換
-        const trelloStatus = row[statusIndex] || '';
+        const trelloStatus = row[headers.indexOf('List Name')] || '';
         let status: '未着手' | '進行中' | '完了';
         switch (trelloStatus) {
           case 'To Do':
@@ -340,27 +365,53 @@ export class NavMenuComponent {
             status = '未着手';
         }
 
-        // 担当者名を取得（Member Namesカラムがある場合はそれを使用）
-        const assignedTo = assigneeNameIndex !== -1 && row[assigneeNameIndex] 
-          ? row[assigneeNameIndex].trim() 
-          : row[assigneeIndex]?.trim() || '';
+        // 日付の取得とバリデーション
+        const startDateStr = row[headers.indexOf('Start Date')] || row[headers.indexOf('開始日')];
+        const dueDateStr = row[headers.indexOf('Due Date')];
+        
+        console.log(`Trello import - Task: ${title}`);
+        console.log(`Start date string: ${startDateStr}`);
+        console.log(`Due date string: ${dueDateStr}`);
+        
+        const startDate = startDateStr ? new Date(startDateStr) : new Date();
+        const dueDate = dueDateStr ? new Date(dueDateStr) : null;
+
+        console.log(`Parsed dates - Start: ${startDate.toISOString()}, Due: ${dueDate?.toISOString()}`);
+
+        const validation = this.validateTaskDates(startDate, dueDate, title);
+        console.log(`Validation result for ${title}:`, validation);
+        
+        if (!validation.isValid) {
+          if (validation.error) {
+            console.log(`Validation error for ${title}:`, validation.error);
+            errorTasks.push(validation.error);
+          }
+        }
+
+        const assignedTo = headers.indexOf('Member Names') !== -1 && row[headers.indexOf('Member Names')]
+          ? row[headers.indexOf('Member Names')].trim()
+          : row[headers.indexOf('Members')]?.trim() || '';
 
         const taskData = {
-          title: row[titleIndex]?.trim() || '',
-          description: row[descriptionIndex]?.trim() || '',
-          status: status as '未着手' | '進行中' | '完了',
-          importance: '' as '低' | '中' | '高',
+          title: title,
+          description: row[headers.indexOf('Card Description')]?.trim() || '',
+          status: status,
+          importance: '中' as '低' | '中' | '高', // デフォルト値を設定
           category: 'Trello',
           assignedTo: assignedTo,
           createdAt: Timestamp.fromDate(new Date()),
           updatedAt: Timestamp.fromDate(new Date()),
-          userId: '', // 後で設定
-          dueDate: row[dueDateIndex]?.trim() ? Timestamp.fromDate(new Date(row[dueDateIndex])) : null,
-          completed: row[headers.indexOf('完了')] === '完了' || false
+          userId: '',
+          dueDate: dueDate ? Timestamp.fromDate(dueDate) : null,
+          completed: row[headers.indexOf('完了')] === '完了' || false,
+          startDate: startDate,
+          duration: dueDate && startDate ? Math.max(1, Math.ceil((dueDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))) : 1
         } as const;
-
         return taskData;
       }).filter(task => task !== null);
+
+      console.log('Trello import - Error tasks:', errorTasks);
+      console.log('Trello import - Total tasks to import:', tasks.length);
 
       let successCount = 0;
       for (const task of tasks) {
@@ -369,15 +420,20 @@ export class NavMenuComponent {
           successCount++;
         } catch (error) {
           console.error('Error creating task:', error);
-          this.snackBar.open(`タスクの作成に失敗しました: ${task.title}`, '閉じる', {
+          this.snackBar.open(`タスクの作成に失敗しました: ${(task as any).title}`, '閉じる', {
             duration: 3000
           });
         }
       }
 
-      this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', {
-        duration: 3000
-      });
+      if (errorTasks.length > 0) {
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
+        setTimeout(() => {
+          this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+        }, 9000);
+      } else {
+        this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
+      }
     } catch (error) {
       console.error('Error importing Trello CSV:', error);
       this.snackBar.open('Trello CSVのインポートに失敗しました', '閉じる', {
@@ -458,13 +514,11 @@ export class NavMenuComponent {
         });
         const validation = this.validateTaskDates(startDate, dueDate, title);
         console.log('Validation result:', validation);
-        if (!validation.isValid) {
-          if (validation.error) {
-            console.log('Validation failed:', validation.error);
-            errorTasks.push(validation.error);
-          }
-          continue;
+        if (!validation.isValid && validation.error) {
+          console.log('Validation failed:', validation.error);
+          errorTasks.push(validation.error);
         }
+        // バリデーションに関係なく全てpush
         const task: Omit<Task, 'id'> = {
           title: title,
           description: values[headers.indexOf('説明')] || '',
@@ -497,10 +551,10 @@ export class NavMenuComponent {
         }
       }
       if (errorTasks.length > 0) {
-        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正のためインポートされませんでした`, '閉じる', { duration: 7000 });
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 9000 });
         setTimeout(() => {
           this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
-        }, 7000);
+        }, 9000);
       } else {
         this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
       }

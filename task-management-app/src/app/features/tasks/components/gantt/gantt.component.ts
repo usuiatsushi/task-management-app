@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import 'dhtmlx-gantt';
+import { TimelineControlsComponent } from '../timeline-controls/timeline-controls.component';
 
 declare let gantt: any;
 
 @Component({
   selector: 'app-gantt',
   standalone: true,
-  imports: [],
+  imports: [TimelineControlsComponent],
   templateUrl: './gantt.component.html',
   styleUrl: './gantt.component.scss'
 })
@@ -17,6 +18,8 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   @Output() taskUpdated = new EventEmitter<any>();
 
   private isUpdating = false;
+  public startDate: Date | null = null;
+  public endDate: Date | null = null;
 
   ngOnInit() {
     this.configureGantt();
@@ -35,11 +38,10 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
     // 表示期間の設定
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
-    const endDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 30);
-
-    gantt.config.start_date = startDate;
-    gantt.config.end_date = endDate;
+    this.startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+    this.endDate = new Date(this.startDate.getFullYear(), this.startDate.getMonth(), this.startDate.getDate() + 30);
+    gantt.config.start_date = this.startDate;
+    gantt.config.end_date = this.endDate;
 
     // 週末と今日のスタイル設定
     gantt.templates.scale_cell_class = function(date: any) {
@@ -299,5 +301,14 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
   ngOnDestroy() {
     gantt.clearAll();
+  }
+
+  onDateRangeChange(range: { start: Date; end: Date }) {
+    this.startDate = range.start;
+    this.endDate = range.end;
+    // dhtmlx-ganttの表示範囲を更新
+    gantt.config.start_date = this.startDate;
+    gantt.config.end_date = this.endDate;
+    this.updateGanttData();
   }
 }

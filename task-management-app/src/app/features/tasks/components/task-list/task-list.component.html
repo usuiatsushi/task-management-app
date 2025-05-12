@@ -127,7 +127,7 @@
               <ng-container matColumnDef="dueDate">
                 <td mat-cell *matCellDef="let task">
                   <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-                    <span class="editable-field" (click)="startEditing(task, 'dueDate')">
+                    <span class="editable-field" (click)="startEditing(task, 'dueDate')" [ngClass]="{'invalid-due-date': isInvalidDueDate(task)}">
                       {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
                     </span>
                   </div>
@@ -202,7 +202,7 @@
               <ng-container matColumnDef="dueDate">
                 <td mat-cell *matCellDef="let task">
                   <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-                    <span class="editable-field" (click)="startEditing(task, 'dueDate')">
+                    <span class="editable-field" (click)="startEditing(task, 'dueDate')" [ngClass]="{'invalid-due-date': isInvalidDueDate(task)}">
                       {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
                     </span>
                   </div>
@@ -277,7 +277,7 @@
               <ng-container matColumnDef="dueDate">
                 <td mat-cell *matCellDef="let task">
                   <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'; else editDueDate">
-                    <span class="editable-field" (click)="startEditing(task, 'dueDate')">
+                    <span class="editable-field" (click)="startEditing(task, 'dueDate')" [ngClass]="{'invalid-due-date': isInvalidDueDate(task)}">
                       {{ task.dueDate ? (getDateFromTimestamp(task.dueDate) | date:'yyyy/MM/d') : '期限なし' }}
                     </span>
                   </div>

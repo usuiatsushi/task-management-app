@@ -1081,7 +1081,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           if (validation.error) {
             errorTasks.push(validation.error);
           }
-          return null;
         }
 
         const taskData: Omit<Task, 'id'> = {
@@ -1116,7 +1115,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       if (errorTasks.length > 0) {
-        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正のためインポートされませんでした`, '閉じる', { duration: 7000 });
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 7000 });
       }
       this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
       await this.loadTasks();
@@ -1160,18 +1159,27 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
             status = '未着手';
         }
 
+        // 日付の取得とバリデーション
         const startDateStr = row[headers.indexOf('Start Date')] || row[headers.indexOf('開始日')];
         const dueDateStr = row[headers.indexOf('Due Date')];
+        
+        console.log(`Trello import - Task: ${title}`);
+        console.log(`Start date string: ${startDateStr}`);
+        console.log(`Due date string: ${dueDateStr}`);
         
         const startDate = startDateStr ? new Date(startDateStr) : new Date();
         const dueDate = dueDateStr ? new Date(dueDateStr) : null;
 
+        console.log(`Parsed dates - Start: ${startDate.toISOString()}, Due: ${dueDate?.toISOString()}`);
+
         const validation = this.validateTaskDates(startDate, dueDate, title);
+        console.log(`Validation result for ${title}:`, validation);
+        
         if (!validation.isValid) {
           if (validation.error) {
+            console.log(`Validation error for ${title}:`, validation.error);
             errorTasks.push(validation.error);
           }
-          return null;
         }
 
         const assignedTo = headers.indexOf('Member Names') !== -1 && row[headers.indexOf('Member Names')]
@@ -1182,7 +1190,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
           title: title,
           description: row[headers.indexOf('Card Description')]?.trim() || '',
           status: status,
-          importance: '' as '低' | '中' | '高',
+          importance: '中' as '低' | '中' | '高', // デフォルト値を設定
           category: 'Trello',
           assignedTo: assignedTo,
           createdAt: Timestamp.fromDate(new Date()),
@@ -1195,6 +1203,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
         } as const;
         return taskData;
       }).filter(task => task !== null);
+
+      console.log('Trello import - Error tasks:', errorTasks);
+      console.log('Trello import - Total tasks to import:', tasks.length);
 
       let successCount = 0;
       for (const task of tasks) {
@@ -1210,7 +1221,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       }
 
       if (errorTasks.length > 0) {
-        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正のためインポートされませんでした`, '閉じる', { duration: 7000 });
+        this.snackBar.open(`${errorTasks.length}件のタスクで日付不正がありました。編集画面で期限を修正してください。`, '閉じる', { duration: 7000 });
       }
       this.snackBar.open(`${successCount}件のタスクをインポートしました`, '閉じる', { duration: 3000 });
       await this.loadTasks();
@@ -1426,5 +1437,30 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
     return filtered;
+  }
+
+  // 期限が不正かどうかを判定するメソッド
+  isInvalidDueDate(task: Task): boolean {
+    // 期限が未設定の場合は赤字表示
+    if (!task.dueDate) return true;
+    
+    // 開始日が未設定の場合は赤字表示しない
+    if (!task.startDate) return false;
+    
+    const dueDate = this.getDateFromTimestamp(task.dueDate);
+    const startDate = this.getDateFromTimestamp(task.startDate);
+    
+    // 日付が不正な場合は赤字表示
+    if (isNaN(dueDate.getTime()) || isNaN(startDate.getTime())) return true;
+    
+    // 今日の日付（UTC 0時）
+    const today = new Date();
+    const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
+    
+    // dueDateが今日と同じ場合は赤字にしない
+    if (dueDate.getTime() === todayUTC.getTime()) return false;
+    
+    // 開始日より前の期限の場合は赤字表示
+    return dueDate.getTime() < startDate.getTime();
   }
 } 
