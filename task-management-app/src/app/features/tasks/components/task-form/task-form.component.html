@@ -21,18 +21,12 @@
                 {{ category }}
               </mat-option>
             </mat-select>
-            <mat-error *ngIf="taskForm.get('category')?.hasError('required')">
-              {{ getErrorMessage('category') }}
-            </mat-error>
           </mat-form-field>
         </div>
         <div class="form-row">
           <mat-form-field appearance="outline">
             <mat-label>説明</mat-label>
             <textarea matInput formControlName="description" placeholder="タスクの詳細を入力"></textarea>
-            <mat-error *ngIf="taskForm.get('description')?.hasError('required')">
-              {{ getErrorMessage('description') }}
-            </mat-error>
           </mat-form-field>
           <div class="new-category-form">
             <mat-form-field appearance="outline" class="new-category-input">
@@ -54,9 +48,6 @@
           <mat-form-field appearance="outline">
             <mat-label>担当者</mat-label>
             <input matInput formControlName="assignedTo" placeholder="担当者名を入力">
-            <mat-error *ngIf="taskForm.get('assignedTo')?.hasError('required')">
-              担当者は必須です
-            </mat-error>
           </mat-form-field>
         </div>
         <div class="form-row">
@@ -69,9 +60,6 @@
                 <mat-option value="中">中</mat-option>
                 <mat-option value="低">低</mat-option>
               </mat-select>
-              <mat-error *ngIf="taskForm.get('importance')?.hasError('required')">
-                {{ getErrorMessage('importance') }}
-              </mat-error>
             </mat-form-field>
             <mat-form-field appearance="outline" style="flex: 1;">
               <mat-label>ステータス</mat-label>

@@ -1,6 +1,11 @@
 import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import 'dhtmlx-gantt';
 import { TimelineControlsComponent } from '../timeline-controls/timeline-controls.component';
+import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { TaskService } from '../../services/task.service';
+import { CalendarService } from '../../services/calendar.service';
 
 declare let gantt: any;
 
@@ -41,6 +46,13 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
         break;
     }
   };
+
+  constructor(
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private taskService: TaskService,
+    private calendarService: CalendarService
+  ) {}
 
   ngOnInit() {
     this.configureGantt();
@@ -148,7 +160,7 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     gantt.config.drag_progress = true;
   }
 
-  private handleTaskUpdate(id: string, task: any) {
+  private async handleTaskUpdate(id: string, task: any) {
     if (this.isUpdating) {
       console.log('更新処理中です。重複更新をスキップします。');
       return;
@@ -205,6 +217,42 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
       console.log('更新後のタスク:', updatedTask);
 
+      // カレンダー連携の確認ダイアログを表示
+      const dialogRef = this.dialog.open(CalendarSyncDialogComponent, {
+        width: '350px',
+        data: { taskTitle: updatedTask.title }
+      });
+
+      const result = await dialogRef.afterClosed().toPromise();
+      const shouldSyncWithCalendar = result === true;
+
+      if (shouldSyncWithCalendar) {
+        // 最新のタスク情報を取得
+        const currentTask = await this.taskService.getTask(id);
+        const oldCalendarEventId = currentTask.calendarEventId;
+        
+        // 古いカレンダーイベントを削除
+        if (oldCalendarEventId) {
+          try {
+            await this.calendarService.deleteCalendarEvent({ ...currentTask, calendarEventId: oldCalendarEventId });
+          } catch (error) {
+            console.error('古いカレンダーイベントの削除に失敗しました:', error);
+            this.snackBar.open('古いカレンダーイベントの削除に失敗しました', '閉じる', { duration: 3000 });
+            return;
+          }
+        }
+
+        // 新しいカレンダーイベントを作成
+        try {
+          const newTask = { ...currentTask, dueDate: endTimestamp, calendarEventId: '' };
+          await this.calendarService.addTaskToCalendar(newTask);
+        } catch (error) {
+          console.error('新しいカレンダーイベントの作成に失敗しました:', error);
+          this.snackBar.open('新しいカレンダーイベントの作成に失敗しました', '閉じる', { duration: 3000 });
+          return;
+        }
+      }
+
       // タスクリストを直接更新
       const taskIndex = this.tasks.findIndex(t => t.id === id);
       if (taskIndex !== -1) {
@@ -215,6 +263,9 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
       // タイムラインを即時更新
       this.updateGanttData();
+    } catch (error) {
+      console.error('タスクの更新に失敗しました:', error);
+      this.snackBar.open('タスクの更新に失敗しました', '閉じる', { duration: 3000 });
     } finally {
       setTimeout(() => {
         this.isUpdating = false;

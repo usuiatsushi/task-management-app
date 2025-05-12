@@ -82,12 +82,12 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
-      description: ['', [this.descriptionValidator.bind(this)]],
-      category: ['', Validators.required],
+      description: [''],
+      category: [''],
       status: ['未着手', Validators.required],
-      importance: ['中', Validators.required],
-      dueDate: [new Date(), [Validators.required, this.dueDateValidator.bind(this)]],
-      assignedTo: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(30)]],
+      importance: ['中'],
+      dueDate: [new Date()],
+      assignedTo: [''],
       newCategoryName: [''],
       projectId: [''],
       urgent: [false]
@@ -415,8 +415,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
 
     const errors: ValidationErrors = {};
 
-    if (value.length < 3) {
-      errors['minlength'] = { requiredLength: 3, actualLength: value.length };
+    if (value.length < 2) {
+      errors['minlength'] = { requiredLength: 2, actualLength: value.length };
     }
     if (value.length > 50) {
       errors['maxlength'] = { requiredLength: 50, actualLength: value.length };
