@@ -71,6 +71,9 @@
   min-height: 36px;
   background: #fff;
   transition: background-color 0.2s;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .day-cell.today {
@@ -104,6 +107,9 @@
   font-size: 0.85em;
   margin-bottom: 1px;
   min-height: 12px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .task-card:hover {
@@ -118,6 +124,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
+  max-width: 100%;
+  display: block;
 }
 
 .task-meta {

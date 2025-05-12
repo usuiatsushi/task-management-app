@@ -24,6 +24,9 @@
   font-family: 'Roboto', 'Noto Sans JP', sans-serif;
   font-size: 15px;
   color: #333;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 /* タスクバー両端の円（resize/progress handles等）を非表示にする */
