@@ -28,6 +28,8 @@
         margin-bottom: 5px;
         color: #333;
         font-weight: 500;
+        margin-left: 0;
+        margin-right: 0;
       }
 
       input {
@@ -36,6 +38,9 @@
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 1em;
+        box-sizing: border-box;
+        margin-left: 0;
+        margin-right: 0;
 
         &:focus {
           outline: none;
@@ -54,18 +59,14 @@
       }
     }
 
-    .error-message {
-      color: #f44336;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
     .form-actions {
-      margin-bottom: 20px;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 1rem;
 
       .register-button {
-        width: 100%;
-        padding: 12px;
+        padding: 12px 32px;
         background: #2196f3;
         color: white;
         border: none;
@@ -85,6 +86,12 @@
       }
     }
 
+    .error-message {
+      color: #f44336;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
     .login-link {
       text-align: center;
       color: #666;
@@ -99,4 +106,13 @@
       }
     }
   }
+}
+
+.success-message {
+  color: #28a745;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
 } 

@@ -25,6 +25,7 @@ import { AiAssistantService } from '../../services/ai-assistant.service';
 import { ProjectService } from '../../../projects/services/project.service';
 import { Project } from '../../../projects/models/project.model';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { UserService } from 'src/app/features/auth/services/user.service';
 
 @Component({
   selector: 'app-task-form',
@@ -61,6 +62,7 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   dueDateOnly: Date | null = null;
   dueTimeOnly: string = '23:59'; // デフォルト
   projects: Project[] = [];
+  users: any[] = [];
 
   // カスタムコンパレータを追加
   compareWith = (o1: any, o2: any) => o1 === o2;
@@ -78,7 +80,8 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private ngZone: NgZone,
     private dialog: MatDialog,
     private aiAssistant: AiAssistantService,
-    private projectService: ProjectService
+    private projectService: ProjectService,
+    private userService: UserService
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, this.titleValidator.bind(this)]],
@@ -133,6 +136,9 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         await this.loadTask(taskId);
       }
     }
+
+    // Firestoreからユーザー一覧を取得
+    this.users = await this.userService.getAllUsers();
     } catch (error) {
       console.error('初期化中にエラーが発生しました:', error);
       this.handleError(error);

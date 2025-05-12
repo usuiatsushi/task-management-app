@@ -1,109 +1,100 @@
 <div class="task-detail-container" *ngIf="!loading">
-  <div *ngIf="task" class="task-detail">
-    <div class="task-header">
-      <div class="task-title-section">
-        <h1>{{ task.title }}</h1>
-        <div class="task-meta">
-          <span class="task-status" [ngClass]="task.status">
-            {{ getStatusLabel(task.status) }}
-          </span>
-          <span class="task-priority" [ngClass]="task.importance">
-            {{ getPriorityLabel(task.importance) }}
-          </span>
-          <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+  <div *ngIf="task" class="task-detail-grid">
+    <div class="main-col">
+      <div class="task-header">
+        <div class="task-title-section">
+          <h1>{{ task.title }}</h1>
+          <div class="task-meta">
+            <span class="task-status" [ngClass]="task.status">
+              {{ getStatusLabel(task.status) }}
+            </span>
+            <span class="task-priority" [ngClass]="task.importance">
+              {{ getPriorityLabel(task.importance) }}
+            </span>
+            <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+          </div>
+        </div>
+        <div class="task-actions">
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="editTask()">
+              <mat-icon>edit</mat-icon>
+              <span>編集</span>
+            </button>
+            <button mat-menu-item (click)="deleteTask()">
+              <mat-icon>delete</mat-icon>
+              <span>削除</span>
+            </button>
+          </mat-menu>
         </div>
       </div>
-      <div class="task-actions">
-        <button mat-icon-button [matMenuTriggerFor]="menu">
-          <mat-icon>more_vert</mat-icon>
-        </button>
-        <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="editTask()">
-            <mat-icon>edit</mat-icon>
-            <span>編集</span>
-          </button>
-          <button mat-menu-item (click)="deleteTask()">
-            <mat-icon>delete</mat-icon>
-            <span>削除</span>
-          </button>
-        </mat-menu>
+      <div class="progress-section">
+        <div class="progress-header">
+          <h3>進捗状況</h3>
+          <span class="progress-percentage">{{ task.progress ?? getProgressPercentage() }}%</span>
+        </div>
+        <ng-container *ngIf="task.status !== '進行中'; else sliderBlock">
+          <mat-progress-bar
+            [mode]="'determinate'"
+            [value]="task.progress ?? getProgressPercentage()"
+            [color]="getProgressColor()"
+            class="progress-bar">
+          </mat-progress-bar>
+        </ng-container>
+        <ng-template #sliderBlock>
+          <div class="progress-slider">
+            <div class="slider-inner">
+              <mat-slider style="width: 100%;">
+                <input matSliderThumb
+                  [min]="0"
+                  [max]="100"
+                  [step]="1"
+                  [value]="task.progress ?? 0"
+                  (valueChange)="onSliderChange($event, task)">
+              </mat-slider>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+      <div class="task-description">
+        <h2>説明</h2>
+        <p>{{ task.description || '説明はありません' }}</p>
+      </div>
+      <div class="task-details">
+        <div class="detail-row">
+          <div class="detail-item">
+            <span class="label">担当者:</span>
+            <span class="value">{{ task.assignee?.name || '未割り当て' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">作成日:</span>
+            <span class="value">{{ task.createdAt | date:'yyyy/MM/dd' }}</span>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-item">
+            <span class="label">更新日:</span>
+            <span class="value">{{ task.updatedAt | date:'yyyy/MM/dd' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="stakeholder-section">
+        <app-stakeholder-matrix [taskId]="task.id"></app-stakeholder-matrix>
       </div>
     </div>
-
-    <div class="progress-section">
-      <div class="progress-header">
-        <h3>進捗状況</h3>
-        <span class="progress-percentage">{{ task.progress ?? getProgressPercentage() }}%</span>
-      </div>
-      <ng-container *ngIf="task.status !== '進行中'; else sliderBlock">
-        <mat-progress-bar
-          [mode]="'determinate'"
-          [value]="task.progress ?? getProgressPercentage()"
-          [color]="getProgressColor()"
-          class="progress-bar">
-        </mat-progress-bar>
-      </ng-container>
-      <ng-template #sliderBlock>
-        <div class="progress-slider">
-          <div class="slider-inner">
-            <mat-slider style="width: 100%;">
-              <input matSliderThumb
-                [min]="0"
-                [max]="100"
-                [step]="1"
-                [value]="task.progress ?? 0"
-                (valueChange)="onSliderChange($event, task)">
-            </mat-slider>
-          </div>
-        </div>
-      </ng-template>
-    </div>
-
-    <div class="task-content">
-      <div class="main-content">
-        <div class="task-description">
-          <h2>説明</h2>
-          <p>{{ task.description || '説明はありません' }}</p>
-        </div>
-
-        <div class="task-details">
-          <div class="detail-row">
-            <div class="detail-item">
-              <span class="label">担当者:</span>
-              <span class="value">{{ task.assignee?.name || '未割り当て' }}</span>
-            </div>
-            <div class="detail-item">
-              <span class="label">作成日:</span>
-              <span class="value">{{ task.createdAt | date:'yyyy/MM/dd' }}</span>
-            </div>
-          </div>
-          <div class="detail-row">
-            <div class="detail-item">
-              <span class="label">更新日:</span>
-              <span class="value">{{ task.updatedAt | date:'yyyy/MM/dd' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="comment-section">
-          <app-comment-section [taskId]="task.id"></app-comment-section>
-        </div>
-      </div>
-
-      <div class="side-content">
-        <div class="stakeholder-section">
-          <app-stakeholder-matrix [taskId]="task.id"></app-stakeholder-matrix>
-        </div>
+    <div class="side-col">
+      <div class="comment-section">
+        <app-comment-section [taskId]="task.id"></app-comment-section>
       </div>
     </div>
   </div>
-
   <div *ngIf="!task" class="not-found">
     <h2>タスクが見つかりません</h2>
     <button routerLink="/tasks">タスク一覧に戻る</button>
   </div>
 </div>
-
 <div *ngIf="loading" class="loading">
   <p>読み込み中...</p>
 </div> 

@@ -16,7 +16,6 @@ import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { interval } from 'rxjs';
 import { CommentSectionComponent } from '../comment-section/comment-section.component';
-import { StakeholderMatrixComponent } from '../stakeholder-matrix/stakeholder-matrix.component';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -36,7 +35,6 @@ import { MatMenuModule } from '@angular/material/menu';
     FormsModule,
     ReactiveFormsModule,
     CommentSectionComponent,
-    StakeholderMatrixComponent,
     MatButtonModule,
     MatIconModule,
     MatMenuModule

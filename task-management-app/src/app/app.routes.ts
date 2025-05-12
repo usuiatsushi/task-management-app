@@ -7,6 +7,9 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { AuthService } from './core/services/auth.service';
 import { inject } from '@angular/core';
 import { map } from 'rxjs/operators';
+import { RegisterComponent } from './features/auth/components/register/register.component';
+import { LoginComponent } from './features/auth/components/login/login.component';
+import { ADMIN_ROUTES } from './features/admin/admin.routes';
 
 export const routes: Routes = [
   {
@@ -65,6 +68,12 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
+  },
+  { path: 'auth/register', component: RegisterComponent },
+  { path: 'auth/login', component: LoginComponent },
+  {
+    path: 'admin',
+    children: ADMIN_ROUTES
   }
 ];
 

@@ -28,6 +28,8 @@
         margin-bottom: 5px;
         color: #333;
         font-weight: 500;
+        margin-left: 0;
+        margin-right: 0;
       }
 
       input {
@@ -36,6 +38,9 @@
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 1em;
+        box-sizing: border-box;
+        margin-left: 0;
+        margin-right: 0;
 
         &:focus {
           outline: none;
@@ -61,7 +66,9 @@
     }
 
     .form-actions {
-      margin-bottom: 20px;
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
 
       .login-button {
         width: 100%;
