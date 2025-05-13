@@ -1,0 +1,85 @@
+<div class="dashboard-section flex-row">
+  <div class="dashboard-card progress-card-better">
+    <span class="progress-label-better">
+      <mat-icon class="progress-icon">trending_up</mat-icon>
+      進捗率
+    </span>
+    <div class="progress-bar-container-better">
+      <div class="progress-bar-better" [style.width.%]="progressPercent"></div>
+      <span class="progress-label-value-strong">{{ progressPercent }}%</span>
+    </div>
+  </div>
+  <div class="dashboard-card overdue-card overdue-inline-card overdue-flex overdue-better">
+    <mat-icon class="overdue-icon">warning</mat-icon>
+    <span class="overdue-label">期限切れタスク数</span>
+    <span class="overdue-count-badge">{{ overdueCount }}</span>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="dashboard-card">
+    <h4>ステータス分布</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="pieChartData"
+        [type]="'pie'"
+        [options]="pieChartOptions">
+      </canvas>
+    </div>
+  </div>
+  <div class="dashboard-card">
+    <h4>重要度分布</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="barPriorityData"
+        [type]="'bar'"
+        [options]="barPriorityOptions">
+      </canvas>
+    </div>
+  </div>
+  <div class="dashboard-card">
+    <h4>担当者別タスク数</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="barAssigneeData"
+        [type]="'bar'"
+        [options]="barAssigneeOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>タスク推移</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="lineTaskTrendData"
+        [type]="'line'"
+        [options]="lineTaskTrendOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>カテゴリ別タスク分布</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="categoryChartData"
+        [type]="'pie'"
+        [options]="categoryChartOptions">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="dashboard-card">
+    <h4>完了率の推移</h4>
+    <div class="responsive-chart-container">
+      <canvas baseChart
+        [data]="completionRateData"
+        [type]="'line'"
+        [options]="completionRateOptions">
+      </canvas>
+    </div>
+  </div>
+</div>
+
+

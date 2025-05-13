@@ -1,0 +1,34 @@
+<h2 mat-dialog-title>
+  <mat-icon>assignment</mat-icon>
+  {{ task.title }}
+</h2>
+<mat-dialog-content>
+  <div class="task-detail-row">
+    <mat-icon>event</mat-icon>
+    <span>期限: {{ dueDate | date:'yyyy/MM/dd' }}</span>
+  </div>
+  <div class="task-detail-row">
+    <mat-icon>person</mat-icon>
+    <span>担当: {{ task.assignedTo || '未割り当て' }}</span>
+  </div>
+  <div class="task-detail-row">
+    <mat-icon>flag</mat-icon>
+    <span>重要度: {{ task.importance }}</span>
+  </div>
+  <div class="task-detail-row">
+    <mat-icon>check_circle</mat-icon>
+    <span>ステータス: {{ task.status }}</span>
+  </div>
+  <div class="task-detail-desc" *ngIf="task.description">
+    <mat-icon>notes</mat-icon>
+    <span>{{ task.description }}</span>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button color="primary" (click)="editTask()">編集</button>
+  <button mat-button color="accent" (click)="toggleComplete()">
+    {{ task.status === '完了' ? '未完了に戻す' : '完了にする' }}
+  </button>
+  <button mat-button color="warn" (click)="deleteTask()">削除</button>
+  <button mat-button mat-dialog-close>閉じる</button>
+</mat-dialog-actions>

@@ -1,0 +1,222 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+@import 'https://fonts.googleapis.com/icon?family=Material+Icons';
+
+/* 検索フィールドのスタイル */
+.mat-mdc-form-field {
+  display: flex;
+  align-items: center;
+}
+
+.mat-mdc-form-field .mat-mdc-text-field-wrapper {
+  padding-bottom: 0;
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-flex {
+  align-items: center;
+  min-height: 40px;
+}
+
+.mat-mdc-form-field .mat-mdc-input-element {
+  font-size: 14px;
+  padding-bottom: 0;
+  margin-top: auto;
+  line-height: 1.5;
+  position: relative;
+  top: 16px;
+}
+
+.mat-mdc-form-field .mat-mdc-form-field-infix {
+  padding-top: 0;
+  padding-bottom: 0;
+  display: flex;
+  align-items: center;
+}
+
+.mat-mdc-form-field .mat-mdc-floating-label {
+  top: 28px;
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+  top: 28px;
+}
+
+.mat-mdc-form-field .mdc-text-field--no-label:not(.mdc-text-field--outlined):not(.mdc-text-field--textarea) .mat-mdc-form-field-infix {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* ドロップダウンメニューのスタイル */
+.mat-mdc-select-panel .mat-mdc-option {
+  font-size: 14px !important;
+  min-height: 36px !important;
+  line-height: 36px !important;
+  padding: 0 16px !important;
+}
+
+.mat-mdc-select-panel .mat-mdc-option .mdc-list-item__primary-text {
+  font-size: 14px !important;
+  line-height: 24px !important;
+}
+
+/* チェックマークのスタイル */
+.mat-mdc-option.mdc-list-item--selected .mdc-list-item__start {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.mat-mdc-option .mat-pseudo-checkbox {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.mat-pseudo-checkbox-checked::after {
+  width: 9px !important;
+  height: 4.5px !important;
+  border-width: 0 0 1.5px 1.5px !important;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}
+
+/* ヘッダー圧縮（グローバル適用） */
+.mat-toolbar, .app-header, header {
+  min-height: 50px !important;
+  height: 40px !important;
+  font-size: 18px !important;
+  padding: 0 8px !important;
+  line-height: 40px !important;
+}
+.mat-toolbar-row {
+  min-height: 40px !important;
+  height: 32px !important;
+  padding: 0 !important;
+}
+.app-title, .mat-toolbar .mat-title, .mat-toolbar h1, .mat-toolbar h2 {
+  font-size: 15px !important;
+  margin: 0 !important;
+  line-height: 32px !important;
+  font-weight: 500 !important;
+}
+
+body .cdk-drag-preview,
+body .cdk-drag-animating {
+  background: #fff !important;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.13) !important;
+  border-radius: 2px !important;
+  border: 1px solid #ddd !important;
+  color: #222 !important;
+}
+/* body .cdk-drag-preview *, body .cdk-drag-animating * { ... } */
+
+body > mat-card.cdk-drag-preview,
+body > .cdk-drag-preview.board-task-card {
+  position: relative !important;
+  border: none !important;
+  box-shadow: 0 6px 24px rgba(25, 118, 210, 0.10), 0 1.5px 6px rgba(0,0,0,0.07) !important;
+  background: #fff !important;
+  border-radius: 18px !important;
+  padding: 28px 24px 20px 32px !important;
+  margin-bottom: 4px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s !important;
+  animation: fadeInUp 0.5s !important;
+  overflow: visible !important;
+  padding-left: 24px !important;
+  min-width: 240px !important;
+  z-index: 9999 !important;
+  box-sizing: border-box !important;
+}
+
+body > mat-card.cdk-drag-preview::before,
+body > .cdk-drag-preview.board-task-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 18px; bottom: 18px;
+  width: 6px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #1976d2 0%, #64b5f6 100%);
+  display: block;
+}
+
+body > mat-card.cdk-drag-preview .board-task-title,
+body > .cdk-drag-preview.board-task-card .board-task-title {
+  font-weight: 700 !important;
+  font-size: 1.18em !important;
+  margin-bottom: 6px !important;
+  color: #222 !important;
+  letter-spacing: 0.01em !important;
+  line-height: normal !important;
+}
+
+body > mat-card.cdk-drag-preview .board-task-meta,
+body > .cdk-drag-preview.board-task-card .board-task-meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 18px !important;
+  font-size: 0.98em !important;
+  color: #888 !important;
+  margin-bottom: 8px !important;
+  line-height: normal !important;
+}
+
+body > mat-card.cdk-drag-preview .board-task-actions,
+body > .cdk-drag-preview.board-task-card .board-task-actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: flex-end !important;
+  margin-top: 8px !important;
+}
+
+body > mat-card.cdk-drag-preview .board-task-actions button,
+body > .cdk-drag-preview.board-task-card .board-task-actions button {
+  background: #f5f7fa !important;
+  border-radius: 50% !important;
+  color: #1976d2 !important;
+  opacity: 0.85 !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.07) !important;
+  border: none !important;
+  font-size: 16px !important;
+  transition: background 0.15s, color 0.15s, opacity 0.15s !important;
+  padding: 0 !important;
+}
+
+body > mat-card.cdk-drag-preview .board-task-actions button mat-icon,
+body > .cdk-drag-preview.board-task-card .board-task-actions button mat-icon {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+  line-height: 16px !important;
+}
+
+.gantt-bar-complete .gantt_task_content { background: #81c784 !important; }
+.gantt-bar-progress .gantt_task_content { background: #ffb74d !important; }
+.gantt-bar-default .gantt_task_content { background: #64b5f6 !important; }
+

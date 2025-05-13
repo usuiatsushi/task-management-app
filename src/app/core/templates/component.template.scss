@@ -1,0 +1,43 @@
+@use '@angular/material' as mat;
+
+:host {
+  display: block;
+  width: 100%;
+  
+  .component-container {
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  // Material UI フォームフィールドのカスタマイズ
+  .mat-mdc-form-field {
+    width: 100%;
+    margin-bottom: 16px;
+
+    .mat-mdc-form-field-infix {
+      padding: 8px 0;
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+    }
+
+    .mdc-text-field--outlined {
+      --mdc-outlined-text-field-container-height: 56px;
+    }
+
+    textarea.mat-mdc-input-element {
+      margin: 0;
+      padding: 8px 0;
+      line-height: 1.5;
+    }
+  }
+
+  // アクションボタンのスタイル
+  .action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+    margin-top: 24px;
+  }
+} 

@@ -1,0 +1,89 @@
+<div class="task-form-container">
+  <mat-card>
+    <mat-card-header style="display: flex; align-items: center; justify-content: space-between;">
+      <mat-card-title>{{ isEditMode ? 'タスクの編集' : '新規タスクの作成' }}</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="taskForm" (ngSubmit)="onSubmit()" class="task-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>タイトル</mat-label>
+            <input matInput formControlName="title" placeholder="タスクのタイトルを入力">
+            <mat-error *ngIf="taskForm.get('title')?.hasError('required')">
+              {{ getErrorMessage('title') }}
+            </mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>カテゴリ</mat-label>
+            <mat-select formControlName="category">
+              <mat-option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>説明</mat-label>
+            <textarea matInput formControlName="description" placeholder="タスクの詳細を入力"></textarea>
+          </mat-form-field>
+          <div class="new-category-form">
+            <mat-form-field appearance="outline" class="new-category-input">
+              <mat-label>新しいカテゴリ</mat-label>
+              <input matInput formControlName="newCategoryName" placeholder="カテゴリ名を入力">
+            </mat-form-field>
+            <button mat-button color="primary" (click)="addNewCategory()" [disabled]="!taskForm.get('newCategoryName')?.value">
+              +追加
+            </button>
+          </div>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>期限日</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="dueDate">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>担当者</mat-label>
+            <mat-select formControlName="assignedTo">
+              <mat-option value="">選択してください</mat-option>
+              <mat-option *ngFor="let user of users" [value]="user.displayName">
+                {{ user.displayName }}（{{ user.email }}）
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+            <mat-checkbox formControlName="urgent">緊急</mat-checkbox>
+            <mat-form-field appearance="outline" style="flex: 1;">
+              <mat-label>重要度</mat-label>
+              <mat-select formControlName="importance">
+                <mat-option value="高">高</mat-option>
+                <mat-option value="中">中</mat-option>
+                <mat-option value="低">低</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" style="flex: 1;">
+              <mat-label>ステータス</mat-label>
+              <mat-select formControlName="status">
+                <mat-option value="未着手">未着手</mat-option>
+                <mat-option value="進行中">進行中</mat-option>
+                <mat-option value="完了">完了</mat-option>
+              </mat-select>
+              <mat-error>{{ getErrorMessage('status') }}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+        <div class="form-row" style="justify-content: flex-end; display: flex; gap: 8px; margin-top: 0;">
+          <button mat-raised-button color="primary" type="submit" [disabled]="!taskForm.valid || loading">
+            {{ isEditMode ? '更新' : '作成' }}
+          </button>
+          <button mat-button type="button" (click)="onCancel()" [disabled]="loading">キャンセル</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div> 

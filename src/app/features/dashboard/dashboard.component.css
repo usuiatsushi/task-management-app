@@ -1,0 +1,229 @@
+.dashboard-section {
+  margin-bottom: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.progress-bar-container {
+  position: relative;
+  background: #eee;
+  border-radius: 8px;
+  height: 20px;
+  width: 220px;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  background: #1976d2;
+  height: 100%;
+  border-radius: 8px 0 0 8px;
+  transition: width 0.5s;
+}
+
+.progress-label {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 0.95em;
+  line-height: 20px;
+}
+
+.dashboard-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dashboard-card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 4px;
+  min-width: 120px;
+  max-width: 300px;
+  flex: 1 1 350px;
+  font-size: 0.9em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.responsive-chart-container {
+  width: 100%;
+  max-width: 280px;
+  height: 280px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overdue-card {
+  background: #ffeaea;
+  color: #d32f2f;
+  text-align: center;
+}
+
+.overdue-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.flex-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.overdue-inline-card {
+  margin-bottom: 0;
+  min-width: 120px;
+  max-width: 180px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.overdue-flex {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-direction: row !important;
+}
+
+.overdue-flex .overdue-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.dashboard-card h4,
+.progress-bar-container,
+.progress-label {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.overdue-better {
+  background: linear-gradient(90deg, #ffeaea 60%, #ffd6d6 100%);
+  border: 1.5px solid #ffbdbd;
+  box-shadow: 0 4px 16px rgba(211,47,47,0.08);
+  border-radius: 16px;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  max-width: 200px;
+  height: 40px;
+}
+
+.overdue-icon {
+  color: #d32f2f;
+  font-size: 1.3rem;
+}
+
+.overdue-label {
+  font-size: 0.85rem;
+  color: #d32f2f;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.overdue-count-badge {
+  background: #d32f2f;
+  color: #fff;
+  border-radius: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  font-weight: bold;
+  margin-left: 6px;
+  box-shadow: 0 2px 8px rgba(211,47,47,0.12);
+}
+
+.progress-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-card-better {
+  background: linear-gradient(90deg, #e3f2fd 60%, #fffde7 100%);
+  border: 1.5px solid #b3e5fc;
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.10);
+  border-radius: 16px;
+  padding: 4px 16px;
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  gap: 14px;
+  min-width: 200px;
+  max-width: 420px;
+  width: 100%;
+  height: 44px;
+}
+
+.progress-label-better {
+  font-size: 1.05rem;
+  color: #1976d2;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress-icon {
+  font-size: 1.2em;
+  color: #1976d2;
+}
+
+.progress-bar-container-better {
+  position: relative;
+  background: #e3eafc;
+  border-radius: 8px;
+  height: 20px;
+  width: 100%;
+  min-width: 120px;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(25, 118, 210, 0.08);
+}
+
+.progress-bar-better {
+  background: linear-gradient(90deg, #1976d2 60%, #64b5f6 100%);
+  height: 100%;
+  border-radius: 8px 0 0 8px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.progress-label-value-strong {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 1.1em;
+  line-height: 20px;
+  color: #1976d2;
+  text-shadow: 0 1px 2px #fff, 0 0 2px #1976d2;
+}
+

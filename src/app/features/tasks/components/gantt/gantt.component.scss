@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 600px;
+  height: 500px;
+  min-height: 400px;
+}
+#gantt_here {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 600px;
+  min-height: 400px;
+}
+
+.gantt-bar-complete .gantt_task_content { background: #43a047 !important; }
+.gantt-bar-progress .gantt_task_content { background: #1976d2 !important; }
+.gantt-bar-default {
+  background-color: #E3F2FD;
+  border-color: #BBDEFB;
+}
+.gantt-weekend { background: #fbe9e7 !important; }
+.gantt-today { background: #fff59d !important; }
+:host ::ng-deep .gantt_task_content {
+  font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+  font-size: 15px;
+  color: #333;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* タスクバー両端の円（resize/progress handles等）を非表示にする */
+:host ::ng-deep .gantt_task_progress_drag,
+:host ::ng-deep .gantt_task_resize,
+:host ::ng-deep .gantt_link_point,
+:host ::ng-deep .gantt_task_start_date,
+:host ::ng-deep .gantt_task_end_date {
+  display: none !important;
+}

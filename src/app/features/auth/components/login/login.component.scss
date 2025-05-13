@@ -1,0 +1,129 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: #f5f5f5;
+
+  h1 {
+    margin-bottom: 30px;
+    color: #333;
+  }
+
+  .login-form {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+
+    .form-group {
+      margin-bottom: 20px;
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+        font-weight: 500;
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1em;
+        box-sizing: border-box;
+        margin-left: 0;
+        margin-right: 0;
+
+        &:focus {
+          outline: none;
+          border-color: #2196f3;
+        }
+
+        &.is-invalid {
+          border-color: #f44336;
+        }
+      }
+
+      .invalid-feedback {
+        color: #f44336;
+        font-size: 0.9em;
+        margin-top: 5px;
+      }
+    }
+
+    .error-message {
+      color: #f44336;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+
+      .login-button {
+        width: 100%;
+        padding: 12px;
+        background: #2196f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover:not(:disabled) {
+          background: #1976d2;
+        }
+
+        &:disabled {
+          background: #bdbdbd;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .register-link {
+      text-align: center;
+      color: #666;
+
+      a {
+        color: #2196f3;
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+.google-login-button {
+  margin-top: 16px;
+  background: #4285f4;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 1em;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover {
+    background: #3367d6;
+  }
+} 

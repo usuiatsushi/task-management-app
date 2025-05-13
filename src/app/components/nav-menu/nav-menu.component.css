@@ -1,0 +1,66 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+mat-nav-list {
+  padding-top: 0;
+}
+
+a[mat-list-item] {
+  height: 48px;
+}
+
+mat-icon {
+  margin-right: 8px;
+}
+
+.export-submenu {
+  padding-left: 16px;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.export-submenu a[mat-list-item] {
+  height: 40px;
+  font-size: 14px;
+}
+
+.export-submenu mat-icon {
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  margin-right: 16px;
+}
+
+.project-submenu {
+  padding-left: 16px;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.project-submenu a[mat-list-item] {
+  height: 48px;
+}
+
+.project-submenu mat-icon {
+  margin-right: 16px;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.expand-icon {
+  margin-left: 0;
+  position: relative;
+  top: 6px;
+  font-size: 24px;
+}
+
+.project-list-item {
+  display: flex;
+  align-items: center;
+}
+
+.project-title {
+  font-size: 16px;
+} 

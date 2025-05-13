@@ -1,0 +1,92 @@
+<div class="login-container">
+  <h1>ログイン</h1>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+    <div class="form-group">
+      <label for="email">メールアドレス</label>
+      <input
+        type="email"
+        id="email"
+        formControlName="email"
+        [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+        <span *ngIf="loginForm.get('email')?.errors?.['required']">メールアドレスを入力してください</span>
+        <span *ngIf="loginForm.get('email')?.errors?.['email']">有効なメールアドレスを入力してください</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">パスワード</label>
+      <input
+        type="password"
+        id="password"
+        formControlName="password"
+        [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+      >
+      <div class="invalid-feedback" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+        パスワードを入力してください
+      </div>
+    </div>
+
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="login-button" [disabled]="loginForm.invalid">
+        ログイン
+      </button>
+      <button type="button" class="login-button" (click)="onAdminLogin()" [disabled]="loginForm.invalid">
+        管理者としてログイン
+      </button>
+    </div>
+
+    <div class="register-link">
+      アカウントをお持ちでない方は
+      <a routerLink="/auth/register">こちら</a>
+      から登録してください
+    </div>
+
+    <!-- Googleログインボタンを追加 -->
+    <button type="button" (click)="loginWithGoogle()" class="google-login-button">
+      <img src="assets/svg/light/web_light_rd_na.svg" alt="Google" width="20" height="20">
+      Googleでログイン
+    </button>
+
+    <!-- パスワードリセットフォーム -->
+    <div class="password-reset-section" style="margin-top: 32px; padding: 16px; background: #f5f7fa; border-radius: 8px; box-shadow: 0 1px 4px #0001;">
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+        <mat-icon color="primary">lock_reset</mat-icon>
+        <span style="font-weight: 500; font-size: 1.1em;">パスワードをお忘れの方</span>
+      </div>
+      <div style="font-size: 0.95em; color: #666; margin-bottom: 12px;">
+        ご登録のメールアドレスを入力し「リセットメール送信」を押してください。<br>
+        パスワード再設定用のメールが届きます。
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input
+          type="email"
+          id="resetEmail"
+          [(ngModel)]="resetPasswordEmail"
+          [ngModelOptions]="{standalone: true}"
+          placeholder="メールアドレスを入力"
+          name="resetEmail"
+          style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em;"
+        >
+        <button type="button" (click)="resetPassword()" style="padding: 8px 16px; background: #1976d2; color: #fff; border: none; border-radius: 4px; font-weight: 500; cursor: pointer;">
+          リセットメール送信
+        </button>
+      </div>
+      <div class="reset-message" *ngIf="resetMessage" style="color: #388e3c; margin-top: 8px; font-size: 0.97em;">{{ resetMessage }}</div>
+      <div class="reset-error" *ngIf="resetError" style="color: #d32f2f; margin-top: 8px; font-size: 0.97em;">{{ resetError }}</div>
+    </div>
+
+    <div *ngIf="showResendVerification" class="verify-section" style="margin-top: 16px;">
+      <button type="button" (click)="resendVerificationEmail()" style="background: #ffa726; color: #fff; border: none; border-radius: 4px; padding: 8px 16px; font-weight: 500; cursor: pointer;">
+        認証メールを再送信
+      </button>
+      <div class="verify-error" *ngIf="emailVerificationError" style="color: #d32f2f; margin-top: 8px; font-size: 0.97em;">{{ emailVerificationError }}</div>
+    </div>
+  </form>
+</div> 

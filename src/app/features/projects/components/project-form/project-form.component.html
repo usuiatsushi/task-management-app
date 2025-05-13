@@ -1,0 +1,59 @@
+<div class="project-form-container">
+  <h1>{{ isEditMode ? 'プロジェクトの編集' : '新規プロジェクト' }}</h1>
+
+  <form [formGroup]="projectForm" (ngSubmit)="onSubmit()" class="project-form">
+    <div class="custom-field">
+      <span class="input-icon material-icons">folder</span>
+      <input id="projectName" type="text" formControlName="name" class="custom-input" placeholder=" " />
+      <label for="projectName">プロジェクト名</label>
+    </div>
+    <div class="custom-field">
+      <span class="input-icon material-icons">notes</span>
+      <textarea
+        id="projectDesc"
+        formControlName="description"
+        class="custom-input"
+        placeholder=" "
+        (input)="autoResize($event)"
+        #descTextarea
+      ></textarea>
+      <label for="projectDesc">説明</label>
+    </div>
+
+    <div class="member-section">
+      <div class="member-header">
+        <span><mat-icon>manage_accounts</mat-icon>メンバー管理</span>
+      </div>
+      <div class="member-list">
+        <div *ngFor="let member of memberInfos" class="member-item">
+          <span>{{ member.displayName || member.email || member.uid }}</span>
+          <button mat-icon-button color="warn" (click)="removeMember(member.uid)" [disabled]="members.length === 1">
+            <mat-icon>remove_circle</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="add-member-row">
+        <mat-form-field class="full-width">
+          <mat-label>アカウントから追加</mat-label>
+          <mat-select [(ngModel)]="selectedUserUid" [ngModelOptions]="{standalone: true}">
+            <mat-option *ngFor="let user of allUsers" [value]="user.uid" [disabled]="members.includes(user.uid)">
+              {{ (user.displayName ? user.displayName + ' ' : '') + '(' + user.email + ')' }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="button"
+          (click)="addMemberByUid()"
+          [disabled]="memberLoading || !selectedUserUid || members.includes(selectedUserUid)">
+          <mat-icon>person_add</mat-icon> 追加
+        </button>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button mat-button type="button" (click)="onCancel()">キャンセル</button>
+      <button mat-raised-button color="primary" type="submit" [disabled]="projectForm.invalid">
+        {{ isEditMode ? '更新' : '作成' }}
+      </button>
+    </div>
+  </form>
+</div> 
