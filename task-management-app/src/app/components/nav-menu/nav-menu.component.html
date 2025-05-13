@@ -1,4 +1,13 @@
 <mat-nav-list>
+  <a mat-list-item (click)="navigateTo('/tasks')">
+    <mat-icon matListItemIcon>list</mat-icon>
+    <span matListItemTitle>タスク一覧</span>
+  </a>
+  <a mat-list-item (click)="navigateTo('/tasks/new')">
+    <mat-icon matListItemIcon>add</mat-icon>
+    <span matListItemTitle>新規タスク作成</span>
+  </a>
+
   <a mat-list-item (click)="navigateTo('/projects')" class="project-list-item">
     <mat-icon matListItemIcon>folder</mat-icon>
     <span class="project-title">プロジェクト</span>

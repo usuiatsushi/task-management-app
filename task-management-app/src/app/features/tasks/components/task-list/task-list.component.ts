@@ -235,7 +235,7 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   quickFilters: string[] = [];
   private quickFilters$ = new BehaviorSubject<string[]>([]);
-  filteredTasks$: Observable<Task[]> = of([]);
+  filteredTasks$!: Observable<Task[]>;
   currentUserId: string = '';
 
   constructor(
@@ -317,14 +317,21 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      this.projectId = params['id'];
-      if (this.projectId) {
-        this.loadProjectName();
-      }
+    this.projectService.loadProjects().then(() => {
+      this.route.params.subscribe(params => {
+        this.projectId = params['id'];
+        if (this.projectId) {
+          this.loadProjectName();
+        }
+        // プロジェクトIDが変わるたびにfilteredTasks$を再生成
+        this.filteredTasks$ = combineLatest([
+          this.taskService.tasks$,
+          this.quickFilters$
+        ]).pipe(
+          map(([tasks, quickFilters]) => this.filterTasks(tasks, quickFilters))
+        );
+      });
     });
-
-    this.projectService.loadProjects();
 
     this.taskService.tasks$.pipe(
       distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
@@ -371,12 +378,6 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.authService.getCurrentUser().then(user => {
       this.currentUserId = user?.uid || '';
-      this.filteredTasks$ = combineLatest([
-        this.taskService.tasks$,
-        this.quickFilters$
-      ]).pipe(
-        map(([tasks, quickFilters]) => this.filterTasks(tasks, quickFilters))
-      );
     });
   }
 
@@ -1195,8 +1196,9 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  getTasksByStatus(status: string): Task[] {
-    return this.dataSource.data.filter(task => task.status === status);
+  getTasksByStatus(tasks: Task[] | null, status: string): Task[] {
+    if (!tasks) return [];
+    return tasks.filter(task => task.status === status);
   }
 
   async onTaskDrop(event: CdkDragDrop<any[]>, newStatus: string) {
@@ -1272,6 +1274,15 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   filterTasks(tasks: Task[], quickFilters: string[]): Task[] {
     let filtered = tasks;
+    // プロジェクトIDによるフィルタリング
+    if (this.projectId) {
+      filtered = filtered.filter(t => t.projectId === this.projectId);
+    } else if (this.currentUserId) {
+      filtered = filtered.filter(t => t.userId === this.currentUserId);
+    } else {
+      // どちらもなければ空配列
+      filtered = [];
+    }
     if (quickFilters.includes('incomplete')) {
       filtered = filtered.filter(t => t.status !== '完了');
     }
