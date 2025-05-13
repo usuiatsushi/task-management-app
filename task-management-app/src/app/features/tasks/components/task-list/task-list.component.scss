@@ -1,0 +1,491 @@
+.task-list-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.task-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.task-list-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  .selected-count {
+    margin-left: 10px;
+    color: #666;
+    font-size: 14px;
+  }
+}
+
+.task-list-filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+
+  .mat-mdc-form-field {
+    min-width: 120px;
+    width: auto;
+  }
+
+  .status-field {
+    min-width: 150px;
+  }
+
+  .priority-field {
+    min-width: 120px;
+  }
+
+  .category-field {
+    min-width: 180px;
+  }
+
+  ::ng-deep {
+    .mat-mdc-form-field-infix {
+      padding-top: 8px;
+      padding-bottom: 12px;
+    }
+
+    .mat-mdc-select-value {
+      position: relative;
+      top: 12px;
+      font-size: 14px;
+    }
+
+    .mat-mdc-select-arrow-wrapper {
+      position: relative;
+      top: 10px;
+    }
+
+    .mat-mdc-select-panel {
+      .mat-mdc-option {
+        font-size: 14px !important;
+        min-height: 36px !important;
+        line-height: 36px !important;
+        padding: 0 16px !important;
+
+        .mdc-list-item__primary-text {
+          font-size: 14px !important;
+          line-height: 36px !important;
+        }
+      }
+    }
+  }
+}
+
+.task-list-table {
+  width: 100%;
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    min-width: 1000px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  th, td {
+    height: 48px !important;
+    padding: 0 8px !important;
+    vertical-align: middle !important;
+    line-height: 48px !important;
+  }
+
+  th {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  td {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  .mat-column-select {
+    width: 50px;
+    padding: 0 !important;
+
+    ::ng-deep {
+      .mdc-checkbox {
+        padding: 0;
+        margin: 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 48px;
+      }
+    }
+  }
+
+  th.mat-column-select {
+    ::ng-deep {
+      .mdc-checkbox {
+        margin-top: 0;
+      }
+    }
+  }
+
+  td.mat-column-select,
+  th.mat-column-select {
+    padding: 0 !important;
+    vertical-align: middle !important;
+  }
+
+  .mat-column-title {
+    width: 300px;
+    padding-left: 0 !important;
+  }
+
+  .mat-column-category {
+    width: 200px;
+  }
+
+  .mat-column-status {
+    width: 140px;
+  }
+
+  .mat-column-priority {
+    width: 100px;
+  }
+
+  td.mat-column-dueDate {
+    width: 100px;
+    padding: 0 !important;
+    height: 48px !important;
+    position: relative;
+
+    .editable-field {
+      width: 100%;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.87);
+      cursor: pointer;
+      padding-left: 8px;
+    }
+
+    .edit-field {
+      width: 100%;
+      height: 48px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      position: relative;
+      z-index: 1;
+
+      ::ng-deep {
+        .mat-mdc-form-field {
+          width: 100%;
+          height: 48px;
+
+          .mdc-text-field {
+            height: 48px;
+            padding: 0;
+            background: white;
+            border: none;
+          }
+
+          .mat-mdc-form-field-flex {
+            height: 48px;
+            padding: 0;
+            background: white;
+            border: none;
+          }
+
+          .mat-mdc-form-field-infix {
+            width: calc(100% - 40px);
+            min-height: unset;
+            padding: 0;
+            border: none;
+          }
+
+          input.mat-mdc-input-element {
+            width: 100%;
+            height: 48px;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            border: none;
+            background: white;
+            line-height: 28px;
+            padding-bottom: 20px;
+          }
+
+          .mat-datepicker-toggle {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            z-index: 2;
+
+            .mat-datepicker-toggle-default-icon {
+              width: 20px;
+              height: 20px;
+            }
+          }
+
+          .mdc-line-ripple,
+          .mdc-notched-outline,
+          .mat-mdc-form-field-subscript-wrapper,
+          .mat-mdc-form-field-bottom-align,
+          .mat-mdc-form-field-hint-wrapper,
+          .mat-mdc-form-field-error-wrapper {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+
+  .mat-column-actions {
+    width: 120px;
+    text-align: right;
+  }
+
+  .task-title-link {
+    display: inline-flex;
+    align-items: center;
+    height: 48px;
+  }
+
+  td.mat-column-category,
+  td.mat-column-status,
+  td.mat-column-priority {
+    white-space: nowrap;
+  }
+}
+
+.status-not-started {
+  color: #f44336;
+}
+
+.status-in-progress {
+  color: #ff9800;
+}
+
+.status-completed {
+  color: #4caf50;
+}
+
+.priority-low {
+  color: #2196f3;
+}
+
+.priority-medium {
+  color: #ff9800;
+}
+
+.priority-high {
+  color: #f44336;
+}
+
+.task-title-link {
+  color: #1976d2;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+
+  &.status-not-started {
+    background-color: #f5f5f5;
+    color: #757575;
+  }
+
+  &.status-in-progress {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+
+  &.status-completed {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+}
+
+.priority-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+
+  &.priority-low {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.priority-medium {
+    background-color: #fff3e0;
+    color: #f57c00;
+  }
+
+  &.priority-high {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+// モバイル対応
+@media (max-width: 768px) {
+  .task-list-filters {
+    flex-direction: column;
+    gap: 8px;
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+
+  .task-list-table {
+    overflow-x: auto;
+  }
+}
+
+.new-task-button {
+  padding: 0.5rem 1rem;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+
+  &:hover {
+    background: #357abd;
+  }
+}
+
+.view-button {
+  padding: 0.25rem 0.75rem;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.75rem;
+
+  &:hover {
+    background: #357abd;
+  }
+}
+
+.mat-column-actions {
+  width: 120px;
+  text-align: right;
+
+  button {
+    margin-left: 8px;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+  max-width: 200px;
+
+  ::ng-deep {
+    .mat-mdc-select-value {
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    .mat-mdc-select-trigger {
+      min-height: 28px;
+      padding: 4px 0;
+    }
+
+    .mat-mdc-form-field-infix {
+      min-height: 28px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+}
+
+::ng-deep {
+  .mat-datepicker-content {
+    display: block;
+    border-radius: 4px;
+    background: white;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2),
+                0 4px 5px 0 rgba(0, 0, 0, 0.14),
+                0 1px 10px 0 rgba(0, 0, 0, 0.12);
+    margin-top: 8px !important;
+  }
+
+  .cdk-global-overlay-wrapper {
+    display: flex;
+    position: absolute;
+    z-index: 1000;
+  }
+
+  .cdk-overlay-container {
+    position: fixed;
+    z-index: 1000;
+  }
+
+  .cdk-overlay-connected-position-bounding-box {
+    position: absolute;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mat-datepicker-popup {
+    margin-top: 0;
+  }
+
+  .mat-calendar {
+    width: 296px !important;
+  }
+} 

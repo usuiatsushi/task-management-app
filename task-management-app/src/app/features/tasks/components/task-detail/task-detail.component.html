@@ -1,0 +1,68 @@
+<div class="task-detail-container" *ngIf="!loading">
+  <div *ngIf="task" class="task-detail">
+    <div class="task-header">
+      <h1>{{ task.title }}</h1>
+      <div class="task-actions">
+        <button class="edit-button" [routerLink]="['/tasks', task.id, 'edit']">編集</button>
+        <button class="delete-button" (click)="deleteTask()" [disabled]="deleting">
+          {{ deleting ? '削除中...' : '削除' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="task-meta">
+      <span class="status" [ngClass]="task.status">{{ task.status }}</span>
+      <span class="priority" [ngClass]="task.priority">{{ task.priority }}</span>
+      <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-header">
+        <h3>進捗状況</h3>
+        <span class="progress-percentage">{{ getProgressPercentage() }}%</span>
+      </div>
+      <mat-progress-bar
+        [mode]="'determinate'"
+        [value]="getProgressPercentage()"
+        [color]="getProgressColor()"
+        class="progress-bar">
+      </mat-progress-bar>
+    </div>
+
+    <div class="task-content">
+      <div class="task-section">
+        <h2>詳細</h2>
+        <p>{{ task.description }}</p>
+      </div>
+
+      <div class="task-section">
+        <h2>カテゴリ</h2>
+        <p>{{ task.category }}</p>
+      </div>
+
+      <div class="task-section">
+        <h2>担当者</h2>
+        <p>{{ task.assignedTo }}</p>
+      </div>
+
+      <div class="task-section">
+        <h2>作成日時</h2>
+        <p>{{ task.createdAt | date:'yyyy/MM/dd HH:mm' }}</p>
+      </div>
+
+      <div class="task-section">
+        <h2>更新日時</h2>
+        <p>{{ task.updatedAt | date:'yyyy/MM/dd HH:mm' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="!task" class="not-found">
+    <h2>タスクが見つかりません</h2>
+    <button routerLink="/tasks">タスク一覧に戻る</button>
+  </div>
+</div>
+
+<div *ngIf="loading" class="loading">
+  <p>読み込み中...</p>
+</div> 

@@ -1,0 +1,217 @@
+<div class="task-list-container">
+  <div class="task-list-header">
+    <h1>タスク一覧</h1>
+    <div class="task-list-actions">
+      <button mat-raised-button color="primary" (click)="navigateToNewTask()">
+        <mat-icon>add</mat-icon>
+        新規タスク
+      </button>
+      <button mat-raised-button color="accent" (click)="openBulkEditDialog()" [disabled]="selectedTasks.length === 0">
+        <mat-icon>edit</mat-icon>
+        一括編集
+      </button>
+      <button mat-raised-button color="warn" (click)="openBulkDeleteDialog()" [disabled]="selectedTasks.length === 0">
+        <mat-icon>delete</mat-icon>
+        一括削除
+      </button>
+      <span class="selected-count" *ngIf="selectedTasks.length > 0">
+        {{ selectedTasks.length }}件選択中
+      </span>
+    </div>
+  </div>
+
+  <form [formGroup]="filterForm" class="task-list-filters">
+    <mat-form-field class="category-field">
+      <mat-label>カテゴリ</mat-label>
+      <mat-select formControlName="category">
+        <mat-option value="">すべて</mat-option>
+        <mat-option *ngFor="let category of getUniqueCategories()" [value]="category">
+          {{ category }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="status-field">
+      <mat-label>ステータス</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="">すべて</mat-option>
+        <mat-option value="未着手">未着手</mat-option>
+        <mat-option value="進行中">進行中</mat-option>
+        <mat-option value="完了">完了</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="priority-field">
+      <mat-label>優先度</mat-label>
+      <mat-select formControlName="priority">
+        <mat-option value="">すべて</mat-option>
+        <mat-option value="低">低</mat-option>
+        <mat-option value="中">中</mat-option>
+        <mat-option value="高">高</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>検索</mat-label>
+      <input matInput formControlName="search" placeholder="タスクを検索">
+    </mat-form-field>
+  </form>
+
+  <div class="task-list-table">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            (change)="toggleAllSelection($event)"
+            [checked]="isAllSelected()"
+            [indeterminate]="isSomeSelected()">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let task">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="toggleTaskSelection(task)"
+            [checked]="isSelected(task)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>タイトル</th>
+        <td mat-cell *matCellDef="let task">
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'title'; else editTitle">
+            <a (click)="viewTask(task)" class="task-title-link">{{ task.title }}</a>
+          </div>
+          <ng-template #editTitle>
+            <div class="edit-field">
+              <input type="text"
+                     [value]="task.title"
+                     (blur)="onFieldChange(task, 'title', $event)"
+                     (keyup.enter)="onFieldChange(task, 'title', $event)"
+                     class="title-input">
+            </div>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="category">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>カテゴリ</th>
+        <td mat-cell *matCellDef="let task">
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'category'; else editCategory">
+            <span class="editable-field" (click)="startEditing(task, 'category')">{{ task.category }}</span>
+          </div>
+          <ng-template #editCategory>
+            <mat-form-field class="edit-field">
+              <mat-select
+                #categorySelect
+                [value]="task.category"
+                (selectionChange)="onSelectChange(task, 'category', $event)"
+                (closed)="stopEditing()"
+                panelClass="task-field-select">
+                <mat-option *ngFor="let category of getUniqueCategories()" [value]="category">
+                  {{ category }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>ステータス</th>
+        <td mat-cell *matCellDef="let task">
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'status'; else editStatus">
+            <span class="editable-field" (click)="startEditing(task, 'status')" [class]="getStatusClass(task.status)">
+              {{ task.status }}
+            </span>
+          </div>
+          <ng-template #editStatus>
+            <mat-form-field class="edit-field">
+              <mat-select
+                [value]="task.status"
+                (selectionChange)="onSelectChange(task, 'status', $event)"
+                (closed)="stopEditing()"
+                panelClass="task-field-select">
+                <mat-option *ngFor="let status of statusOptions" [value]="status">
+                  {{ status }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="priority">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>優先度</th>
+        <td mat-cell *matCellDef="let task">
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'priority'; else editPriority">
+            <span class="editable-field" (click)="startEditing(task, 'priority')" [class]="getPriorityClass(task.priority)">
+              {{ task.priority }}
+            </span>
+          </div>
+          <ng-template #editPriority>
+            <mat-form-field class="edit-field">
+              <mat-select
+                [value]="task.priority"
+                (selectionChange)="onSelectChange(task, 'priority', $event)"
+                (closed)="stopEditing()"
+                panelClass="task-field-select">
+                <mat-option *ngFor="let priority of priorityOptions" [value]="priority">
+                  {{ priority }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="dueDate">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>期限</th>
+        <td mat-cell *matCellDef="let task">
+          <div *ngIf="editingTask?.id !== task.id || editingField !== 'dueDate'"
+               (click)="startEditing(task, 'dueDate')"
+               class="editable-field">
+            <ng-container *ngIf="task.dueDate">
+              {{ task.dueDate.seconds ? (convertTimestampToDate(task.dueDate) | date:'yyyy/MM/dd') : '未設定' }}
+            </ng-container>
+            <ng-container *ngIf="!task.dueDate">未設定</ng-container>
+          </div>
+          <div *ngIf="editingTask?.id === task.id && editingField === 'dueDate'"
+               class="edit-field">
+            <mat-form-field>
+              <input matInput
+                     [matDatepicker]="picker"
+                     [value]="task.dueDate ? convertTimestampToDate(task.dueDate) : null"
+                     (dateChange)="onDateChange(task, $event)">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let task">
+          <div class="action-buttons">
+            <button mat-button color="primary" (click)="viewTask(task)">詳細</button>
+            <button mat-icon-button color="warn" (click)="deleteTask(task, $event)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+          [class.selected]="isSelected(row)">
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[5, 10, 25, 100]" aria-label="ページを選択"></mat-paginator>
+  </div>
+
+  <div class="loading-spinner" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+  </div>
+</div> 

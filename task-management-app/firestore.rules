@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // タスクのルール
+    match /tasks/{taskId} {
+      allow read, write: if true;  // 認証なしでも読み書きを許可
+    }
+    
+    // カテゴリのルール
+    match /categories/{categoryId} {
+      allow read: if true;  // 認証なしで読み取りを許可
+      allow write: if true;  // 認証なしで書き込みを許可
+    }
+  }
+} 

@@ -1,0 +1,102 @@
+<div class="ai-assistant-container" *ngIf="currentTask">
+  <mat-card *ngIf="!loading">
+    <mat-card-header>
+      <mat-card-title>AIアシスタント分析</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- タスク提案セクション -->
+      <section *ngIf="suggestions" class="suggestions-section">
+        <h3>タスク提案</h3>
+        <div class="suggestion-item">
+          <strong>推奨カテゴリ:</strong> {{ suggestions.category }}
+        </div>
+        <div class="suggestion-item">
+          <strong>推奨優先度:</strong> {{ suggestions.priority }}
+        </div>
+        <div class="suggestion-item">
+          <strong>推奨期限:</strong> {{ suggestions.suggestedDueDate | date }}
+        </div>
+        <div class="suggestion-item" *ngIf="suggestions.relatedTasks.length">
+          <strong>関連タスク:</strong>
+          <ul>
+            <li *ngFor="let task of suggestions.relatedTasks">{{ task }}</li>
+          </ul>
+        </div>
+        <div class="suggestion-item" *ngIf="suggestions.actionPlan.length">
+          <strong>アクションプラン:</strong>
+          <ol>
+            <li *ngFor="let action of suggestions.actionPlan">{{ action }}</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- アイゼンハワーマトリックスセクション -->
+      <section *ngIf="matrix" class="matrix-section">
+        <h3>アイゼンハワーマトリックス分析</h3>
+        <div class="matrix-grid">
+          <div class="matrix-cell" [class]="getQuadrantClass(matrix.quadrant)">
+            {{ matrix.quadrant }}
+          </div>
+        </div>
+      </section>
+
+      <!-- タスク分析セクション -->
+      <section *ngIf="analysis" class="analysis-section">
+        <h3>タスク分析</h3>
+        <div class="analysis-item">
+          <strong>平均完了時間:</strong> {{ analysis.historicalData.averageCompletionTime }}日
+        </div>
+        <div class="analysis-item">
+          <strong>一般的なカテゴリ:</strong>
+          <ul>
+            <li *ngFor="let category of analysis.historicalData.commonCategories">{{ category }}</li>
+          </ul>
+        </div>
+        <div class="analysis-item">
+          <strong>頻繁な協力者:</strong>
+          <ul>
+            <li *ngFor="let collaborator of analysis.historicalData.frequentCollaborators">{{ collaborator }}</li>
+          </ul>
+        </div>
+        <div class="analysis-item">
+          <strong>現在の作業負荷:</strong> {{ analysis.currentStatus.workload }}%
+        </div>
+        <div class="analysis-item">
+          <strong>期限切れタスク:</strong> {{ analysis.currentStatus.overdueTasks }}件
+        </div>
+        <div class="analysis-item">
+          <strong>近い期限のタスク:</strong> {{ analysis.currentStatus.upcomingDeadlines }}件
+        </div>
+      </section>
+
+      <!-- 推奨事項セクション -->
+      <section *ngIf="analysis" class="recommendations-section">
+        <h3>推奨事項</h3>
+        <div class="recommendation-item" *ngIf="analysis.recommendations.priorityAdjustments.length">
+          <strong>優先度調整:</strong>
+          <ul>
+            <li *ngFor="let recommendation of analysis.recommendations.priorityAdjustments">{{ recommendation }}</li>
+          </ul>
+        </div>
+        <div class="recommendation-item" *ngIf="analysis.recommendations.resourceAllocation.length">
+          <strong>リソース配分:</strong>
+          <ul>
+            <li *ngFor="let recommendation of analysis.recommendations.resourceAllocation">{{ recommendation }}</li>
+          </ul>
+        </div>
+        <div class="recommendation-item" *ngIf="analysis.recommendations.timelineOptimization.length">
+          <strong>タイムライン最適化:</strong>
+          <ul>
+            <li *ngFor="let recommendation of analysis.recommendations.timelineOptimization">{{ recommendation }}</li>
+          </ul>
+        </div>
+      </section>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="loading-spinner" *ngIf="loading">
+    <mat-spinner></mat-spinner>
+    <p>分析中...</p>
+  </div>
+</div> 
