@@ -21,7 +21,6 @@ import { CalendarService } from '../../services/calendar.service';
 import { Timestamp } from '@angular/fire/firestore';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { CalendarSyncDialogComponent } from '../calendar-sync-dialog/calendar-sync-dialog.component';
-import { AiAssistantService } from '../../services/ai-assistant.service';
 import { ProjectService } from '../../../projects/services/project.service';
 import { Project } from '../../../projects/models/project.model';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -51,7 +50,6 @@ import { UserService } from 'src/app/features/auth/services/user.service';
     MatDialogModule,
     MatCheckboxModule
   ],
-  providers: [AiAssistantService]
 })
 export class TaskFormComponent implements OnInit, AfterViewInit {
   taskForm: FormGroup;
@@ -79,7 +77,6 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
     private calendarService: CalendarService,
     private ngZone: NgZone,
     private dialog: MatDialog,
-    private aiAssistant: AiAssistantService,
     private projectService: ProjectService,
     private userService: UserService
   ) {
@@ -531,39 +528,6 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
         userId: ''
       };
 
-      // AIアシスタントによる自動分類
-      const suggestedCategory = this.aiAssistant.categorizeTask(task);
-      this.taskForm.patchValue({ category: suggestedCategory });
-
-      // AIアシスタントによる重要度設定
-      const suggestedImportance = this.aiAssistant.setImportance(task);
-      this.taskForm.patchValue({ importance: suggestedImportance });
-    }
-  }
-
-  // 過去のタスクに基づいてサジェストを取得
-  async getTaskSuggestions() {
-    try {
-      const previousTasks = await this.taskService.getTasks();
-      this.aiAssistant.suggestTasks(previousTasks).subscribe(suggestions => {
-        if (suggestions.length > 0) {
-          const suggestion = suggestions[0];
-          this.snackBar.open(
-            `提案: "${suggestion.title}" を追加しますか？`,
-            '追加',
-            { duration: 5000 }
-          ).onAction().subscribe(() => {
-            this.taskForm.patchValue({
-              title: suggestion.title,
-              description: suggestion.description,
-              category: suggestion.category,
-              importance: suggestion.importance
-            });
-          });
-        }
-      });
-    } catch (error) {
-      console.error('タスクのサジェスト取得に失敗しました:', error);
     }
   }
 } 
