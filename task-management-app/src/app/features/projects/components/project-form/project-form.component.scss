@@ -169,3 +169,17 @@ textarea.custom-input {
   margin-bottom: 4px;
 }
 
+.member-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.member-manage-label {
+  color: #b3b8c6;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+

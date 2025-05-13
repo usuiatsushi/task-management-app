@@ -14,6 +14,9 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { Firestore } from '@angular/fire/firestore';
 import { doc, getDoc } from '@angular/fire/firestore';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
 
 interface MemberInfo {
   uid: string;
@@ -34,7 +37,9 @@ interface MemberInfo {
     MatInputModule,
     MatButtonModule,
     MatCardModule,
-    MatIconModule
+    MatIconModule,
+    MatSelectModule,
+    MatOptionModule,
   ]
 })
 export class ProjectFormComponent implements OnInit {
@@ -45,6 +50,8 @@ export class ProjectFormComponent implements OnInit {
   memberInfos: MemberInfo[] = [];
   newMemberEmail: string = '';
   memberLoading: boolean = false;
+  allUsers: any[] = [];
+  selectedUserUid: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -53,7 +60,8 @@ export class ProjectFormComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private authService: AuthService,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private angularFirestore: AngularFirestore
   ) {
     this.projectForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -67,6 +75,9 @@ export class ProjectFormComponent implements OnInit {
       this.isEditMode = true;
       this.loadProject();
     }
+    this.angularFirestore.collection('users').valueChanges({ idField: 'uid' }).subscribe(users => {
+      this.allUsers = users;
+    });
   }
 
   private async loadProject(): Promise<void> {
@@ -157,5 +168,20 @@ export class ProjectFormComponent implements OnInit {
     const textarea = event.target as HTMLTextAreaElement;
     textarea.style.height = 'auto'; // 一度リセット
     textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  addMemberByUid() {
+    if (
+      this.selectedUserUid &&
+      !this.members.includes(this.selectedUserUid)
+    ) {
+      this.members.push(this.selectedUserUid);
+      this.selectedUserUid = null;
+      this.updateMemberInfos();
+    }
+  }
+
+  private updateMemberInfos() {
+    // Implementation of updateMemberInfos method
   }
 } 

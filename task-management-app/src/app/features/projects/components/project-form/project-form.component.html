@@ -20,8 +20,10 @@
       <label for="projectDesc">説明</label>
     </div>
 
-    <div *ngIf="isEditMode" class="custom-field">
-      <label style="margin-bottom: 8px; font-weight: 600;">メンバー管理</label>
+    <div class="member-section">
+      <div class="member-header">
+        <span><mat-icon>manage_accounts</mat-icon>メンバー管理</span>
+      </div>
       <div class="member-list">
         <div *ngFor="let member of memberInfos" class="member-item">
           <span>{{ member.displayName || member.email || member.uid }}</span>
@@ -31,8 +33,17 @@
         </div>
       </div>
       <div class="add-member-row">
-        <input type="email" [(ngModel)]="newMemberEmail" [ngModelOptions]="{standalone: true}" placeholder="メールアドレスで追加" />
-        <button mat-raised-button color="primary" type="button" (click)="addMemberByEmail()" [disabled]="memberLoading || !newMemberEmail">
+        <mat-form-field class="full-width">
+          <mat-label>アカウントから追加</mat-label>
+          <mat-select [(ngModel)]="selectedUserUid" [ngModelOptions]="{standalone: true}">
+            <mat-option *ngFor="let user of allUsers" [value]="user.uid" [disabled]="members.includes(user.uid)">
+              {{ (user.displayName ? user.displayName + ' ' : '') + '(' + user.email + ')' }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button mat-raised-button color="primary" type="button"
+          (click)="addMemberByUid()"
+          [disabled]="memberLoading || !selectedUserUid || members.includes(selectedUserUid)">
           <mat-icon>person_add</mat-icon> 追加
         </button>
       </div>
