@@ -1278,9 +1278,14 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.projectId) {
       filtered = filtered.filter(t => t.projectId === this.projectId);
     } else if (this.currentUserId) {
-      filtered = filtered.filter(t => t.userId === this.currentUserId);
+      // プロジェクトIDがない場合は「自分のタスク」＋「projectId未設定（undefined/null/空文字列）」のタスクを表示
+      filtered = filtered.filter(t =>
+        t.userId === this.currentUserId ||
+        t.projectId === undefined ||
+        t.projectId === null ||
+        t.projectId === ''
+      );
     } else {
-      // どちらもなければ空配列
       filtered = [];
     }
     if (quickFilters.includes('incomplete')) {

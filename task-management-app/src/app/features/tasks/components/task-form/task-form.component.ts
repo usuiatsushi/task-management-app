@@ -340,13 +340,10 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
             panelClass: ['success-snackbar']
           });
         } else {
-          const tasksRef = collection(this.firestore, 'tasks');
-          const docRef = await addDoc(tasksRef, {
-            ...taskData,
-            createdAt: Timestamp.now()
-          });
+          // 新規作成時はTaskService.createTaskを必ず使う
+          const docId = await this.taskService.createTask(taskData);
           if (shouldSyncWithCalendar) {
-            await this.calendarService.addTaskToCalendar({ ...taskData, id: docRef.id });
+            await this.calendarService.addTaskToCalendar({ ...taskData, id: docId });
           }
           this.snackBar.open('タスクを作成しました', '閉じる', { 
             duration: 3000,
