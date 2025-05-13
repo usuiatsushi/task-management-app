@@ -47,7 +47,8 @@ export class RegisterComponent {
           uid: userCredential.user?.uid,
           email,
           displayName,
-          role: 'user'
+          role: 'user',
+          isApproved: false
         });
         this.registerSuccess = '登録が完了しました。ログイン画面に移動します。';
         setTimeout(() => {
@@ -80,7 +81,8 @@ export class RegisterComponent {
           uid: userCredential.user?.uid,
           email,
           displayName,
-          role: 'admin'
+          role: 'admin',
+          isApproved: false
         };
         console.log('保存するユーザーデータ:', userData);
         

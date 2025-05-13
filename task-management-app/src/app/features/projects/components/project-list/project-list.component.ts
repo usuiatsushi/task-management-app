@@ -30,6 +30,9 @@ export class ProjectListComponent implements OnInit {
   projects: Project[] = [];
   tasks: Task[] = [];
 
+  authChecking: boolean = false;
+  loading: boolean = false;
+
   constructor(
     private projectService: ProjectService,
     private taskService: TaskService,
@@ -39,8 +42,14 @@ export class ProjectListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.authChecking = true;
+    this.loading = true;
+
     this.projectService.projects$.subscribe(projects => {
+      console.log('取得したプロジェクト:', projects);
       this.projects = projects;
+      this.loading = false;
+      this.authChecking = false;
     });
     this.taskService.tasks$.subscribe(tasks => {
       this.tasks = tasks;
@@ -80,14 +89,7 @@ export class ProjectListComponent implements OnInit {
   }
 
   getTaskCount(projectId: string): number {
-    const filtered = this.tasks.filter(task => String(task.projectId) === String(projectId));
-    this.tasks.forEach(task => {
-      console.log(
-        '[DEBUG] projectId:', projectId, 'typeof:', typeof projectId,
-        '| task.projectId:', task.projectId, 'typeof:', typeof task.projectId
-      );
-    });
-    console.log('projectId:', projectId, 'filtered tasks:', filtered);
-    return filtered.length;
+    if (!projectId || !this.tasks) return 0;
+    return this.tasks.filter(task => task.projectId === projectId).length;
   }
 } 

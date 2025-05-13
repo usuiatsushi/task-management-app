@@ -12,6 +12,14 @@
       <span matListItemTitle>{{ project.name }}</span>
     </a>
   </div>
+
+  <ng-container *ngIf="isAdmin$ | async">
+    <mat-divider></mat-divider>
+    <a mat-list-item (click)="navigateTo('/admin')">
+      <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
+      <span matListItemTitle>管理者ページ</span>
+    </a>
+  </ng-container>
   
   <a mat-list-item (click)="logout()">
     <mat-icon matListItemIcon>logout</mat-icon>

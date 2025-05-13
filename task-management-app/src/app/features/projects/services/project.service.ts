@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, Timestamp } from '@angular/fire/firestore';
+import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, getDocs, Timestamp, getDoc } from '@angular/fire/firestore';
 import { Project } from '../models/project.model';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,34 +10,70 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ProjectService {
   private projectsSubject = new BehaviorSubject<Project[]>([]);
   projects$ = this.projectsSubject.asObservable();
+  private clearProjectsTimeout: any;
 
   constructor(
     private firestore: Firestore,
     private authService: AuthService
   ) {
     this.authService.authState$.subscribe(user => {
+      console.log('authState$ changed:', user);
       if (user) {
+        if (this.clearProjectsTimeout) {
+          clearTimeout(this.clearProjectsTimeout);
+          this.clearProjectsTimeout = null;
+        }
         this.loadProjects();
       } else {
-        this.projectsSubject.next([]);
+        // 500ms待ってもuserが復帰しなければ空にする
+        this.clearProjectsTimeout = setTimeout(() => {
+          this.projectsSubject.next([]);
+        }, 500);
       }
     });
   }
 
   public async loadProjects(): Promise<void> {
-    const user = await this.authService.getCurrentUser();
-    if (!user) return;
+    try {
+      const user = await this.authService.getCurrentUser();
+      if (!user) return;
 
-    const projectsRef = collection(this.firestore, 'projects');
-    const q = query(projectsRef, where('userId', '==', user.uid));
-    const querySnapshot = await getDocs(q);
+      const projectsRef = collection(this.firestore, 'projects');
+      const userDoc = await getDoc(doc(this.firestore, 'users', user.uid));
+      const userData = userDoc.data();
+      const role = userData?.['role'];
 
-    const projects: Project[] = [];
-    querySnapshot.forEach((doc) => {
-      projects.push({ id: doc.id, ...doc.data() } as Project);
-    });
+      console.log('user.uid:', user.uid);
+      let querySnapshot;
+      if (role === 'admin') {
+        // 管理者は全件取得
+        querySnapshot = await getDocs(projectsRef);
+      } else {
+        // 一般ユーザーは自分のプロジェクトのみ
+        const q = query(projectsRef, where('userId', '==', user.uid));
+        querySnapshot = await getDocs(q);
+        console.log('取得プロジェクト数:', querySnapshot.size);
+      }
 
-    this.projectsSubject.next(projects);
+      const projects: Project[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        projects.push({
+          id: doc.id,
+          name: data['name'],
+          description: data['description'],
+          userId: data['userId'],
+          createdAt: data['createdAt'],
+          updatedAt: data['updatedAt'],
+          tasks: data['tasks'] || []
+        } as Project);
+      });
+
+      this.projectsSubject.next(projects);
+    } catch (error) {
+      console.error('loadProjects error:', error);
+      this.projectsSubject.next([]);
+    }
   }
 
   async createProject(project: Omit<Project, 'id'>): Promise<string> {

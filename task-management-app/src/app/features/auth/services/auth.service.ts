@@ -43,13 +43,25 @@ export class AuthService {
     const result = await this.afAuth.signInWithPopup(provider);
     const user = result.user;
     if (user) {
-      // FirestoreにdisplayNameも保存
-      await this.afs.collection('users').doc(user.uid).set({
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || '',
-        role: 'user'
-      }, { merge: true });
+      // 既存ユーザーの確認
+      const userDoc = await this.afs.collection('users').doc(user.uid).ref.get();
+      if (userDoc.exists) {
+        // 既存ユーザーの場合は既存のデータを保持
+        await this.afs.collection('users').doc(user.uid).set({
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+        }, { merge: true });
+      } else {
+        // 新規ユーザーの場合のみisApproved: falseを設定
+        await this.afs.collection('users').doc(user.uid).set({
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || '',
+          role: 'user',
+          isApproved: false
+        });
+      }
     }
   }
 } 

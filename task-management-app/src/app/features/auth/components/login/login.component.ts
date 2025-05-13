@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Auth, signInWithEmailAndPassword } from '@angular/fire/auth';
+import { Auth, signInWithEmailAndPassword, signOut } from '@angular/fire/auth';
 import { AuthService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -37,10 +37,15 @@ export class LoginComponent {
       try {
         const { email, password } = this.loginForm.value;
         await signInWithEmailAndPassword(this.auth, email, password);
-        // ユーザーのroleを確認
+        // ユーザーのroleとisApprovedを確認
         const userSnap = await this.afs.collection('users', ref => ref.where('email', '==', email)).get().toPromise();
         if (userSnap && !userSnap.empty) {
           const userData = userSnap.docs[0].data() as any;
+          if (userData.isApproved === false) {
+            await signOut(this.auth);
+            this.errorMessage = '管理者の承認待ちです。ログインできません。';
+            return;
+          }
           if (userData.role === 'admin') {
             this.router.navigate(['/admin']);
           } else {
@@ -58,12 +63,17 @@ export class LoginComponent {
   async loginWithGoogle() {
     try {
       await this.authService.signInWithGoogle();
-      // Googleログイン後もroleを確認
+      // Googleログイン後もroleとisApprovedを確認
       const user = await this.auth.currentUser;
       if (user) {
         const userSnap = await this.afs.collection('users', ref => ref.where('email', '==', user.email)).get().toPromise();
         if (userSnap && !userSnap.empty) {
           const userData = userSnap.docs[0].data() as any;
+          if (userData.isApproved === false) {
+            await signOut(this.auth);
+            this.errorMessage = '管理者の承認待ちです。ログインできません。';
+            return;
+          }
           if (userData.role === 'admin') {
             this.router.navigate(['/admin']);
           } else {
@@ -89,10 +99,15 @@ export class LoginComponent {
     try {
       // まず認証
       await signInWithEmailAndPassword(this.auth, email, password);
-      // 認証後にFirestoreからroleを取得
+      // 認証後にFirestoreからroleとisApprovedを取得
       const userSnap = await this.afs.collection('users', ref => ref.where('email', '==', email)).get().toPromise();
       if (userSnap && !userSnap.empty) {
         const userData = userSnap.docs[0].data() as any;
+        if (userData.isApproved === false) {
+          await signOut(this.auth);
+          this.loginError = '管理者の承認待ちです。ログインできません。';
+          return;
+        }
         if (userData.role === 'admin') {
           this.router.navigate(['/admin']);
         } else {

@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { GoogleAuthProvider } from 'firebase/auth';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, map, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 
 @Injectable({
   providedIn: 'root'
@@ -11,18 +12,31 @@ export class AuthService {
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
   authState$: Observable<any>;
+  isAdmin$: Observable<boolean>;
 
   constructor(
     private afAuth: AngularFireAuth,
-    private router: Router
+    private router: Router,
+    private firestore: AngularFirestore
   ) {
     this.authState$ = this.afAuth.authState;
     this.afAuth.authState.subscribe(user => {
+      console.log('現在のユーザー情報:', user);
       this.userSubject.next(user);
-      if (user) {
-        this.router.navigate(['/projects']);
-      }
     });
+
+    // 管理者判定のObservable
+    this.isAdmin$ = this.user$.pipe(
+      switchMap(user => {
+        if (!user) return new Observable<boolean>(observer => observer.next(false));
+        return this.firestore.doc(`users/${user.uid}`).valueChanges().pipe(
+          map((userData: any) => {
+            console.log('Firestoreユーザーデータ:', userData);
+            return userData?.role === 'admin';
+          })
+        );
+      })
+    );
   }
 
   async getGoogleAuthToken(): Promise<string> {
@@ -55,7 +69,7 @@ export class AuthService {
   async signOut(): Promise<void> {
     try {
       await this.afAuth.signOut();
-      this.router.navigate(['/auth/login']);
+      await this.router.navigate(['/auth/login']);
     } catch (error) {
       console.error('サインアウトに失敗しました:', error);
       throw error;
@@ -91,7 +105,7 @@ export class AuthService {
       const provider = new GoogleAuthProvider();
       const result = await this.afAuth.signInWithPopup(provider);
       if (result.user) {
-        this.router.navigate(['/projects']);
+        await this.router.navigate(['/projects']);
       }
       return result;
     } catch (error) {

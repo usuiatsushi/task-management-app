@@ -18,6 +18,7 @@ import { AppUser } from '../auth/models/user.model';
               <th>メールアドレス</th>
               <th>表示名</th>
               <th>権限</th>
+              <th>承認状態</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -26,6 +27,10 @@ import { AppUser } from '../auth/models/user.model';
               <td>{{ user.email }}</td>
               <td>{{ user.displayName || '未設定' }}</td>
               <td>{{ user.role }}</td>
+              <td>
+                <span *ngIf="user.isApproved">承認済み</span>
+                <button *ngIf="!user.isApproved" (click)="approveUser(user)">承認</button>
+              </td>
               <td>
                 <button (click)="toggleRole(user)">権限変更</button>
                 <button (click)="deleteUser(user)">削除</button>
@@ -87,5 +92,10 @@ export class AdminComponent implements OnInit {
       await this.afs.collection('users').doc(user.uid).delete();
       await this.loadUsers();
     }
+  }
+
+  async approveUser(user: AppUser) {
+    await this.afs.collection('users').doc(user.uid).update({ isApproved: true });
+    await this.loadUsers();
   }
 } 

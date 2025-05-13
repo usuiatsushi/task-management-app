@@ -11,6 +11,7 @@ import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { ProjectService } from '../../features/projects/services/project.service';
 import { Project } from '../../features/projects/models/project.model';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-nav-menu',
@@ -36,6 +37,7 @@ export class NavMenuComponent {
 
   projects: Project[] = [];
   showProjectMenu = true;
+  isAdmin$: Observable<boolean>;
 
   constructor(
     private router: Router,
@@ -44,6 +46,11 @@ export class NavMenuComponent {
     private projectService: ProjectService,
     private snackBar: MatSnackBar
   ) {
+    this.isAdmin$ = this.authService.isAdmin$;
+    this.isAdmin$.subscribe(isAdmin => {
+      console.log('ナビゲーションメニュー - 管理者状態:', isAdmin);
+    });
+    
     this.projectService.projects$.subscribe(projects => {
       this.projects = projects;
     });

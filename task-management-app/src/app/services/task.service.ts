@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { Observable, catchError } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { CalendarService } from './calendar.service';
 import { Task } from '../interfaces/task.interface';
+import { AuthService } from 'src/app/features/auth/services/auth.service';
+import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { switchMap, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +13,9 @@ import { Task } from '../interfaces/task.interface';
 export class TaskService {
   constructor(
     private firestore: AngularFirestore,
-    private calendarService: CalendarService
+    private calendarService: CalendarService,
+    private authService: AuthService,
+    private afAuth: AngularFireAuth
   ) {}
 
   // タスクを作成し、カレンダーにも登録
@@ -172,6 +177,22 @@ export class TaskService {
 
   // タスクを取得
   getTasks(): Observable<Task[]> {
-    return this.firestore.collection<Task>('tasks').valueChanges({ idField: 'id' });
+    return this.afAuth.authState.pipe(
+      switchMap(user => {
+        if (!user) return of([]);
+        // ユーザー情報取得
+        return this.firestore.collection('users').doc(user.uid).valueChanges().pipe(
+          switchMap((userData: any) => {
+            if (userData?.role === 'admin') {
+              // 管理者は全件
+              return this.firestore.collection<Task>('tasks').valueChanges({ idField: 'id' });
+            } else {
+              // 一般ユーザーは自分のタスクのみ
+              return this.firestore.collection<Task>('tasks', ref => ref.where('userId', '==', user.uid)).valueChanges({ idField: 'id' });
+            }
+          })
+        );
+      })
+    );
   }
 } 

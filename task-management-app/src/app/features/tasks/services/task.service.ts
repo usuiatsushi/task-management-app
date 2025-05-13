@@ -49,15 +49,34 @@ export class TaskService implements OnDestroy {
     });
   }
 
-  private initializeTasksListener() {
+  private async initializeTasksListener() {
     try {
       if (this.unsubscribe) {
         this.unsubscribe();
         this.unsubscribe = null;
       }
 
+      const user = await this.authService.getCurrentUser();
+      if (!user) return;
+
+      const userDoc = await getDoc(doc(this.firestore, 'users', user.uid));
+      const userData = userDoc.data();
+      const role = userData?.['role'];
+
       const tasksRef = collection(this.firestore, 'tasks');
-      const q = query(tasksRef, orderBy('createdAt', 'desc'));
+      let q;
+
+      if (role === 'admin') {
+        // 管理者は全件取得
+        q = query(tasksRef, orderBy('createdAt', 'desc'));
+      } else {
+        // 一般ユーザーは自分のタスクのみ
+        q = query(
+          tasksRef,
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc')
+        );
+      }
 
       this.unsubscribe = onSnapshot(q, 
         (querySnapshot: QuerySnapshot<DocumentData>) => {
@@ -267,26 +286,24 @@ export class TaskService implements OnDestroy {
   }
 
   async createTask(task: Omit<Task, 'id'>): Promise<string> {
-    try {
-      const tasksCollection = collection(this.firestore, 'tasks');
-      const now = new Date();
-      const currentTimestamp = {
-        seconds: Math.floor(now.getTime() / 1000),
-        nanoseconds: 0
-      };
+    const user = await this.authService.getCurrentUser();
+    if (!user) throw new Error('ユーザーが認証されていません');
+    const tasksCollection = collection(this.firestore, 'tasks');
+    const now = new Date();
+    const currentTimestamp = {
+      seconds: Math.floor(now.getTime() / 1000),
+      nanoseconds: 0
+    };
 
-      const docRef = await addDoc(tasksCollection, {
-        ...task,
-        createdAt: currentTimestamp,
-        updatedAt: currentTimestamp
-      });
+    const docRef = await addDoc(tasksCollection, {
+      ...task,
+      userId: user.uid,
+      createdAt: currentTimestamp,
+      updatedAt: currentTimestamp
+    });
 
-      console.log('Task created with ID:', docRef.id);
-      return docRef.id;
-    } catch (error) {
-      console.error('Error creating task:', error);
-      throw error;
-    }
+    console.log('Task created with ID:', docRef.id);
+    return docRef.id;
   }
 
   async updateTask(taskId: string, updateData: Partial<Task>): Promise<void> {
