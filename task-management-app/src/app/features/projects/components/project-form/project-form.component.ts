@@ -170,18 +170,32 @@ export class ProjectFormComponent implements OnInit {
     textarea.style.height = textarea.scrollHeight + 'px';
   }
 
-  addMemberByUid() {
+  async addMemberByUid() {
     if (
       this.selectedUserUid &&
       !this.members.includes(this.selectedUserUid)
     ) {
       this.members.push(this.selectedUserUid);
       this.selectedUserUid = null;
-      this.updateMemberInfos();
+      await this.updateMemberInfos();
     }
   }
 
-  private updateMemberInfos() {
-    // Implementation of updateMemberInfos method
+  private async updateMemberInfos() {
+    this.memberInfos = [];
+    for (const uid of this.members) {
+      const userDocRef = doc(this.firestore, 'users', uid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const data = userDocSnap.data() as any;
+        this.memberInfos.push({
+          uid,
+          displayName: data.displayName,
+          email: data.email
+        });
+      } else {
+        this.memberInfos.push({ uid, displayName: '(不明なユーザー)', email: '' });
+      }
+    }
   }
 } 
