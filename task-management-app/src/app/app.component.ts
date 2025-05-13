@@ -40,6 +40,7 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit() {
+    /* 一時的にコメントアウト
     // セキュリティ設定を適用
     if (environment.security) {
       // Cross-Origin-Opener-Policy
@@ -54,6 +55,7 @@ export class AppComponent implements OnInit {
       coepMeta.content = environment.security.crossOriginEmbedderPolicy;
       document.head.appendChild(coepMeta);
     }
+      */
   }
 
   closeMenu(): void {

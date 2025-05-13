@@ -69,6 +69,7 @@ export class NavMenuComponent {
     try {
       await this.authService.signOut();
       this.menuClosed.emit();
+      window.location.reload();
     } catch (error) {
       console.error('ログアウトに失敗しました:', error);
     }
