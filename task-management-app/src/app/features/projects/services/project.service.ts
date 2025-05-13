@@ -49,8 +49,8 @@ export class ProjectService {
         // 管理者は全件取得
         querySnapshot = await getDocs(projectsRef);
       } else {
-        // 一般ユーザーは自分のプロジェクトのみ
-        const q = query(projectsRef, where('userId', '==', user.uid));
+        // 一般ユーザーは自分がメンバーのプロジェクトのみ
+        const q = query(projectsRef, where('members', 'array-contains', user.uid));
         querySnapshot = await getDocs(q);
         console.log('取得プロジェクト数:', querySnapshot.size);
       }
@@ -65,7 +65,8 @@ export class ProjectService {
           userId: data['userId'],
           createdAt: data['createdAt'],
           updatedAt: data['updatedAt'],
-          tasks: data['tasks'] || []
+          tasks: data['tasks'] || [],
+          members: data['members'] || []
         } as Project);
       });
 
@@ -85,7 +86,8 @@ export class ProjectService {
       userId: user.uid,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
-      tasks: []
+      tasks: [],
+      members: [user.uid]
     };
 
     const docRef = await addDoc(collection(this.firestore, 'projects'), projectData);
@@ -139,3 +141,4 @@ export class ProjectService {
     return project || null;
   }
 } 
+

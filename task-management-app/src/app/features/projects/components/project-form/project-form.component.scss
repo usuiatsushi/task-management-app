@@ -156,3 +156,16 @@ textarea.custom-input {
   }
 }
 
+/* メンバー管理セクションの余白調整 */
+.member-list {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+

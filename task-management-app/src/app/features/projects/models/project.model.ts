@@ -8,4 +8,5 @@ export interface Project {
   updatedAt: Timestamp;
   userId: string;
   tasks: string[]; // タスクIDの配列
+  members: string[]; // チームメンバーのユーザーID配列
 } 

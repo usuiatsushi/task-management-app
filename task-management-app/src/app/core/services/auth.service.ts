@@ -139,4 +139,13 @@ export class AuthService {
     // 例: Firestoreのユーザーデータを使って判定
     return this.userSubject.value?.role || null;
   }
+
+  /**
+   * メールアドレスからユーザーID（uid）を取得
+   */
+  async getUidByEmail(email: string): Promise<string | null> {
+    const snapshot = await this.firestore.collection('users', ref => ref.where('email', '==', email)).get().toPromise();
+    if (!snapshot || snapshot.empty) return null;
+    return snapshot.docs[0].id;
+  }
 } 

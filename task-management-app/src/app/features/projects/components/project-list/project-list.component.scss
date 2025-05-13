@@ -15,6 +15,11 @@
     margin: 0;
     font-size: 24px;
   }
+
+  .header-buttons {
+    display: flex;
+    gap: 8px;
+  }
 }
 
 .project-list-table {
