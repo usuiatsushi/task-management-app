@@ -88,6 +88,32 @@ enum FileType {
   UNKNOWN = 'UNKNOWN'
 }
 
+function escapeCSV(value: string): string {
+  if (value == null) return '';
+  const str = String(value);
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function formatDueDate(dueDate: any): string {
+  if (!dueDate) return '';
+  if (typeof dueDate === 'string') {
+    return dueDate;
+  }
+  if (dueDate instanceof Date) {
+    return dueDate.toLocaleDateString();
+  }
+  if ('toDate' in dueDate && typeof dueDate.toDate === 'function') {
+    return dueDate.toDate().toLocaleDateString();
+  }
+  if ('seconds' in dueDate) {
+    return new Date(dueDate.seconds * 1000).toLocaleDateString();
+  }
+  return '';
+}
+
 @Component({
   selector: 'app-task-list',
   templateUrl: './task-list.component.html',
@@ -1356,27 +1382,22 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   
 
   async exportTasks() {
-    // filteredTasks$の最新値を取得
     const tasks = await this.filteredTasks$.pipe(take(1)).toPromise();
-    if (!tasks || tasks.length === 0) {
-      // エクスポート対象がなければ何もしない
-      return;
-    }
+    if (!tasks || tasks.length === 0) return;
 
-    // CSV変換
     const csvRows = [
-      ['タイトル', 'カテゴリ', '重要度', '期限', '担当者'], // ヘッダー
+      ['タイトル', '説明', 'ステータス', '重要度', 'カテゴリ', '担当者', '期限'],
       ...tasks.map(task => [
-        task.title,
-        task.category,
-        task.importance,
-        formatDueDate(task.dueDate),
-        task.assignedTo || ''
+        escapeCSV(task.title),
+        escapeCSV(task.description || ''),
+        escapeCSV(task.status || ''),
+        escapeCSV(task.importance || ''),
+        escapeCSV(task.category || ''),
+        escapeCSV(task.assignedTo || ''),
+        escapeCSV(formatDueDate(task.dueDate))
       ])
     ];
     const csvContent = csvRows.map(row => row.join(',')).join('\r\n');
-
-    // ダウンロード
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, 'tasks.csv');
   }
@@ -1393,24 +1414,4 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
     // Implementation of downloadSampleCSV method
   }
 
-}
-
-function formatDueDate(dueDate: any): string {
-  if (!dueDate) return '';
-  if (typeof dueDate === 'string') {
-    // すでに日付文字列の場合
-    return dueDate;
-  }
-  if (dueDate instanceof Date) {
-    return dueDate.toLocaleDateString();
-  }
-  if ('toDate' in dueDate && typeof dueDate.toDate === 'function') {
-    // Firestore Timestamp
-    return dueDate.toDate().toLocaleDateString();
-  }
-  if ('seconds' in dueDate) {
-    // { seconds, nanoseconds } 形式
-    return new Date(dueDate.seconds * 1000).toLocaleDateString();
-  }
-  return '';
 } 
