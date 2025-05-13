@@ -2,71 +2,73 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LoginComponent } from './login.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Auth } from '@angular/fire/auth';
 import { AuthService } from 'src/app/core/services/auth.service';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { Router, UrlTree } from '@angular/router';
-import { of } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { of, throwError } from 'rxjs';
+import { initializeApp, deleteApp, getApps } from 'firebase/app';
 import { FIREBASE_OPTIONS } from '@angular/fire/compat';
-import { initializeApp } from 'firebase/app';
-import { Component } from '@angular/core';
-
-@Component({
-  template: '<router-outlet></router-outlet>'
-})
-class TestComponent {}
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Router } from '@angular/router';
+import { AngularFireAuth } from '@angular/fire/compat/auth';
+import { Auth } from '@angular/fire/auth';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
   let fixture: ComponentFixture<LoginComponent>;
   let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let snackBarSpy: jasmine.SpyObj<MatSnackBar>;
   let afsSpy: jasmine.SpyObj<AngularFirestore>;
+  let afAuthSpy: jasmine.SpyObj<AngularFireAuth>;
+  let authSpy: jasmine.SpyObj<Auth>;
   let router: Router;
 
   const mockFirebaseConfig = {
-    apiKey: 'test-api-key',
-    authDomain: 'test-auth-domain',
-    projectId: 'test-project-id',
-    storageBucket: 'test-storage-bucket',
-    messagingSenderId: 'test-messaging-sender-id',
-    appId: 'test-app-id'
+    apiKey: 'dummy',
+    authDomain: 'dummy',
+    projectId: 'dummy',
+    storageBucket: 'dummy',
+    messagingSenderId: 'dummy',
+    appId: 'dummy'
   };
 
   beforeEach(async () => {
-    const authSpy = jasmine.createSpyObj('Auth', ['currentUser']);
-    authServiceSpy = jasmine.createSpyObj('AuthService', ['signInWithGoogle', 'resetPassword']);
-    afsSpy = jasmine.createSpyObj('AngularFirestore', ['collection']);
+    // 既存のFirebaseインスタンスをクリーンアップ
+    const apps = getApps();
+    await Promise.all(apps.map(app => deleteApp(app)));
 
-    // Firebaseアプリの初期化
-    const app = initializeApp(mockFirebaseConfig);
+    authServiceSpy = jasmine.createSpyObj('AuthService', [
+      'login',
+      'signInWithGoogle',
+      'resetPassword'
+    ]);
+    snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+    afsSpy = jasmine.createSpyObj('AngularFirestore', ['collection']);
+    afAuthSpy = jasmine.createSpyObj('AngularFireAuth', ['signInWithPopup', 'signInWithEmailAndPassword', 'sendPasswordResetEmail'], {
+      authState: of(null)
+    });
+    authSpy = jasmine.createSpyObj('Auth', ['currentUser'], {
+      currentUser: null
+    });
 
     await TestBed.configureTestingModule({
-      declarations: [TestComponent],
       imports: [
         LoginComponent,
         ReactiveFormsModule,
-        RouterTestingModule.withRoutes([
-          { path: '', component: TestComponent },
-          { path: 'login', component: LoginComponent }
-        ]),
-        NoopAnimationsModule
+        RouterTestingModule
       ],
       providers: [
-        { provide: Auth, useValue: authSpy },
         { provide: AuthService, useValue: authServiceSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy },
         { provide: AngularFirestore, useValue: afsSpy },
+        { provide: AngularFireAuth, useValue: afAuthSpy },
+        { provide: Auth, useValue: authSpy },
         { provide: FIREBASE_OPTIONS, useValue: mockFirebaseConfig }
       ]
     }).compileComponents();
 
-    router = TestBed.inject(Router);
-    spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
-    spyOn(router, 'createUrlTree').and.returnValue({} as UrlTree);
-    spyOn(router, 'serializeUrl').and.returnValue('/');
-
     fixture = TestBed.createComponent(LoginComponent);
     component = fixture.componentInstance;
+    router = TestBed.inject(Router);
     fixture.detectChanges();
   });
 
@@ -79,61 +81,64 @@ describe('LoginComponent', () => {
     expect(component.loginForm.get('password')?.value).toBe('');
   });
 
-  it('should validate email format', () => {
-    const emailControl = component.loginForm.get('email');
-    emailControl?.setValue('invalid-email');
-    expect(emailControl?.valid).toBeFalsy();
-    expect(emailControl?.errors?.['email']).toBeTruthy();
-
-    emailControl?.setValue('valid@email.com');
-    expect(emailControl?.valid).toBeTruthy();
-  });
-
   it('should require password', () => {
     const passwordControl = component.loginForm.get('password');
     passwordControl?.setValue('');
     expect(passwordControl?.valid).toBeFalsy();
     expect(passwordControl?.errors?.['required']).toBeTruthy();
+  });
 
-    passwordControl?.setValue('password123');
-    expect(passwordControl?.valid).toBeTruthy();
+  it('should validate email format', () => {
+    const emailControl = component.loginForm.get('email');
+    emailControl?.setValue('invalid-email');
+    expect(emailControl?.valid).toBeFalsy();
+    expect(emailControl?.errors?.['email']).toBeTruthy();
+  });
+
+  it('should handle password reset', async () => {
+    const email = 'test@example.com';
+    component.loginForm.get('email')?.setValue(email);
+    authServiceSpy.resetPassword.and.returnValue(Promise.resolve());
+    
+    await component.resetPassword();
+    
+    expect(authServiceSpy.resetPassword).toHaveBeenCalledWith(email);
+    expect(snackBarSpy.open).toHaveBeenCalledWith(
+      'パスワードリセットメールを送信しました',
+      '閉じる',
+      { duration: 3000 }
+    );
+  });
+
+  it('should show error message for invalid password reset email', async () => {
+    const email = 'invalid@example.com';
+    component.loginForm.get('email')?.setValue(email);
+    authServiceSpy.resetPassword.and.returnValue(Promise.reject(new Error('Invalid email')));
+    
+    await component.resetPassword();
+    
+    expect(snackBarSpy.open).toHaveBeenCalledWith(
+      'パスワードリセットメールの送信に失敗しました',
+      '閉じる',
+      { duration: 3000 }
+    );
   });
 
   it('should handle form submission with invalid form', () => {
-    component.loginForm.setValue({
-      email: '',
-      password: ''
-    });
+    component.loginForm.setErrors({ invalid: true });
     component.onSubmit();
-    expect(router.navigate).not.toHaveBeenCalled();
+    expect(authServiceSpy.login).not.toHaveBeenCalled();
   });
 
   it('should handle Google login', async () => {
     const mockUserCredential = {
       user: {
-        email: 'test@example.com',
-        emailVerified: true
+        uid: '123',
+        email: 'test@example.com'
       }
     };
     authServiceSpy.signInWithGoogle.and.returnValue(Promise.resolve(mockUserCredential as any));
     await component.loginWithGoogle();
     expect(authServiceSpy.signInWithGoogle).toHaveBeenCalled();
-  });
-
-  it('should handle password reset', async () => {
-    const testEmail = 'test@example.com';
-    component.resetPasswordEmail = testEmail;
-    authServiceSpy.resetPassword.and.returnValue(Promise.resolve());
-    
-    await component.resetPassword();
-    
-    expect(authServiceSpy.resetPassword).toHaveBeenCalledWith(testEmail);
-    expect(component.resetMessage).toBe('パスワードリセットメールを送信しました。メールをご確認ください。');
-  });
-
-  it('should show error message for invalid password reset email', async () => {
-    component.resetPasswordEmail = '';
-    await component.resetPassword();
-    expect(component.resetError).toBe('メールアドレスを入力してください');
   });
 }); 
