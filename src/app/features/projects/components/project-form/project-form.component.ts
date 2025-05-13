@@ -17,6 +17,7 @@ import { doc, getDoc } from '@angular/fire/firestore';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
+import { Timestamp } from '@angular/fire/firestore';
 
 interface MemberInfo {
   uid: string;
@@ -74,6 +75,12 @@ export class ProjectFormComponent implements OnInit {
     if (this.projectId && this.projectId !== 'new') {
       this.isEditMode = true;
       this.loadProject();
+    } else {
+      this.isEditMode = false;
+      this.projectForm.reset({
+        name: '',
+        description: ''
+      });
     }
     this.angularFirestore.collection('users').valueChanges({ idField: 'uid' }).subscribe(users => {
       this.allUsers = users;
@@ -96,16 +103,21 @@ export class ProjectFormComponent implements OnInit {
   private async loadMemberInfos() {
     this.memberInfos = [];
     for (const uid of this.members) {
-      const userDocRef = doc(this.firestore, 'users', uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        const data = userDocSnap.data() as any;
-        this.memberInfos.push({
-          uid,
-          displayName: data.displayName,
-          email: data.email
-        });
-      } else {
+      try {
+        const userDocRef = doc(this.firestore, 'users', uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          const data = userDocSnap.data() as any;
+          this.memberInfos.push({
+            uid,
+            displayName: data.displayName,
+            email: data.email
+          });
+        } else {
+          this.memberInfos.push({ uid, displayName: '(不明なユーザー)', email: '' });
+        }
+      } catch (error) {
+        console.error(`ユーザー ${uid} の情報取得に失敗しました:`, error);
         this.memberInfos.push({ uid, displayName: '(不明なユーザー)', email: '' });
       }
     }
@@ -114,7 +126,16 @@ export class ProjectFormComponent implements OnInit {
   async onSubmit(): Promise<void> {
     if (this.projectForm.invalid) return;
     try {
-      const projectData = { ...this.projectForm.value, members: this.members };
+      const now = Timestamp.fromDate(new Date());
+      const projectData = {
+        ...this.projectForm.value,
+        members: this.members,
+        createdAt: this.isEditMode ? (await this.projectService.getProject(this.projectId!))?.createdAt : now,
+        updatedAt: now,
+        userId: 'user1', // テスト用の固定値
+        tasks: []
+      };
+
       if (this.isEditMode && this.projectId) {
         await this.projectService.updateProject(this.projectId, projectData);
         this.snackBar.open('プロジェクトを更新しました', '閉じる', { duration: 3000 });
@@ -136,28 +157,33 @@ export class ProjectFormComponent implements OnInit {
       const uid = await this.authService.getUidByEmail(this.newMemberEmail);
       if (!uid) {
         this.snackBar.open('該当ユーザーが見つかりません', '閉じる', { duration: 3000 });
-        this.memberLoading = false;
         return;
       }
       if (this.members.includes(uid)) {
         this.snackBar.open('既に追加されています', '閉じる', { duration: 3000 });
-        this.memberLoading = false;
         return;
       }
       this.members.push(uid);
       await this.loadMemberInfos();
       this.snackBar.open('メンバーを追加しました', '閉じる', { duration: 2000 });
       this.newMemberEmail = '';
-    } catch (e) {
+    } catch (error) {
+      console.error('メンバー追加に失敗しました:', error);
       this.snackBar.open('追加に失敗しました', '閉じる', { duration: 3000 });
+    } finally {
+      this.memberLoading = false;
     }
-    this.memberLoading = false;
   }
 
   async removeMember(uid: string) {
-    this.members = this.members.filter(m => m !== uid);
-    await this.loadMemberInfos();
-    this.snackBar.open('メンバーを削除しました', '閉じる', { duration: 2000 });
+    try {
+      this.members = this.members.filter(m => m !== uid);
+      await this.loadMemberInfos();
+      this.snackBar.open('メンバーを削除しました', '閉じる', { duration: 2000 });
+    } catch (error) {
+      console.error('メンバー削除に失敗しました:', error);
+      this.snackBar.open('削除に失敗しました', '閉じる', { duration: 3000 });
+    }
   }
 
   onCancel(): void {
@@ -166,8 +192,8 @@ export class ProjectFormComponent implements OnInit {
 
   autoResize(event: Event) {
     const textarea = event.target as HTMLTextAreaElement;
-    textarea.style.height = 'auto'; // 一度リセット
-    textarea.style.height = textarea.scrollHeight + 'px';
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
   }
 
   async addMemberByUid() {

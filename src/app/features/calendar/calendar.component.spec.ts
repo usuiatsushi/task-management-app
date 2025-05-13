@@ -30,7 +30,15 @@ describe('CalendarComponent', () => {
         { provide: AngularFirestore, useValue: afsSpy },
         { provide: AuthService, useValue: authServiceSpy },
         { provide: MatDialog, useValue: dialogSpy },
-        { provide: FIREBASE_OPTIONS, useValue: { apiKey: 'dummy', projectId: 'dummy', appId: 'dummy' } }
+        { provide: FIREBASE_OPTIONS, useValue: {
+          apiKey: 'AIzaSyDtfvkdvkps6QwTjwsEJ8-CBkl6TyGR-jU',
+          authDomain: 'kensyu10095.firebaseapp.com',
+          projectId: 'kensyu10095',
+          storageBucket: 'kensyu10095.firebasestorage.app',
+          messagingSenderId: '263465065376',
+          appId: '1:263465065376:web:3cb93f8c54e4ceffeee2c5',
+          measurementId: 'G-Z3FRW7D9BT'
+        }}
       ]
     }).compileComponents();
 
