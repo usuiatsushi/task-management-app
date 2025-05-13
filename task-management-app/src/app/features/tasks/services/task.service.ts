@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy, NgZone, Inject } from '@angular/core';
 import { Firestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy, onSnapshot, QuerySnapshot, DocumentData, getDoc } from '@angular/fire/firestore';
-import { BehaviorSubject, Observable, Subscription, catchError, map, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, catchError, map, of, throwError, firstValueFrom } from 'rxjs';
 import { Task } from '../models/task.model';
 import { Timestamp } from 'firebase/firestore';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -439,5 +439,44 @@ export class TaskService implements OnDestroy {
     return this.tasks$.pipe(
       map(tasks => tasks.filter(task => task.projectId === projectId))
     );
+  }
+
+  async exportTasks() {
+    // 現在表示中のタスクのみ取得
+    const tasks = await firstValueFrom(this.tasks$);
+    if (!tasks || tasks.length === 0) {
+      this.snackBar.open('エクスポートするタスクがありません', '閉じる', { duration: 2000 });
+      return;
+    }
+
+    // CSV変換処理（例）
+    const csvRows = [
+      ['タイトル', '説明', '期限', '担当者', 'ステータス'], // ヘッダー
+      ...tasks.map(task => [
+        task.title,
+        task.description,
+        task.dueDate
+          ? (task.dueDate instanceof Date
+              ? task.dueDate.toLocaleDateString()
+              : typeof task.dueDate === 'string'
+                ? new Date(task.dueDate).toLocaleDateString()
+                : 'seconds' in task.dueDate
+                  ? new Date(task.dueDate.seconds * 1000).toLocaleDateString()
+                  : '')
+          : '',
+        task.assignedTo || '',
+        task.status || ''
+      ])
+    ];
+    const csvContent = csvRows.map(row => row.map(field => `"${(field ?? '').replace(/"/g, '""')}"`).join(',')).join('\r\n');
+
+    // ダウンロード処理
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tasks.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }
