@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -31,8 +31,8 @@ export class ComponentNameComponent implements OnInit {
 
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
-      title: [''],
-      description: ['']
+      title: ['', [Validators.required]],
+      description: ['', [Validators.required]]
     });
   }
 
@@ -48,6 +48,9 @@ export class ComponentNameComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.form.reset();
+    this.form.reset({
+      title: '',
+      description: ''
+    });
   }
 } 
