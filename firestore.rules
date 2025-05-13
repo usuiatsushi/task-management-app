@@ -1,44 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 共通のルール
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // ユーザーのルール
-    match /users/{userId} {
-      allow list, get: if isAuthenticated();
-      allow create, update: if isAuthenticated() && request.auth.uid == userId;
-      allow delete: if false;
-    }
-
-    // タスクのルール
-    match /tasks/{taskId} {
-      allow list, get: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
-    }
-    
-    // カテゴリのルール
-    match /categories/{categoryId} {
-      allow list, get: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
-    }
-
-    // コメントのルール
-    match /comments/{commentId} {
-      allow list, get: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && request.auth.uid == resource.data.userId;
-    }
-
-    // 通知のルール
-    match /notifications/{notificationId} {
-      allow list, get: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && request.auth.uid == resource.data.userId;
-      allow delete: if false;
+    match /{document=**} {
+      allow read, write: if true;
     }
   }
-} 
+}
