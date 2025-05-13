@@ -1,16 +1,18 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Auth, signInWithEmailAndPassword, signOut } from '@angular/fire/auth';
-import { AuthService } from '../../services/auth.service';
+import { Auth, signInWithEmailAndPassword, signOut, sendEmailVerification } from '@angular/fire/auth';
+import { AuthService } from 'src/app/core/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, FormsModule, MatIconModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -18,6 +20,11 @@ export class LoginComponent {
   loginForm: FormGroup;
   errorMessage: string | null = null;
   loginError = '';
+  resetPasswordEmail: string = '';
+  resetMessage: string = '';
+  resetError: string = '';
+  emailVerificationError: string = '';
+  showResendVerification: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -36,7 +43,14 @@ export class LoginComponent {
     if (this.loginForm.valid) {
       try {
         const { email, password } = this.loginForm.value;
-        await signInWithEmailAndPassword(this.auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+        if (!userCredential.user.emailVerified) {
+          await signOut(this.auth);
+          this.errorMessage = 'メール認証が完了していません。メールをご確認ください。';
+          this.showResendVerification = true;
+          return;
+        }
+        this.showResendVerification = false;
         // ユーザーのroleとisApprovedを確認
         const userSnap = await this.afs.collection('users', ref => ref.where('email', '==', email)).get().toPromise();
         if (userSnap && !userSnap.empty) {
@@ -57,6 +71,21 @@ export class LoginComponent {
       } catch (error) {
         this.errorMessage = 'ログインに失敗しました。もう一度お試しください。';
       }
+    }
+  }
+
+  async resendVerificationEmail() {
+    this.emailVerificationError = '';
+    try {
+      const { email, password } = this.loginForm.value;
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+      if (userCredential.user) {
+        await sendEmailVerification(userCredential.user);
+        this.errorMessage = '認証メールを再送信しました。メールをご確認ください。';
+        await signOut(this.auth);
+      }
+    } catch (error) {
+      this.emailVerificationError = '認証メールの再送信に失敗しました。';
     }
   }
 
@@ -119,6 +148,21 @@ export class LoginComponent {
     } catch (error) {
       console.error('管理者ログインエラー:', error);
       this.loginError = 'ログインに失敗しました';
+    }
+  }
+
+  async resetPassword() {
+    this.resetMessage = '';
+    this.resetError = '';
+    if (!this.resetPasswordEmail) {
+      this.resetError = 'メールアドレスを入力してください';
+      return;
+    }
+    try {
+      await this.authService.resetPassword(this.resetPasswordEmail);
+      this.resetMessage = 'パスワードリセットメールを送信しました。メールをご確認ください。';
+    } catch (error) {
+      this.resetError = 'パスワードリセットメールの送信に失敗しました。';
     }
   }
 } 

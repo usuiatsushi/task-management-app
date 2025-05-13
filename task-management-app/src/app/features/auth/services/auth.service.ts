@@ -64,4 +64,13 @@ export class AuthService {
       }
     }
   }
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await this.afAuth.sendPasswordResetEmail(email);
+    } catch (error) {
+      console.error('パスワードリセットメールの送信に失敗しました:', error);
+      throw error;
+    }
+  }
 } 

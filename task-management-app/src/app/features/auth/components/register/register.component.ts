@@ -4,6 +4,7 @@ import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -16,12 +17,14 @@ export class RegisterComponent {
   registerForm: FormGroup;
   registerError = '';
   registerSuccess = '';
+  successMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private afAuth: AngularFireAuth,
     private afs: AngularFirestore,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -42,15 +45,15 @@ export class RegisterComponent {
     if (this.registerForm.valid) {
       const { email, password, displayName } = this.registerForm.value;
       try {
-        const userCredential = await this.afAuth.createUserWithEmailAndPassword(email, password);
-        await this.afs.collection('users').doc(userCredential.user?.uid).set({
-          uid: userCredential.user?.uid,
+        const user = await this.authService.signup(email, password);
+        await this.afs.collection('users').doc(user?.uid).set({
+          uid: user?.uid,
           email,
           displayName,
           role: 'user',
           isApproved: false
         });
-        this.registerSuccess = '登録が完了しました。ログイン画面に移動します。';
+        this.successMessage = '認証メールを送信しました。メールをご確認ください。';
         setTimeout(() => {
           this.router.navigate(['/auth/login']);
         }, 2000);
@@ -73,23 +76,16 @@ export class RegisterComponent {
     if (this.registerForm.valid) {
       const { email, password, displayName } = this.registerForm.value;
       try {
-        console.log('管理者登録開始:', email);
-        const userCredential = await this.afAuth.createUserWithEmailAndPassword(email, password);
-        console.log('ユーザー作成成功:', userCredential.user?.uid);
-        
+        const user = await this.authService.signup(email, password);
         const userData = {
-          uid: userCredential.user?.uid,
+          uid: user?.uid,
           email,
           displayName,
           role: 'admin',
           isApproved: false
         };
-        console.log('保存するユーザーデータ:', userData);
-        
-        await this.afs.collection('users').doc(userCredential.user?.uid).set(userData);
-        console.log('Firestoreへの保存成功');
-        
-        this.registerSuccess = '管理者登録が完了しました。ログイン画面に移動します。';
+        await this.afs.collection('users').doc(user?.uid).set(userData);
+        this.successMessage = '認証メールを送信しました。メールをご確認ください。';
         setTimeout(() => {
           this.router.navigate(['/auth/login']);
         }, 2000);

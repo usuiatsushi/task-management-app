@@ -1273,12 +1273,19 @@ export class TaskListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filterTasks(tasks: Task[], quickFilters: string[]): Task[] {
-    let filtered = tasks;
-    // プロジェクトIDによるフィルタリング
+    // プロジェクトIDが指定されている場合は、管理者でもそのプロジェクトのタスクのみ
     if (this.projectId) {
-      filtered = filtered.filter(t => t.projectId === this.projectId);
-    } else if (this.currentUserId) {
-      // プロジェクトIDがない場合は「自分のタスク」＋「projectId未設定（undefined/null/空文字列）」のタスクを表示
+      return tasks.filter(t => t.projectId === this.projectId);
+    }
+
+    // プロジェクトIDがない場合のみ、管理者は全タスク
+    if (this.authService.currentUserRole === 'admin') {
+      return tasks;
+    }
+
+    // 一般ユーザー
+    let filtered = tasks;
+    if (this.currentUserId) {
       filtered = filtered.filter(t =>
         t.userId === this.currentUserId ||
         t.projectId === undefined ||

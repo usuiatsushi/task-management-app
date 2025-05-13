@@ -20,9 +20,18 @@ export class AuthService {
     private firestore: AngularFirestore
   ) {
     this.authState$ = this.afAuth.authState;
-    this.afAuth.authState.subscribe(user => {
-      console.log('現在のユーザー情報:', user);
-      this.userSubject.next(user);
+    this.afAuth.authState.subscribe(async user => {
+      if (user) {
+        // Firestoreからユーザーデータを取得
+        const userDoc = await this.firestore.collection('users').doc(user.uid).ref.get();
+        if (userDoc.exists) {
+          this.userSubject.next(userDoc.data()); // ← ここでFirestoreのデータをセット
+        } else {
+          this.userSubject.next(null);
+        }
+      } else {
+        this.userSubject.next(null);
+      }
     });
 
     // 管理者判定のObservable
@@ -83,6 +92,9 @@ export class AuthService {
   async signup(email: string, password: string) {
     try {
       const result = await this.afAuth.createUserWithEmailAndPassword(email, password);
+      if (result.user) {
+        await result.user.sendEmailVerification();
+      }
       return result.user;
     } catch (error) {
       console.error('サインアップに失敗しました:', error);
@@ -112,5 +124,19 @@ export class AuthService {
       console.error('Googleログインエラー:', error);
       throw error;
     }
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    try {
+      await this.afAuth.sendPasswordResetEmail(email);
+    } catch (error) {
+      console.error('パスワードリセットメールの送信に失敗しました:', error);
+      throw error;
+    }
+  }
+
+  get currentUserRole(): 'admin' | 'user' | null {
+    // 例: Firestoreのユーザーデータを使って判定
+    return this.userSubject.value?.role || null;
   }
 } 

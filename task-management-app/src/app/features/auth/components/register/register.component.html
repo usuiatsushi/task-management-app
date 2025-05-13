@@ -64,8 +64,8 @@
       {{ registerError }}
     </div>
 
-    <div class="success-message" *ngIf="registerSuccess">
-      {{ registerSuccess }}
+    <div *ngIf="successMessage" class="success-message">
+      {{ successMessage }}
     </div>
 
     <div class="form-actions">
