@@ -417,7 +417,6 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       this.ganttContainer.nativeElement.removeEventListener('keydown', this.keydownHandler);
     }
     gantt.clearAll();
-    gantt.destroy();
   }
 
   onDateRangeChange(range: { start: Date; end: Date }) {

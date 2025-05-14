@@ -174,4 +174,176 @@ describe('TaskDetailComponent', () => {
     expect(component.getStatusLabel('in_progress')).toBe('進行中');
     expect(component.getStatusLabel('done')).toBe('完了');
   });
+});
+
+describe('TaskDetailComponent Integration', () => {
+  let component: TaskDetailComponent;
+  let fixture: ComponentFixture<TaskDetailComponent>;
+  let taskService: jasmine.SpyObj<TaskService>;
+  let router: jasmine.SpyObj<Router>;
+  let snackBar: jasmine.SpyObj<MatSnackBar>;
+
+  const mockTask: Task = {
+    id: 'test-task-id',
+    title: 'テストタスク',
+    description: 'テスト説明',
+    status: '未着手',
+    importance: '中',
+    category: 'テスト',
+    assignedTo: 'テストユーザー',
+    dueDate: Timestamp.fromDate(new Date()),
+    createdAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.fromDate(new Date()),
+    progress: 0,
+    userId: 'test-user-id',
+    completed: false
+  };
+
+  beforeEach(async () => {
+    const taskServiceSpy = jasmine.createSpyObj('TaskService', ['getTask', 'updateTask', 'deleteTask']);
+    const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+    const dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
+
+    await TestBed.configureTestingModule({
+      imports: [TaskDetailComponent],
+      providers: [
+        { provide: TaskService, useValue: taskServiceSpy },
+        { provide: Router, useValue: routerSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy },
+        { provide: MatDialog, useValue: dialogSpy },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: {
+                get: () => 'test-task-id'
+              }
+            }
+          }
+        },
+        {
+          provide: Firestore,
+          useValue: {}
+        }
+      ]
+    }).compileComponents();
+
+    taskService = TestBed.inject(TaskService) as jasmine.SpyObj<TaskService>;
+    router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
+    snackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
+
+    taskService.getTask.and.returnValue(Promise.resolve(mockTask));
+    taskService.updateTask.and.returnValue(Promise.resolve());
+    taskService.deleteTask.and.returnValue(Promise.resolve());
+
+    fixture = TestBed.createComponent(TaskDetailComponent);
+    component = fixture.componentInstance;
+  });
+
+  it('should load task data on init', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    expect(component.task).toBeTruthy();
+    expect(component.task?.id).toBe('test-task-id');
+    expect(component.task?.title).toBe('テストタスク');
+  }));
+
+  it('should update task status to 進行中 and set progress to 50%', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    component.updateTaskStatus('進行中');
+    tick();
+
+    expect(taskService.updateTask).toHaveBeenCalledWith('test-task-id', jasmine.objectContaining({
+      status: '進行中',
+      progress: 50
+    }));
+    expect(component.task?.progress).toBe(50);
+    expect(snackBar.open).toHaveBeenCalledWith('タスクのステータスを更新しました', '閉じる', { duration: 3000 });
+  }));
+
+  it('should update task status to 完了 and set progress to 100%', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    component.updateTaskStatus('完了');
+    tick();
+
+    expect(taskService.updateTask).toHaveBeenCalledWith('test-task-id', jasmine.objectContaining({
+      status: '完了',
+      progress: 100
+    }));
+    expect(component.task?.progress).toBe(100);
+    expect(snackBar.open).toHaveBeenCalledWith('タスクのステータスを更新しました', '閉じる', { duration: 3000 });
+  }));
+
+  it('should handle task deletion', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    const dialogRef = { afterClosed: () => of(true) };
+    const dialog = TestBed.inject(MatDialog);
+    (dialog.open as jasmine.Spy).and.returnValue(dialogRef);
+
+    component.deleteTask();
+    tick();
+
+    expect(taskService.deleteTask).toHaveBeenCalledWith('test-task-id');
+    expect(router.navigate).toHaveBeenCalledWith(['/tasks']);
+    expect(snackBar.open).toHaveBeenCalledWith('タスクを削除しました', '閉じる', { duration: 3000 });
+  }));
+
+  it('should update progress when slider value changes', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    const newProgress = 75;
+    component.onSliderChange(newProgress, mockTask);
+    tick();
+
+    expect(taskService.updateTask).toHaveBeenCalledWith('test-task-id', { progress: newProgress });
+  }));
+
+  it('should handle sub-task operations', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    // サブタスクの追加
+    component.newSubTaskTitle = '新しいサブタスク';
+    component.newSubTaskAssignee = '担当者';
+    component.addSubTask();
+    tick();
+
+    expect(taskService.updateTask).toHaveBeenCalledWith('test-task-id', jasmine.objectContaining({
+      subTasks: jasmine.any(Array)
+    }));
+
+    // サブタスクの更新
+    if (component.task?.subTasks && component.task.subTasks.length > 0) {
+      const subTask = component.task.subTasks[0];
+      subTask.done = true;
+      component.updateSubTask(subTask);
+      tick();
+
+      expect(taskService.updateTask).toHaveBeenCalledWith('test-task-id', {
+        subTasks: component.task.subTasks
+      });
+    }
+  }));
+
+  it('should handle error cases', fakeAsync(() => {
+    fixture.detectChanges();
+    tick();
+
+    // エラーケースのテスト
+    taskService.updateTask.and.returnValue(Promise.reject('Error'));
+
+    component.updateTaskStatus('進行中');
+    tick();
+
+    expect(snackBar.open).toHaveBeenCalledWith('タスクのステータス更新に失敗しました', '閉じる', { duration: 3000 });
+  }));
 }); 

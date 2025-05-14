@@ -11,7 +11,7 @@
             <span class="task-priority" [ngClass]="task.importance">
               {{ getPriorityLabel(task.importance) }}
             </span>
-            <span class="due-date">期限: {{ task.dueDate | date:'yyyy/MM/dd' }}</span>
+            <span class="due-date">期限: {{ getFormattedDate(task.dueDate) }}</span>
           </div>
         </div>
         <div class="task-actions">
@@ -70,13 +70,13 @@
           </div>
           <div class="detail-item">
             <span class="label">作成日:</span>
-            <span class="value">{{ task.createdAt | date:'yyyy/MM/dd' }}</span>
+            <span class="value">{{ getFormattedDate(task.createdAt) }}</span>
           </div>
         </div>
         <div class="detail-row">
           <div class="detail-item">
             <span class="label">更新日:</span>
-            <span class="value">{{ task.updatedAt | date:'yyyy/MM/dd' }}</span>
+            <span class="value">{{ getFormattedDate(task.updatedAt) }}</span>
           </div>
         </div>
       </div>

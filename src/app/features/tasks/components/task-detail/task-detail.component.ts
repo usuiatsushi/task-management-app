@@ -63,10 +63,12 @@ export class TaskDetailComponent implements OnInit {
     if (taskId) {
       await this.loadTask(taskId);
       if (this.task) {
-        this.progressControl.setValue(this.task.progress ?? 0);
+        // 進捗状況の変更を監視
         this.progressControl.valueChanges.subscribe(value => {
-          this.task!.progress = value ?? 0;
-          this.onProgressChange(this.task!);
+          if (this.task) {
+            this.task.progress = value ?? 0;
+            this.onProgressChange(this.task);
+          }
         });
       }
     }
@@ -92,8 +94,27 @@ export class TaskDetailComponent implements OnInit {
       if (!(task.dueDate instanceof Date)) {
         console.warn('Invalid dueDate for task:', task.id, task.dueDate);
       }
+
+      // 進捗状況が未設定の場合、ステータスに基づいて設定
+      if (task.progress === undefined || task.progress === null) {
+        switch (task.status) {
+          case '未着手':
+            task.progress = 0;
+            break;
+          case '進行中':
+            task.progress = 50;
+            break;
+          case '完了':
+            task.progress = 100;
+            break;
+          default:
+            task.progress = 0;
+        }
+      }
       
       this.task = task;
+      // 進捗状況コントロールの値を更新
+      this.progressControl.setValue(task.progress);
     }
   }
 
@@ -148,7 +169,15 @@ export class TaskDetailComponent implements OnInit {
   }
 
   getProgressPercentage(): number {
-    switch (this.task?.status) {
+    if (!this.task) return 0;
+    
+    // タスクの進捗状況が設定されている場合はその値を使用
+    if (this.task.progress !== undefined && this.task.progress !== null) {
+      return this.task.progress;
+    }
+
+    // 進捗状況が設定されていない場合は、ステータスに基づいてデフォルト値を設定
+    switch (this.task.status) {
       case '未着手':
         return 0;
       case '進行中':
@@ -270,6 +299,50 @@ export class TaskDetailComponent implements OnInit {
   editTask() {
     if (this.task) {
       this.router.navigate(['/tasks', this.task.id, 'edit']);
+    }
+  }
+
+  getFormattedDate(date: any): string {
+    if (!date) return '未設定';
+    if (date instanceof Date) return date.toLocaleDateString('ja-JP');
+    if (date instanceof Timestamp) return date.toDate().toLocaleDateString('ja-JP');
+    if (typeof date === 'object' && 'seconds' in date && 'nanoseconds' in date) {
+      return new Date(date.seconds * 1000 + date.nanoseconds / 1000000).toLocaleDateString('ja-JP');
+    }
+    if (typeof date === 'string') return new Date(date).toLocaleDateString('ja-JP');
+    return '未設定';
+  }
+
+  async updateTaskStatus(status: '未着手' | '進行中' | '完了'): Promise<void> {
+    if (!this.task) {
+      this.snackBar.open('タスクが見つかりません', '閉じる', { duration: 3000 });
+      return;
+    }
+
+    try {
+      const updates: Partial<Task> = {
+        status,
+        updatedAt: Timestamp.now()
+      };
+
+      // 進行中に変更する場合、進捗状況を50%に設定
+      if (status === '進行中' && this.task.status !== '進行中') {
+        updates.progress = 50;
+        this.progressControl.setValue(50);
+      }
+
+      // 完了に変更する場合、進捗状況を100%に設定
+      if (status === '完了') {
+        updates.progress = 100;
+        updates.completedAt = Timestamp.now();
+        this.progressControl.setValue(100);
+      }
+
+      await this.taskService.updateTask(this.task.id, updates);
+      this.snackBar.open('タスクのステータスを更新しました', '閉じる', { duration: 3000 });
+    } catch (error) {
+      console.error('タスクのステータス更新に失敗しました:', error);
+      this.snackBar.open('タスクのステータス更新に失敗しました', '閉じる', { duration: 3000 });
     }
   }
 } 
