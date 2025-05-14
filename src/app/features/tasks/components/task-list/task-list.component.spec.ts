@@ -198,7 +198,7 @@ describe('TaskListComponent', () => {
     flushMicrotasks();
     fixture.detectChanges();
 
-    expect(taskServiceSpy.deleteTask).toHaveBeenCalledWith(task);
+    expect(taskServiceSpy.deleteTask).toHaveBeenCalledWith(task as any);
   }));
 
   it('should update task field', fakeAsync(() => {
