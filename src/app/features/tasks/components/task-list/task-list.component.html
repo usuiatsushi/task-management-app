@@ -10,9 +10,6 @@
       <app-toast-container></app-toast-container>
       <div class="task-list-header">
         <div class="task-list-actions-row">
-          <button mat-button [matMenuTriggerFor]="filterMenu">
-            <mat-icon>menu</mat-icon> フィルター
-          </button>
           <button mat-raised-button color="primary" (click)="navigateToNewTask()">
             <mat-icon>add</mat-icon>
             新規タスク
@@ -41,27 +38,6 @@
           </span>
         </div>
       </div>
-
-      <mat-menu #filterMenu="matMenu" class="filter-menu-panel" [overlapTrigger]="false">
-        <div class="filter-menu-header">
-          <span>フィルター</span>
-          <button mat-button color="primary" (click)="clearFilters()" style="float:right;">クリア</button>
-        </div>
-        <div class="quick-filters">
-          <mat-button-toggle-group name="quickFilters" multiple [(ngModel)]="quickFilters" (change)="onQuickFilterChange()">
-            <mat-button-toggle value="incomplete">未完了タスク</mat-button-toggle>
-            <mat-button-toggle value="complete">完了したタスク</mat-button-toggle>
-            <mat-button-toggle value="mine">自分のタスクのみ</mat-button-toggle>
-            <mat-button-toggle value="thisWeek">今週期限</mat-button-toggle>
-            <mat-button-toggle value="nextWeek">来週期限</mat-button-toggle>
-          </mat-button-toggle-group>
-        </div>
-        <div class="add-filter">
-          <button mat-button>
-            <mat-icon>add</mat-icon> フィルターを追加
-          </button>
-        </div>
-      </mat-menu>
 
       <div class="task-status-sections">
         <!-- ヘッダー行 -->

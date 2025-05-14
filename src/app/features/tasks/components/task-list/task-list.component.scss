@@ -1012,13 +1012,14 @@ h2 {
 }
 
 .filter-menu-panel {
+  min-width: 320px !important;
+  max-width: 600px !important;
   .filter-menu-header {
     padding: 16px;
     border-bottom: 1px solid #e0e0e0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-
     span {
       font-size: 16px;
       font-weight: 500;
@@ -1071,4 +1072,10 @@ h2 {
       }
     }
   }
+}
+
+::ng-deep .mat-menu-panel.filter-menu-panel {
+  min-width: 320px !important;
+  max-width: 480px !important;
+  width: 100% !important;
 }

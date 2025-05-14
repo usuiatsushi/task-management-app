@@ -8,6 +8,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
+import { getAuth } from '@angular/fire/auth';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +33,8 @@ export class LoginComponent {
     private router: Router,
     private auth: Auth,
     private authService: AuthService,
-    private afs: AngularFirestore
+    private afs: AngularFirestore,
+    private snackBar: MatSnackBar
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -71,21 +74,6 @@ export class LoginComponent {
       } catch (error) {
         this.errorMessage = 'ログインに失敗しました。もう一度お試しください。';
       }
-    }
-  }
-
-  async resendVerificationEmail() {
-    this.emailVerificationError = '';
-    try {
-      const { email, password } = this.loginForm.value;
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
-      if (userCredential.user) {
-        await sendEmailVerification(userCredential.user);
-        this.errorMessage = '認証メールを再送信しました。メールをご確認ください。';
-        await signOut(this.auth);
-      }
-    } catch (error) {
-      this.emailVerificationError = '認証メールの再送信に失敗しました。';
     }
   }
 

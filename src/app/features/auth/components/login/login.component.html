@@ -83,12 +83,5 @@
       <div class="reset-message" *ngIf="resetMessage" style="color: #388e3c; margin-top: 8px; font-size: 0.97em;">{{ resetMessage }}</div>
       <div class="reset-error" *ngIf="resetError" style="color: #d32f2f; margin-top: 8px; font-size: 0.97em;">{{ resetError }}</div>
     </div>
-
-    <div *ngIf="showResendVerification" class="verify-section" style="margin-top: 16px;">
-      <button type="button" (click)="resendVerificationEmail()" style="background: #ffa726; color: #fff; border: none; border-radius: 4px; padding: 8px 16px; font-weight: 500; cursor: pointer;">
-        認証メールを再送信
-      </button>
-      <div class="verify-error" *ngIf="emailVerificationError" style="color: #d32f2f; margin-top: 8px; font-size: 0.97em;">{{ emailVerificationError }}</div>
-    </div>
   </form>
 </div> 
