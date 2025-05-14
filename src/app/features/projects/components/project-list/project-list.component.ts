@@ -68,7 +68,7 @@ export class ProjectListComponent implements OnInit {
   }
 
   editProject(project: Project): void {
-    this.router.navigate(['/projects', project.id, 'edit']);
+    this.router.navigate(['/projects', project.id]);
   }
 
   async deleteProject(project: Project): Promise<void> {
