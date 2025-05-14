@@ -65,6 +65,14 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
   // カスタムコンパレータを追加
   compareWith = (o1: any, o2: any) => o1 === o2;
 
+  private defaultCategories = [
+    '仕事',
+    '遊び',
+    '勉強',
+    '家事',
+    'その他'
+  ];
+
   constructor(
     private fb: FormBuilder,
     private route: ActivatedRoute,
@@ -529,5 +537,9 @@ export class TaskFormComponent implements OnInit, AfterViewInit {
       };
 
     }
+  }
+
+  isDefaultCategory(category: string): boolean {
+    return this.defaultCategories.includes(category);
   }
 } 

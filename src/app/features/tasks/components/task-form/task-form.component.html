@@ -14,13 +14,24 @@
               {{ getErrorMessage('title') }}
             </mat-error>
           </mat-form-field>
-          <mat-form-field appearance="outline">
+          <mat-form-field appearance="outline" class="form-field">
             <mat-label>カテゴリ</mat-label>
             <mat-select formControlName="category">
+              <mat-select-trigger>
+                {{ taskForm.get('category')?.value }}
+              </mat-select-trigger>
               <mat-option *ngFor="let category of categories" [value]="category">
-                {{ category }}
+                <div class="category-option">
+                  <span>{{ category }}</span>
+                  <button mat-icon-button (click)="deleteCategory(category); $event.stopPropagation()" *ngIf="!isDefaultCategory(category)" matTooltip="削除">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
               </mat-option>
             </mat-select>
+            <mat-error *ngIf="taskForm.get('category')?.hasError('required')">
+              カテゴリは必須です
+            </mat-error>
           </mat-form-field>
         </div>
         <div class="form-row">

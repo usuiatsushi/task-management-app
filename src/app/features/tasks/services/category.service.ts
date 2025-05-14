@@ -10,10 +10,11 @@ export class CategoryService {
   categories$ = this.categoriesSubject.asObservable();
 
   private defaultCategories = [
-    '技術的課題',
-    '業務フロー',
-    'バグ修正',
-    '新機能・改善提案'
+    '仕事',
+    '遊び',
+    '勉強',
+    '家事',
+    'その他'
   ];
 
   constructor(private firestore: Firestore) {
