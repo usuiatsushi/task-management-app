@@ -11,6 +11,7 @@ import { Project } from '../../models/project.model';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { TaskService } from 'src/app/features/tasks/services/task.service';
 import { Task } from 'src/app/features/tasks/models/task.model';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-project-list',
@@ -67,6 +68,7 @@ export class ProjectListComponent implements OnInit {
 
   async deleteProject(project: Project): Promise<void> {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
       data: {
         title: 'プロジェクトの削除',
         message: `「${project.name}」を削除してもよろしいですか？`,
@@ -75,17 +77,16 @@ export class ProjectListComponent implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(async result => {
-      if (result) {
-        try {
-          await this.projectService.deleteProject(project.id);
-          this.snackBar.open('プロジェクトを削除しました', '閉じる', { duration: 3000 });
-        } catch (error) {
-          console.error('プロジェクトの削除に失敗しました:', error);
-          this.snackBar.open('プロジェクトの削除に失敗しました', '閉じる', { duration: 3000 });
-        }
+    const result = await firstValueFrom(dialogRef.afterClosed());
+    if (result) {
+      try {
+        await this.projectService.deleteProject(project.id);
+        this.snackBar.open('プロジェクトを削除しました', '閉じる', { duration: 3000 });
+      } catch (error) {
+        console.error('プロジェクトの削除に失敗しました:', error);
+        this.snackBar.open('プロジェクトの削除に失敗しました', '閉じる', { duration: 3000 });
       }
-    });
+    }
   }
 
   getTaskCount(projectId: string): number {
