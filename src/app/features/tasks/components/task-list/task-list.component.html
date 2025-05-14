@@ -14,10 +14,6 @@
             <mat-icon>add</mat-icon>
             新規タスク
           </button>
-          <button mat-raised-button color="accent" (click)="openBulkEditDialog()" [disabled]="selectedTasks.length === 0">
-            <mat-icon>edit</mat-icon>
-            一括編集
-          </button>
           <button mat-raised-button color="warn" (click)="openBulkDeleteDialog()" [disabled]="selectedTasks.length === 0">
             <mat-icon>delete</mat-icon>
             一括削除

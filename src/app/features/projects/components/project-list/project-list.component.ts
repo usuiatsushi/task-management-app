@@ -67,6 +67,10 @@ export class ProjectListComponent implements OnInit {
     this.router.navigate(['/projects', project.id, 'tasks']);
   }
 
+  editProject(project: Project): void {
+    this.router.navigate(['/projects', project.id, 'edit']);
+  }
+
   async deleteProject(project: Project): Promise<void> {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       width: '400px',
