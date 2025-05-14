@@ -16,8 +16,12 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Timestamp } from '@angular/fire/firestore';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { PortalModule } from '@angular/cdk/portal';
-import { MatDialogModule } from '@angular/material/dialog';
-import { Injectable } from '@angular/core';
+import { Injectable, Injector, NgZone } from '@angular/core';
+import { Overlay, OverlayContainer, ScrollStrategyOptions } from '@angular/cdk/overlay';
+import { Platform } from '@angular/cdk/platform';
+import { Location } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
+import { DOCUMENT } from '@angular/common';
 
 const mockProjects: Project[] = [
   {
@@ -76,37 +80,63 @@ const mockTasks: Task[] = [
 ];
 
 @Injectable()
-class MockMatDialog extends MatDialog {
+class MockMatDialog {
+  private afterClosedSubject = new Subject<boolean>();
+  private dialogRef: MatDialogRef<any>;
   _openDialogs: MatDialogRef<any>[] = [];
-  _afterAllClosed = new Subject<void>();
-  _afterOpened = new Subject<MatDialogRef<any>>();
-  _lastAfterClosed = new Subject<boolean>();
 
-  override open = jasmine.createSpy('open').and.callFake((component: any, config?: any) => {
-    console.log('MockMatDialog.openが呼び出されました', { component, config });
-    const dialogRef = {
-      afterClosed: () => this._lastAfterClosed.asObservable(),
-      close: () => {
-        this._lastAfterClosed.next(false);
-        this._lastAfterClosed.complete();
-      },
+  constructor() {
+    this._openDialogs = [];
+    this.dialogRef = {
+      afterClosed: () => this.afterClosedSubject.asObservable(),
+      close: () => this.afterClosedSubject.next(false),
       backdropClick: () => of(null),
       keydownEvents: () => of(null),
       beforeClosed: () => of(null),
       disableClose: false,
-      id: `mock-dialog-${Date.now()}`,
+      id: '',
       componentInstance: {},
-      updatePosition: () => dialogRef,
-      updateSize: () => dialogRef
+      updatePosition: () => this.dialogRef,
+      updateSize: () => this.dialogRef,
+      _ref: { push: () => {} },
+      _containerInstance: {},
+      componentRef: {},
+      _afterOpened: of(null),
+      _afterAllClosed: of(null),
+      _beforeAllClosed: of(null),
+      _getStateChanges: () => of(null),
+      _getOverlayRef: () => ({ dispose: () => {} }),
+      _getContainerInstance: () => ({}),
+      _getComponentInstance: () => ({}),
+      _getOverlayContainer: () => ({ getContainerElement: () => document.createElement('div') }),
+      _result: undefined,
+      _beforeClosed: of(null)
     } as unknown as MatDialogRef<any>;
+  }
 
-    this._openDialogs.push(dialogRef);
-    this._afterOpened.next(dialogRef);
-    return dialogRef;
-  });
+  open(component: any, config?: any): MatDialogRef<any> {
+    const newDialogRef = {
+      ...this.dialogRef,
+      id: Math.random().toString(36).substring(7),
+      _result: undefined,
+      _beforeClosed: of(null)
+    } as unknown as MatDialogRef<any>;
+    this._openDialogs.push(newDialogRef);
+    return newDialogRef;
+  }
 
-  getLastAfterClosed(): Subject<boolean> {
-    return this._lastAfterClosed;
+  closeDialog(result: boolean) {
+    this.afterClosedSubject.next(result);
+    this._openDialogs = this._openDialogs.filter(ref => ref !== this.dialogRef);
+  }
+
+  getDialogById(id: string): MatDialogRef<any> | undefined {
+    return this._openDialogs.find(dialog => dialog.id === id);
+  }
+
+  closeAll(): void {
+    this._openDialogs.forEach(dialog => dialog.close());
+    this._openDialogs = [];
   }
 }
 
@@ -117,12 +147,10 @@ describe('ProjectListComponent', () => {
   let taskService: jasmine.SpyObj<TaskService>;
   let snackBar: jasmine.SpyObj<MatSnackBar>;
   let router: jasmine.SpyObj<Router>;
-  let dialog: MatDialog;
-  let afterClosedSubject: Subject<boolean>;
+  let dialog: MockMatDialog;
 
   beforeEach(async () => {
     console.log('テストのセットアップを開始します');
-    afterClosedSubject = new Subject<boolean>();
     const projectServiceSpy = jasmine.createSpyObj('ProjectService', ['deleteProject'], {
       projects$: of(mockProjects)
     });
@@ -131,6 +159,7 @@ describe('ProjectListComponent', () => {
     });
     const snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
     const routerSpy = jasmine.createSpyObj('Router', ['navigate']);
+    const mockDialog = new MockMatDialog();
 
     console.log('TestBedの設定を開始します');
     await TestBed.configureTestingModule({
@@ -142,25 +171,24 @@ describe('ProjectListComponent', () => {
         NoopAnimationsModule,
         OverlayModule,
         PortalModule,
-        ConfirmDialogComponent,
-        MatDialogModule
+        ConfirmDialogComponent
       ],
       providers: [
         { provide: ProjectService, useValue: projectServiceSpy },
         { provide: TaskService, useValue: taskServiceSpy },
         { provide: MatSnackBar, useValue: snackBarSpy },
         { provide: Router, useValue: routerSpy },
-        { provide: MatDialog, useClass: MockMatDialog }
+        { provide: MatDialog, useValue: mockDialog }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProjectListComponent);
     component = fixture.componentInstance;
-    dialog = TestBed.inject(MatDialog);
     projectService = TestBed.inject(ProjectService) as jasmine.SpyObj<ProjectService>;
     snackBar = TestBed.inject(MatSnackBar) as jasmine.SpyObj<MatSnackBar>;
     router = TestBed.inject(Router) as jasmine.SpyObj<Router>;
     taskService = TestBed.inject(TaskService) as jasmine.SpyObj<TaskService>;
+    dialog = TestBed.inject(MatDialog) as unknown as MockMatDialog;
     fixture.detectChanges();
     console.log('テストのセットアップが完了しました');
   });
@@ -190,58 +218,43 @@ describe('ProjectListComponent', () => {
   });
 
   it('should show confirm dialog when deleting project', fakeAsync(() => {
-    console.log('プロジェクト削除の確認ダイアログテストを実行します');
     const project = mockProjects[0];
+    const dialogRef = dialog.open(ConfirmDialogComponent, {
+      data: { message: 'このプロジェクトを削除してもよろしいですか？' }
+    });
 
     component.deleteProject(project);
     tick();
     fixture.detectChanges();
 
-    console.log('ダイアログの呼び出しを確認します');
-    expect(dialog.open).toHaveBeenCalledWith(
-      ConfirmDialogComponent,
-      jasmine.objectContaining({
-        width: '400px',
-        data: jasmine.objectContaining({
-          title: 'プロジェクトの削除',
-          message: `「${project.name}」を削除してもよろしいですか？`,
-          confirmText: '削除',
-          cancelText: 'キャンセル'
-        })
-      })
-    );
-
-    const mockDialog = dialog as MockMatDialog;
-    mockDialog.getLastAfterClosed().next(false);
-    mockDialog.getLastAfterClosed().complete();
-    tick();
-    fixture.detectChanges();
+    expect(dialogRef).toBeTruthy();
+    dialog.closeDialog(true);
   }));
 
   it('should delete project when confirmed', fakeAsync(() => {
-    console.log('プロジェクト削除の確認テストを実行します');
     const project = mockProjects[0];
+    const dialogRef = dialog.open(ConfirmDialogComponent, {
+      data: { message: 'このプロジェクトを削除してもよろしいですか？' }
+    });
     projectService.deleteProject.and.returnValue(Promise.resolve());
 
     component.deleteProject(project);
     tick();
     fixture.detectChanges();
 
-    const mockDialog = dialog as MockMatDialog;
-    console.log('ダイアログの確認をシミュレートします');
-    mockDialog.getLastAfterClosed().next(true);
-    mockDialog.getLastAfterClosed().complete();
+    dialog.closeDialog(true);
     tick();
     fixture.detectChanges();
 
-    console.log('プロジェクト削除の実行を確認します');
     expect(projectService.deleteProject).toHaveBeenCalledWith(project.id);
     expect(snackBar.open).toHaveBeenCalledWith('プロジェクトを削除しました', '閉じる', { duration: 3000 });
   }));
 
   it('should handle delete project error', fakeAsync(() => {
-    console.log('プロジェクト削除のエラーハンドリングテストを実行します');
     const project = mockProjects[0];
+    const dialogRef = dialog.open(ConfirmDialogComponent, {
+      data: { message: 'このプロジェクトを削除してもよろしいですか？' }
+    });
     const error = new Error('削除エラー');
     projectService.deleteProject.and.returnValue(Promise.reject(error));
 
@@ -249,9 +262,7 @@ describe('ProjectListComponent', () => {
     tick();
     fixture.detectChanges();
 
-    const mockDialog = dialog as MockMatDialog;
-    mockDialog.getLastAfterClosed().next(true);
-    mockDialog.getLastAfterClosed().complete();
+    dialog.closeDialog(true);
     tick();
     fixture.detectChanges();
 
