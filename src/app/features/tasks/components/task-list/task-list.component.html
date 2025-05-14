@@ -65,7 +65,7 @@
 
       <div class="task-status-sections">
         <!-- ヘッダー行 -->
-        <div class="task-list-table">
+        <div class="task-list-table" data-cy="task-list">
           <table mat-table matSort>
             <ng-container matColumnDef="select">
               <th mat-header-cell *matHeaderCellDef>
@@ -104,10 +104,10 @@
         <!-- 未着手のタスク -->
         <div class="task-status-section">
           <h2 class="status-header status-not-started">未着手</h2>
-          <div class="task-list-table">
+          <div class="task-list-table" data-cy="task-list">
             <table mat-table [dataSource]="(getFilteredTasks('未着手') | async) || []" matSort>
               <ng-container matColumnDef="select">
-                <td mat-cell *matCellDef="let task">
+                <td mat-cell *matCellDef="let task" data-cy="task-item">
                   <mat-checkbox
                     (click)="$event.stopPropagation()"
                     (change)="toggleTaskSelection(task)"
@@ -179,10 +179,10 @@
         <!-- 進行中のタスク -->
         <div class="task-status-section">
           <h2 class="status-header status-in-progress">進行中</h2>
-          <div class="task-list-table">
+          <div class="task-list-table" data-cy="task-list">
             <table mat-table [dataSource]="(getFilteredTasks('進行中') | async) || []" matSort>
               <ng-container matColumnDef="select">
-                <td mat-cell *matCellDef="let task">
+                <td mat-cell *matCellDef="let task" data-cy="task-item">
                   <mat-checkbox
                     (click)="$event.stopPropagation()"
                     (change)="toggleTaskSelection(task)"
@@ -254,10 +254,10 @@
         <!-- 完了のタスク -->
         <div class="task-status-section">
           <h2 class="status-header status-completed">完了</h2>
-          <div class="task-list-table">
+          <div class="task-list-table" data-cy="task-list">
             <table mat-table [dataSource]="(getFilteredTasks('完了') | async) || []" matSort>
               <ng-container matColumnDef="select">
-                <td mat-cell *matCellDef="let task">
+                <td mat-cell *matCellDef="let task" data-cy="task-item">
                   <mat-checkbox
                     (click)="$event.stopPropagation()"
                     (change)="toggleTaskSelection(task)"
@@ -362,7 +362,7 @@
             </div>
           </mat-card>
         </div>
-        <button mat-stroked-button color="primary" (click)="navigateToNewTask()">
+        <button mat-stroked-button color="primary" (click)="navigateToNewTask()" data-cy="new-task-button">
           ＋タスクを追加
         </button>
       </div>
