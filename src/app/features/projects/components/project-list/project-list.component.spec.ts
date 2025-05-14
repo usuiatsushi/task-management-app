@@ -82,22 +82,27 @@ const mockTasks: Task[] = [
 @Injectable()
 class MockMatDialog {
   private afterClosedSubject = new Subject<boolean>();
-  private dialogRef: MatDialogRef<any>;
-  _openDialogs: MatDialogRef<any>[] = [];
+  private _openDialogs: MatDialogRef<any>[] = [];
 
   constructor() {
     this._openDialogs = [];
-    this.dialogRef = {
+  }
+
+  open(component: any, config?: any): MatDialogRef<any> {
+    const dialogRef = {
       afterClosed: () => this.afterClosedSubject.asObservable(),
-      close: () => this.afterClosedSubject.next(false),
+      close: () => {
+        this.afterClosedSubject.next(false);
+        this._openDialogs = this._openDialogs.filter(ref => ref !== dialogRef);
+      },
       backdropClick: () => of(null),
       keydownEvents: () => of(null),
       beforeClosed: () => of(null),
       disableClose: false,
-      id: '',
+      id: Math.random().toString(36).substring(7),
       componentInstance: {},
-      updatePosition: () => this.dialogRef,
-      updateSize: () => this.dialogRef,
+      updatePosition: () => dialogRef,
+      updateSize: () => dialogRef,
       _ref: { push: () => {} },
       _containerInstance: {},
       componentRef: {},
@@ -112,22 +117,17 @@ class MockMatDialog {
       _result: undefined,
       _beforeClosed: of(null)
     } as unknown as MatDialogRef<any>;
-  }
 
-  open(component: any, config?: any): MatDialogRef<any> {
-    const newDialogRef = {
-      ...this.dialogRef,
-      id: Math.random().toString(36).substring(7),
-      _result: undefined,
-      _beforeClosed: of(null)
-    } as unknown as MatDialogRef<any>;
-    this._openDialogs.push(newDialogRef);
-    return newDialogRef;
+    this._openDialogs.push(dialogRef);
+    return dialogRef;
   }
 
   closeDialog(result: boolean) {
     this.afterClosedSubject.next(result);
-    this._openDialogs = this._openDialogs.filter(ref => ref !== this.dialogRef);
+    if (this._openDialogs.length > 0) {
+      const dialogRef = this._openDialogs[this._openDialogs.length - 1];
+      this._openDialogs = this._openDialogs.filter(ref => ref !== dialogRef);
+    }
   }
 
   getDialogById(id: string): MatDialogRef<any> | undefined {
@@ -220,7 +220,13 @@ describe('ProjectListComponent', () => {
   it('should show confirm dialog when deleting project', fakeAsync(() => {
     const project = mockProjects[0];
     const dialogRef = dialog.open(ConfirmDialogComponent, {
-      data: { message: 'このプロジェクトを削除してもよろしいですか？' }
+      width: '400px',
+      data: {
+        title: 'プロジェクトの削除',
+        message: `「${project.name}」を削除してもよろしいですか？`,
+        confirmText: '削除',
+        cancelText: 'キャンセル'
+      }
     });
 
     component.deleteProject(project);
@@ -229,12 +235,19 @@ describe('ProjectListComponent', () => {
 
     expect(dialogRef).toBeTruthy();
     dialog.closeDialog(true);
+    tick();
   }));
 
   it('should delete project when confirmed', fakeAsync(() => {
     const project = mockProjects[0];
     const dialogRef = dialog.open(ConfirmDialogComponent, {
-      data: { message: 'このプロジェクトを削除してもよろしいですか？' }
+      width: '400px',
+      data: {
+        title: 'プロジェクトの削除',
+        message: `「${project.name}」を削除してもよろしいですか？`,
+        confirmText: '削除',
+        cancelText: 'キャンセル'
+      }
     });
     projectService.deleteProject.and.returnValue(Promise.resolve());
 
@@ -253,7 +266,13 @@ describe('ProjectListComponent', () => {
   it('should handle delete project error', fakeAsync(() => {
     const project = mockProjects[0];
     const dialogRef = dialog.open(ConfirmDialogComponent, {
-      data: { message: 'このプロジェクトを削除してもよろしいですか？' }
+      width: '400px',
+      data: {
+        title: 'プロジェクトの削除',
+        message: `「${project.name}」を削除してもよろしいですか？`,
+        confirmText: '削除',
+        cancelText: 'キャンセル'
+      }
     });
     const error = new Error('削除エラー');
     projectService.deleteProject.and.returnValue(Promise.reject(error));

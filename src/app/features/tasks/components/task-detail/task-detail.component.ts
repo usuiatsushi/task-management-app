@@ -42,7 +42,7 @@ import { MatMenuModule } from '@angular/material/menu';
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class TaskDetailComponent implements OnInit {
-  task: (Task & { dueDate: Date; createdAt: Date; updatedAt: Date }) | null = null;
+  task: Task | null = null;
   loading = true;
   deleting = false;
   progressControl = new FormControl(0);
@@ -97,11 +97,11 @@ export class TaskDetailComponent implements OnInit {
     }
   }
 
-  private convertTimestampToDate(timestamp: any): Date {
+  private convertTimestampToDate(timestamp: Timestamp | { seconds: number; nanoseconds: number } | Date | string | null): Date {
     if (timestamp instanceof Timestamp) {
       return timestamp.toDate();
     }
-    if (timestamp && typeof timestamp.toDate === 'function') {
+    if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp && typeof timestamp.toDate === 'function') {
       return timestamp.toDate();
     }
     if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp && 'nanoseconds' in timestamp) {
@@ -217,10 +217,17 @@ export class TaskDetailComponent implements OnInit {
     let due: Date;
     if (this.task.dueDate instanceof Date) {
       due = this.task.dueDate;
-    } else if ((this.task.dueDate as any).toDate) {
-      due = (this.task.dueDate as any).toDate();
-    } else {
+    } else if (this.task.dueDate instanceof Timestamp) {
+      due = this.task.dueDate.toDate();
+    } else if (typeof this.task.dueDate === 'object' && 'toDate' in this.task.dueDate && typeof this.task.dueDate.toDate === 'function') {
+      due = this.task.dueDate.toDate();
+    } else if (typeof this.task.dueDate === 'object' && 'seconds' in this.task.dueDate && 'nanoseconds' in this.task.dueDate) {
+      due = new Date(this.task.dueDate.seconds * 1000 + this.task.dueDate.nanoseconds / 1000000);
+    } else if (typeof this.task.dueDate === 'string') {
       due = new Date(this.task.dueDate);
+    } else {
+      console.warn('Invalid dueDate format:', this.task.dueDate);
+      return;
     }
     const now = new Date();
     // 日付部分だけで差分日数を計算

@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
 import { ProjectFormComponent } from './project-form.component';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -177,6 +177,9 @@ describe('ProjectFormComponent', () => {
     component.members = ['user1'];
 
     await component.onSubmit();
+    tick();
+    tick();
+    fixture.detectChanges();
 
     expect(projectService.createProject).toHaveBeenCalledWith({
       name: '新規プロジェクト',
@@ -211,6 +214,9 @@ describe('ProjectFormComponent', () => {
 
     // 更新処理を実行
     await component.onSubmit();
+    tick();
+    tick();
+    fixture.detectChanges();
 
     // 期待される結果を検証
     expect(projectService.updateProject).toHaveBeenCalledWith('1', {
@@ -270,5 +276,29 @@ describe('ProjectFormComponent', () => {
     component.autoResize(event);
 
     expect(textarea.style.height).toBe('200px');
+  });
+
+  it('should submit form and call notification service', async () => {
+    component.projectForm.setValue({
+      name: '新規プロジェクト',
+      description: '新規説明'
+    });
+    component.members = ['user1'];
+
+    component.onSubmit();
+    flushMicrotasks();
+    fixture.detectChanges();
+
+    expect(projectService.createProject).toHaveBeenCalledWith({
+      name: '新規プロジェクト',
+      description: '新規説明',
+      members: ['user1'],
+      createdAt: jasmine.any(Timestamp),
+      updatedAt: jasmine.any(Timestamp),
+      userId: 'user1',
+      tasks: []
+    });
+    expect(snackBar.open).toHaveBeenCalledWith('コメントを投稿しました', '閉じる', { duration: 3000 });
+    expect(router.navigate).toHaveBeenCalledWith(['/projects']);
   });
 }); 

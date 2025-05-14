@@ -35,7 +35,7 @@ export class BulkEditDialogComponent {
   ) {
     this.editForm = this.fb.group({
       status: [''],
-      priority: [''],
+      importance: [''],
       category: ['']
     });
 
