@@ -55,6 +55,25 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   ) {}
 
   ngOnInit() {
+    gantt.config.details_on_dblclick = false;
+    gantt.config.details_on_create = false;
+
+    gantt.attachEvent("onBeforeLightbox", function(_id: any) {
+      return false;
+    });
+
+    // 1. まずラベルを設定
+    gantt.locale.labels = {
+      section_time: "期間",
+      confirm_closing: "",
+    };
+
+    // 2. セクションも設定
+    gantt.config.lightbox.sections = [
+      { name: "time", type: "time", map_to: "auto", title: "期間" }
+    ];
+
+    // 3. その後にガントチャートの設定
     this.configureGantt();
 
     gantt.attachEvent('onTaskDrag', (id: string, mode: string, task: any, original: any) => {
@@ -85,6 +104,25 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
       }
       return true;
     });
+
+    // 4. イベントハンドラの設定
+    gantt.attachEvent('onAfterTaskUpdate', (id: string, task: any) => {
+      console.log('タスク更新イベント:', { id, task });
+      this.handleTaskUpdate(id, task);
+      return true;
+    });
+
+    gantt.attachEvent('onAfterTaskDrag', (id: string, mode: string, e: any) => {
+      console.log('タスクドラッグイベント:', { id, mode, e });
+      const task = gantt.getTask(id);
+      this.handleTaskUpdate(id, task);
+      return true;
+    });
+
+    // タスクの移動を許可
+    gantt.config.drag_move = true;
+    gantt.config.drag_resize = true;
+    gantt.config.drag_progress = true;
   }
 
   private configureGantt() {
@@ -139,25 +177,6 @@ export class GanttComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     gantt.config.drag_progress = true;
     gantt.config.drag_resize = true;
     gantt.config.drag_move = true;
-
-    // イベントハンドラの設定
-    gantt.attachEvent('onAfterTaskUpdate', (id: string, task: any) => {
-      console.log('タスク更新イベント:', { id, task });
-      this.handleTaskUpdate(id, task);
-      return true;
-    });
-
-    gantt.attachEvent('onAfterTaskDrag', (id: string, mode: string, e: any) => {
-      console.log('タスクドラッグイベント:', { id, mode, e });
-      const task = gantt.getTask(id);
-      this.handleTaskUpdate(id, task);
-      return true;
-    });
-
-    // タスクの移動を許可
-    gantt.config.drag_move = true;
-    gantt.config.drag_resize = true;
-    gantt.config.drag_progress = true;
   }
 
   private async handleTaskUpdate(id: string, task: any) {
